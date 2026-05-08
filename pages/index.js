@@ -52,7 +52,7 @@ export default function Home() {
   /* form state */
   const [pack,    setPack]    = useState(2);
   const [payment, setPayment] = useState('prepaid');
-  const [form,    setForm]    = useState({ name:'', mobile:'', address:'', pincode:'', city:'', state:'' });
+  const [form,    setForm]    = useState({ name:'', mobile:'', email:'', address:'', pincode:'', city:'', state:'' });
   const [loading, setLoading] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
   const [toast,   setToast]   = useState(null);
@@ -95,12 +95,13 @@ export default function Home() {
 
   /* validation */
   const validate = () => {
-    if (!form.name.trim())                          return 'Please enter your full name.';
-    if (!/^[6-9][0-9]{9}$/.test(form.mobile.trim())) return 'Please enter a valid 10-digit mobile number.';
-    if (!form.address.trim())                       return 'Please enter your delivery address.';
-    if (!/^[1-9][0-9]{5}$/.test(form.pincode))     return 'Please enter a valid 6-digit pincode.';
-    if (!form.city.trim())                          return 'Please enter your city.';
-    if (!form.state)                                return 'Please select your state.';
+    if (!form.name.trim())                                        return 'Please enter your full name.';
+    if (!/^[6-9][0-9]{9}$/.test(form.mobile.trim()))             return 'Please enter a valid 10-digit mobile number.';
+    if (form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) return 'Please enter a valid email address.';
+    if (!form.address.trim())                                     return 'Please enter your delivery address.';
+    if (!/^[1-9][0-9]{5}$/.test(form.pincode))                   return 'Please enter a valid 6-digit pincode.';
+    if (!form.city.trim())                                        return 'Please enter your city.';
+    if (!form.state)                                              return 'Please select your state.';
     return null;
   };
 
@@ -633,6 +634,13 @@ export default function Home() {
                   <label className="field-label" htmlFor="mobile">Mobile Number *</label>
                   <input id="mobile" type="tel" placeholder="10-digit number" maxLength={10} inputMode="numeric" value={form.mobile} onChange={e => setForm(f => ({ ...f, mobile: e.target.value.replace(/\D/g,'') }))} />
                 </div>
+              </div>
+
+              <div className="field-group">
+                <label className="field-label" htmlFor="email">
+                  Email Address <span style={{ fontWeight: 400, color: 'var(--vd-text-light)' }}>(optional — for order confirmation)</span>
+                </label>
+                <input id="email" type="email" placeholder="yourname@gmail.com" autoComplete="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
               </div>
 
               <div className="field-group">
