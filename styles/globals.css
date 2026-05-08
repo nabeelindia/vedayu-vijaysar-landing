@@ -541,6 +541,35 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
 }
 
 /* ====================================================
+   HOW TO USE — TWO-COLUMN LAYOUT
+   ==================================================== */
+.how-to-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 56px;
+  align-items: start;
+}
+.how-to-img-col  { position: sticky; top: 24px; }
+.how-to-steps-col {}
+
+.steps-vertical  { display: flex; flex-direction: column; gap: 22px; }
+.step-v          { display: flex; align-items: flex-start; gap: 16px; }
+.step-v-icon     {
+  width: 44px; height: 44px; min-width: 44px;
+  background: var(--vd-brown); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; box-shadow: 0 4px 12px rgba(92,61,30,.25);
+}
+
+@media (max-width: 768px) {
+  .how-to-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .how-to-img-col { position: static; }
+}
+
+/* ====================================================
    EXIT INTENT POPUP
    ==================================================== */
 .exit-overlay {

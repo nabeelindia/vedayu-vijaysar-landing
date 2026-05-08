@@ -450,43 +450,52 @@ export default function Home() {
           <h2 className="section-title">How to Use Your Vijaysar Wooden Glass</h2>
           <p className="section-sub">4 simple steps. One powerful daily wellness habit.</p>
           <div className="divider" />
-          <div className="steps">
-            {[
-              { icon: '💧', title: 'Step 1 — Fill',            body: 'Fill the tumbler with normal room temperature drinking water. Do not use hot water.' },
-              { icon: '🌙', title: 'Step 2 — Rest',            body: 'Cover and keep overnight or 6–8 hours. Let the Vijaysar wood naturally infuse into the water.' },
-              { icon: '☀️', title: 'Step 3 — Drink',           body: 'First thing in the morning, drink the Vijaysar wood infused water — ideally on an empty stomach.' },
-              { icon: '♻️', title: 'Step 4 — Rinse & Repeat',  body: 'Rinse gently with plain water. Dry thoroughly. Refill tonight. Build your daily ritual.' },
-            ].map(({ icon, title, body }) => (
-              <div className="step" key={title}>
-                <div className="step-num">{icon}</div>
-                <h3>{title}</h3>
-                <p>{body}</p>
-              </div>
-            ))}
-          </div>
-          {/* How-to-use infographic */}
-          <div style={{ textAlign: 'center', margin: '32px 0 8px' }}>
-            <img
-              src="/images/how-to-use.jpg"
-              alt="How to use Vijaysar Wooden Glass — 4 steps infographic"
-              style={{ maxWidth: '100%', width: 560, height: 'auto', borderRadius: 12, boxShadow: '0 4px 24px rgba(0,0,0,.10)' }}
-            />
-          </div>
+          {/* Two-column layout: image left, steps right on desktop */}
+          <div className="how-to-grid">
 
-          <div className="usage-tips">
-            <h3>📋 Important Care &amp; Usage Tips</h3>
-            <ul>
-              <li>Use only <strong>room temperature water</strong> — never hot water</li>
-              <li>Wash with plain water only — <strong>no soap or chemicals</strong></li>
-              <li><strong>Dry completely</strong> after each use to prevent moisture buildup</li>
-              <li>Store in a dry, well-ventilated place</li>
-              <li>Natural wood colour, grain, and texture will vary — each piece is unique</li>
-              <li>Slight natural colour leaching into water is normal and completely safe</li>
-              <li>Do not soak for more than 8–10 hours</li>
-            </ul>
-          </div>
-          <div style={{ textAlign: 'center', marginTop: 36 }}>
-            <button className="btn btn-brown btn-lg" onClick={() => scrollToCheckout()}>🛒 Order Now — Starting ₹499</button>
+            {/* Left — infographic image */}
+            <div className="how-to-img-col">
+              <img
+                src="/images/how-to-use.jpg"
+                alt="How to use Vijaysar Wooden Glass — 4 steps infographic"
+                style={{ width: '100%', maxWidth: 480, height: 'auto', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,.12)', display: 'block', margin: '0 auto' }}
+              />
+            </div>
+
+            {/* Right — steps + tips + CTA */}
+            <div className="how-to-steps-col">
+              <div className="steps-vertical">
+                {[
+                  { icon: '💧', title: 'Step 1 — Fill',           body: 'Fill the tumbler with normal room temperature drinking water. Do not use hot water.' },
+                  { icon: '🌙', title: 'Step 2 — Rest',           body: 'Cover and keep overnight for 6–8 hours. Let the Vijaysar wood naturally infuse into the water.' },
+                  { icon: '☀️', title: 'Step 3 — Drink',          body: 'First thing in the morning, drink the Vijaysar wood infused water — ideally on an empty stomach.' },
+                  { icon: '♻️', title: 'Step 4 — Rinse & Repeat', body: 'Rinse gently with plain water. Dry thoroughly. Refill tonight. Build your daily ritual.' },
+                ].map(({ icon, title, body }) => (
+                  <div className="step-v" key={title}>
+                    <div className="step-v-icon">{icon}</div>
+                    <div>
+                      <h3 style={{ margin: '0 0 4px', fontSize: '1rem', color: 'var(--vd-dark-brown)' }}>{title}</h3>
+                      <p style={{ margin: 0, fontSize: '.9rem', color: 'var(--vd-text-light)', lineHeight: 1.6 }}>{body}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="usage-tips" style={{ marginTop: 24 }}>
+                <h3>📋 Care Tips</h3>
+                <ul>
+                  <li>Use only <strong>room temperature water</strong> — never hot</li>
+                  <li>Rinse with plain water only — <strong>no soap or chemicals</strong></li>
+                  <li><strong>Dry completely</strong> after each use</li>
+                  <li>Do not soak for more than 8–10 hours</li>
+                </ul>
+              </div>
+
+              <button className="btn btn-brown btn-lg" style={{ marginTop: 28, width: '100%' }} onClick={() => scrollToCheckout()}>
+                🛒 Order Now — Starting ₹449
+              </button>
+            </div>
+
           </div>
         </div>
       </section>
