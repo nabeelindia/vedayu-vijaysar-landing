@@ -492,7 +492,7 @@ export default function Home() {
               </div>
 
               <button className="btn btn-brown btn-lg" style={{ marginTop: 28, width: '100%' }} onClick={() => scrollToCheckout()}>
-                🛒 Order Now — Starting ₹449
+                🛒 Order Now — Starting ₹499
               </button>
             </div>
 
@@ -883,8 +883,8 @@ export default function Home() {
             <div className="sticky-cta-inner">
               <div className="sticky-text">
                 {formReady
-                  ? <><strong>Ready to order!</strong> {fmt(currentPrice)} · Free Delivery</>
-                  : <><strong>Vijaysar Wooden Glass</strong> From {fmt(currentPrice)} · Free Delivery</>
+                  ? <><strong>Ready to order!</strong> {fmt(PACKS[pack].price)} · Free Delivery</>
+                  : <><strong>Vijaysar Wooden Glass</strong> From ₹499 · Free Delivery</>
                 }
               </div>
               <button
