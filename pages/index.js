@@ -867,19 +867,28 @@ export default function Home() {
       </div>
 
       {/* ── STICKY CTA (mobile) ── */}
-      {showSticky && (
-        <div className="sticky-cta">
-          <div className="sticky-cta-inner">
-            <div className="sticky-text">
-              <strong>Vijaysar Wooden Glass</strong>
-              Starting ₹499 · Free Delivery
+      {showSticky && (() => {
+        const formReady = !validate();
+        return (
+          <div className="sticky-cta">
+            <div className="sticky-cta-inner">
+              <div className="sticky-text">
+                {formReady
+                  ? <><strong>Ready to order!</strong> {fmt(currentPrice)} · Free Delivery</>
+                  : <><strong>Vijaysar Wooden Glass</strong> From {fmt(currentPrice)} · Free Delivery</>
+                }
+              </div>
+              <button
+                onClick={formReady ? placeOrder : () => scrollToCheckout()}
+                disabled={loading}
+                style={{ background: formReady ? '#4A7C59' : 'var(--vd-gold)', color: formReady ? '#fff' : 'var(--vd-dark-brown)', fontWeight: 700, padding: '11px 22px', borderRadius: 6, fontSize: '.88rem', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'background .3s' }}
+              >
+                {loading ? '⏳' : formReady ? '✅ Place Order' : '🛒 Buy Now'}
+              </button>
             </div>
-            <button onClick={() => scrollToCheckout()} style={{ background: 'var(--vd-gold)', color: 'var(--vd-dark-brown)', fontWeight: 700, padding: '11px 22px', borderRadius: 6, fontSize: '.88rem', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-              🛒 Buy Now
-            </button>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ── WHATSAPP FLOAT ── */}
       <a className="wa-float" href={`https://wa.me/91${WA_NUM}?text=Hi%20Vedayu%2C%20I%20want%20to%20order%20the%20Vijaysar%20Wooden%20Glass`} target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp">
