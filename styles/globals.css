@@ -423,7 +423,8 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
 .review-stars  { color: var(--vd-gold); font-size: 1rem; letter-spacing: 3px; margin-bottom: 10px; }
 .review-text   { font-size: .86rem; color: var(--vd-text); line-height: 1.65; margin-bottom: 14px; }
 .review-author { display: flex; align-items: center; gap: 10px; }
-.review-avatar { width: 34px; height: 34px; min-width: 34px; border-radius: 50%; background: var(--vd-off-white); border: 2px solid var(--vd-gold); display: flex; align-items: center; justify-content: center; font-size: .88rem; font-weight: 700; color: var(--vd-brown); }
+.review-avatar { width: 44px; height: 44px; min-width: 44px; border-radius: 50%; background: var(--vd-off-white); border: 2px solid var(--vd-gold); display: flex; align-items: center; justify-content: center; font-size: .88rem; font-weight: 700; color: var(--vd-brown); }
+.review-avatar-img { width: 44px; height: 44px; min-width: 44px; border-radius: 50%; border: 2px solid var(--vd-gold); object-fit: cover; display: block; }
 .review-name   { font-size: .8rem; font-weight: 700; color: var(--vd-dark-brown); }
 .review-meta   { font-size: .7rem; color: var(--vd-text-light); }
 .review-verified { font-size: .68rem; color: var(--vd-green); font-weight: 600; }

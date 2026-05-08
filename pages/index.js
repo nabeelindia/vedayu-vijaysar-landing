@@ -809,18 +809,18 @@ export default function Home() {
           </div>
           <div className="reviews-grid">
             {[
-              { init:'P', name:'Priya Sharma',   loc:'Pune, Maharashtra',          ago:'3 weeks ago',  stars:'★★★★★', text:'Bought this for my father after my aunt recommended it. The wood quality is really premium — you can tell it\'s handcrafted. He uses it every morning now and loves the ritual. Packaging was very safe. Fast delivery to Pune within 3 days!' },
-              { init:'R', name:'Rajesh Verma',   loc:'Delhi',                      ago:'1 month ago',  stars:'★★★★★', text:'Bought the couple pack for me and my wife. Beautiful wooden finish — looks very premium. We\'ve made it part of our morning routine. Fill at night, drink together every morning. The natural wood fragrance is also very pleasant!' },
-              { init:'S', name:'Sunita Patel',   loc:'Ahmedabad, Gujarat',         ago:'2 months ago', stars:'★★★★☆', text:'Gifted the family pack to my in-laws for Diwali. They were very happy — it\'s a meaningful, practical gift. All 5 glasses came well packed with no damage. Follow the care instructions carefully. Overall excellent product!' },
-              { init:'A', name:'Arjun Nair',     loc:'Bangalore, Karnataka',       ago:'6 weeks ago',  stars:'★★★★★', text:'I was a bit skeptical at first but decided to try. The Vijaysar glass is beautifully made. Each piece has a unique grain pattern. Delivery in 3 days to Bangalore. My mother loves it and uses it every single morning. Worth every rupee!' },
-              { init:'M', name:'Meera Krishnan', loc:'Chennai, Tamil Nadu',        ago:'5 weeks ago',  stars:'★★★★★', text:'Good quality wooden glass. COD option was very convenient. The tumbler is sturdy and the natural finish looks great. I like that it\'s 100% natural with no coating. Already recommended to 3 friends. Very good value, especially the couple pack!' },
-              { init:'K', name:'Kavita Singh',   loc:'Lucknow, Uttar Pradesh',     ago:'7 weeks ago',  stars:'★★★★★', text:'Perfect gift idea for parents! Bought the family pack — 5 glasses. Everyone impressed by the packaging and quality. Vijaysar wood is authentic. The natural grain on each glass is slightly different — very premium feel. Highly recommend!' },
-            ].map(({ init, name, loc, ago, stars, text }) => (
+              { avatar:'https://i.pravatar.cc/80?img=47', name:'Priya Sharma',   loc:'Pune, Maharashtra',      ago:'3 weeks ago',  stars:'★★★★★', text:'Bought this for my father after my aunt recommended it. The wood quality is really premium — you can tell it\'s handcrafted. He uses it every morning now and loves the ritual. Packaging was very safe. Fast delivery to Pune within 3 days!' },
+              { avatar:'https://i.pravatar.cc/80?img=13', name:'Rajesh Verma',   loc:'Delhi',                  ago:'1 month ago',  stars:'★★★★★', text:'Bought the couple pack for me and my wife. Beautiful wooden finish — looks very premium. We\'ve made it part of our morning routine. Fill at night, drink together every morning. The natural wood fragrance is also very pleasant!' },
+              { avatar:'https://i.pravatar.cc/80?img=44', name:'Sunita Patel',   loc:'Ahmedabad, Gujarat',     ago:'2 months ago', stars:'★★★★☆', text:'Gifted the family pack to my in-laws for Diwali. They were very happy — it\'s a meaningful, practical gift. All 5 glasses came well packed with no damage. Follow the care instructions carefully. Overall excellent product!' },
+              { avatar:'https://i.pravatar.cc/80?img=57', name:'Arjun Nair',     loc:'Bangalore, Karnataka',   ago:'6 weeks ago',  stars:'★★★★★', text:'I was a bit skeptical at first but decided to try. The Vijaysar glass is beautifully made. Each piece has a unique grain pattern. Delivery in 3 days to Bangalore. My mother loves it and uses it every single morning. Worth every rupee!' },
+              { avatar:'https://i.pravatar.cc/80?img=25', name:'Meera Krishnan', loc:'Chennai, Tamil Nadu',    ago:'5 weeks ago',  stars:'★★★★★', text:'Good quality wooden glass. COD option was very convenient. The tumbler is sturdy and the natural finish looks great. I like that it\'s 100% natural with no coating. Already recommended to 3 friends. Very good value, especially the couple pack!' },
+              { avatar:'https://i.pravatar.cc/80?img=32', name:'Kavita Singh',   loc:'Lucknow, Uttar Pradesh', ago:'7 weeks ago',  stars:'★★★★★', text:'Perfect gift idea for parents! Bought the family pack — 5 glasses. Everyone impressed by the packaging and quality. Vijaysar wood is authentic. The natural grain on each glass is slightly different — very premium feel. Highly recommend!' },
+            ].map(({ avatar, name, loc, ago, stars, text }) => (
               <div className="review-card" key={name}>
                 <div className="review-stars">{stars}</div>
                 <p className="review-text">&ldquo;{text}&rdquo;</p>
                 <div className="review-author">
-                  <div className="review-avatar">{init}</div>
+                  <img src={avatar} alt={name} className="review-avatar-img" />
                   <div>
                     <div className="review-name">{name}</div>
                     <div className="review-meta">{loc} · {ago}</div>
