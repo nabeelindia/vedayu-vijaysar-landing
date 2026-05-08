@@ -181,9 +181,9 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
   font-style: italic; font-size: .9rem; padding: 20px;
 }
 .hero-product-img {
-  width: 100%; max-width: 380px; border-radius: 16px;
+  width: 100%; max-width: 520px; border-radius: 16px;
   box-shadow: 0 20px 60px rgba(92,61,30,.25);
-  object-fit: cover; margin: 0 auto;
+  object-fit: cover; margin: 0 auto; display: block;
 }
 .spec-pills { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
 .spec-pill  {
@@ -221,13 +221,13 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
 .solution-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; }
 .solution-img-wrap { text-align: center; }
 .solution-circle {
-  width: 100%; max-width: 340px; aspect-ratio: 1/1;
+  width: 100%; max-width: 460px; aspect-ratio: 1/1;
   background: linear-gradient(135deg, #D4B896, #A8842E);
   border-radius: 50%; display: flex; align-items: center;
   justify-content: center; margin: 0 auto;
   box-shadow: 0 16px 48px rgba(92,61,30,.2);
   font-style: italic; font-size: .85rem; color: #fff;
-  text-align: center; padding: 20px; overflow: hidden;
+  text-align: center; padding: 0; overflow: hidden;
 }
 .solution-circle img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
 

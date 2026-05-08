@@ -283,9 +283,8 @@ export default function Home() {
                 src="/images/product.jpg"
                 alt="Vedayu Vijaysar Wooden Herbal Glass — with box and herbal tea"
                 className="hero-product-img"
-                width={480}
-                height={480}
-                style={{ width: '100%', height: 'auto', borderRadius: 16, objectFit: 'cover', display: 'block' }}
+                width={520}
+                height={520}
               />
               <div className="spec-pills">
                 <span className="spec-pill">📏 6 inch tall</span>
