@@ -1,6 +1,7 @@
 import Head from 'next/head';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/router';
+import SiteFooter from '../components/SiteFooter';
 
 /* ─── pack data ─────────────────────────────────────────── */
 const PACKS = {
@@ -898,6 +899,9 @@ export default function Home() {
           </div>
         );
       })()}
+
+      {/* ── SITE FOOTER ── */}
+      <SiteFooter />
 
       {/* ── WHATSAPP FLOAT ── */}
       <a className="wa-float" href={`https://wa.me/91${WA_NUM}?text=Hi%20Vedayu%2C%20I%20want%20to%20order%20the%20Vijaysar%20Wooden%20Glass`} target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp">
