@@ -33,7 +33,7 @@ export default async function handler(req, res) {
     try {
       const resend = new Resend(process.env.RESEND_API_KEY);
       await resend.emails.send({
-        from:    'Vedayu Orders <onboarding@resend.dev>',  // switch to orders@yourdomain.com after verifying your domain on resend.com
+        from:    'Vedayu Orders <orders@vedayulife.com>',
         to:      process.env.ORDERS_EMAIL,
         subject: `🛒 New COD Order — ${pack} — ${priceStr} | ${name}`,
         html: `
