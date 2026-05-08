@@ -129,7 +129,7 @@ export default function Home() {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to place order');
-        router.push(`/order-confirmed?method=cod&pack=${encodeURIComponent(selectedPack.name)}&price=${selectedPack.price}&name=${encodeURIComponent(form.name)}`);
+        router.push(`/order-confirmed?method=cod&pack=${encodeURIComponent(selectedPack.name)}&price=${selectedPack.price}&name=${encodeURIComponent(form.name)}&orderId=${encodeURIComponent(data.orderId)}`);
 
       } else {
         /* ── Razorpay prepaid flow ── */
@@ -156,8 +156,9 @@ export default function Home() {
           notes:       { address: `${form.address}, ${form.city}, ${form.state} - ${form.pincode}` },
           theme:       { color: '#5C3D1E' },
           modal:       { ondismiss: () => setLoading(false) },
-          handler: () => {
-            router.push(`/order-confirmed?method=prepaid&pack=${encodeURIComponent(selectedPack.name)}&price=${selectedPack.price}&name=${encodeURIComponent(form.name)}`);
+          handler: (response) => {
+            const rzpOrderId = response.razorpay_payment_id || order_id || '';
+            router.push(`/order-confirmed?method=prepaid&pack=${encodeURIComponent(selectedPack.name)}&price=${selectedPack.price}&name=${encodeURIComponent(form.name)}&orderId=${encodeURIComponent(rzpOrderId)}`);
           },
         });
         rzp.open();

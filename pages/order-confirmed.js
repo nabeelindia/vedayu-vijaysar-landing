@@ -4,18 +4,28 @@ import { useEffect, useState } from 'react';
 
 export default function OrderConfirmed() {
   const router  = useRouter();
-  const { method, pack, price, name } = router.query;
+  const { method, pack, price, name, orderId } = router.query;
   const [visible, setVisible] = useState(false);
+  const [copied,  setCopied]  = useState(false);
 
   useEffect(() => {
-    // Fade in after mount
     const t = setTimeout(() => setVisible(true), 80);
     return () => clearTimeout(t);
   }, []);
 
-  const isCOD     = method === 'cod';
-  const priceStr  = price ? '₹' + Number(price).toLocaleString('en-IN') : '';
-  const WA_NUM    = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '9999999999';
+  const isCOD    = method === 'cod';
+  const priceStr = price ? '₹' + Number(price).toLocaleString('en-IN') : '';
+  const WA_NUM   = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '9999999999';
+
+  const copyOrderId = () => {
+    if (!orderId) return;
+    navigator.clipboard.writeText(orderId).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  const waMessage = `Hi Vedayu! I just placed an order.%0AOrder ID: ${orderId || 'N/A'}%0AName: ${encodeURIComponent(name || '')}%0AProduct: Vijaysar Wooden Glass`;
 
   return (
     <>
@@ -29,9 +39,7 @@ export default function OrderConfirmed() {
 
           <div className="confirm-icon">{isCOD ? '📦' : '🎉'}</div>
 
-          <h1>
-            {isCOD ? 'Order Placed!' : 'Payment Successful!'}
-          </h1>
+          <h1>{isCOD ? 'Order Placed!' : 'Payment Successful!'}</h1>
 
           <p>
             {name ? `Thank you, ${name}! ` : 'Thank you! '}
@@ -40,11 +48,42 @@ export default function OrderConfirmed() {
               : 'Your payment was successful. Your Vijaysar Wooden Glass is being prepared for dispatch.'}
           </p>
 
+          {/* ── ORDER ID BOX ── */}
+          {orderId && (
+            <div style={{
+              background: '#FFF8E1', border: '2px solid #C9A84C',
+              borderRadius: 12, padding: '16px 20px', margin: '4px 0 20px',
+              textAlign: 'center',
+            }}>
+              <p style={{ margin: '0 0 6px', fontSize: '.78rem', fontWeight: 700, color: '#6D4C00', textTransform: 'uppercase', letterSpacing: 1 }}>
+                📋 Your Order ID
+              </p>
+              <p style={{ margin: '0 0 10px', fontSize: '1.15rem', fontWeight: 800, color: '#5C3D1E', fontFamily: 'monospace', letterSpacing: 1.5, wordBreak: 'break-all' }}>
+                {orderId}
+              </p>
+              <button
+                onClick={copyOrderId}
+                style={{
+                  background: copied ? '#4A7C59' : '#5C3D1E', color: '#fff',
+                  border: 'none', borderRadius: 8, padding: '7px 20px',
+                  fontSize: '.8rem', fontWeight: 600, cursor: 'pointer',
+                  transition: 'background .2s',
+                }}
+              >
+                {copied ? '✅ Copied!' : '📋 Copy Order ID'}
+              </button>
+              <p style={{ margin: '10px 0 0', fontSize: '.72rem', color: '#6D4C00' }}>
+                Save this ID — share it on WhatsApp for quick order tracking
+              </p>
+            </div>
+          )}
+
+          {/* ── ORDER DETAILS ── */}
           <div className="confirm-details">
             {[
               ['Product',   'Vedayu Vijaysar Wooden Glass'],
-              ...(pack   ? [['Pack',    pack]]         : []),
-              ...(priceStr? [['Amount', isCOD ? `${priceStr} (Pay on delivery)` : `${priceStr} (Paid)`]] : []),
+              ...(pack    ? [['Pack',    pack]]    : []),
+              ...(priceStr? [['Amount',  isCOD ? `${priceStr} (Pay on delivery)` : `${priceStr} (Paid)`]] : []),
               ['Delivery',  'Free — All over India'],
               ['Dispatch',  '1–2 business days'],
               ['Support',   'WhatsApp us anytime'],
@@ -56,7 +95,7 @@ export default function OrderConfirmed() {
             ))}
           </div>
 
-          {/* Usage reminder */}
+          {/* ── USAGE REMINDER ── */}
           <div style={{ background: '#F0F9F3', border: '1px solid #4A7C59', borderRadius: 10, padding: '14px 18px', textAlign: 'left', marginBottom: 24, fontSize: '.84rem', color: '#2d6b40' }}>
             <strong style={{ display: 'block', marginBottom: 6 }}>📋 Quick Reminder — How to Use</strong>
             <ol style={{ paddingLeft: 18, lineHeight: 2 }}>
@@ -69,11 +108,11 @@ export default function OrderConfirmed() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <a
-              href={`https://wa.me/91${WA_NUM}?text=Hi%20Vedayu%2C%20I%20just%20placed%20an%20order%20for%20the%20Vijaysar%20Wooden%20Glass.%20My%20name%20is%20${encodeURIComponent(name||'')}`}
+              href={`https://wa.me/91${WA_NUM}?text=${waMessage}`}
               target="_blank" rel="noopener noreferrer"
               className="btn btn-green btn-full"
             >
-              💬 WhatsApp Us for Order Updates
+              💬 WhatsApp Us — Share Order ID for Tracking
             </a>
             <a href="/" className="btn btn-outline btn-full">← Back to Home</a>
           </div>
@@ -81,6 +120,7 @@ export default function OrderConfirmed() {
           <p style={{ marginTop: 20, fontSize: '.72rem', color: 'var(--vd-text-light)', lineHeight: 1.6 }}>
             ⚠️ <em>This product is not a medicine and is not intended to diagnose, treat, cure, or prevent any disease.</em>
           </p>
+
         </div>
       </div>
     </>
