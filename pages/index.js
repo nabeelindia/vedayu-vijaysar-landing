@@ -277,14 +277,14 @@ export default function Home() {
             </div>
 
             <div className="hero-img-wrap">
-              {/* Replace src with your actual product image */}
-              <div className="hero-img-placeholder">
-                <span style={{ fontSize: '3.5rem' }}>🪵</span>
-                <strong>Vijaysar Wooden Glass</strong>
-                <span style={{ fontSize: '.76rem', opacity: .7, textAlign: 'center' }}>
-                  Add product image to<br />/public/images/product.webp
-                </span>
-              </div>
+              <img
+                src="/images/product.jpg"
+                alt="Vedayu Vijaysar Wooden Herbal Glass — with box and herbal tea"
+                className="hero-product-img"
+                width={480}
+                height={480}
+                style={{ width: '100%', height: 'auto', borderRadius: 16, objectFit: 'cover', display: 'block' }}
+              />
               <div className="spec-pills">
                 <span className="spec-pill">📏 6 inch tall</span>
                 <span className="spec-pill">💧 80 ml capacity</span>
@@ -339,10 +339,11 @@ export default function Home() {
           <div className="solution-grid">
             <div className="solution-img-wrap">
               <div className="solution-circle">
-                <div style={{ textAlign: 'center' }}>
-                  <span style={{ fontSize: '2.5rem' }}>🪵💧</span><br />
-                  <span style={{ fontSize: '.78rem', marginTop: 8, display: 'block' }}>Add lifestyle image<br />/public/images/lifestyle.webp<br />600×600px WebP</span>
-                </div>
+                <img
+                  src="/images/lifestyle.jpg"
+                  alt="Vedayu Vijaysar Wooden Glass — Premium Natural Wood"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                />
               </div>
             </div>
             <div>
@@ -419,6 +420,15 @@ export default function Home() {
               </div>
             ))}
           </div>
+          {/* How-to-use infographic */}
+          <div style={{ textAlign: 'center', margin: '32px 0 8px' }}>
+            <img
+              src="/images/how-to-use.jpg"
+              alt="How to use Vijaysar Wooden Glass — 4 steps infographic"
+              style={{ maxWidth: '100%', width: 560, height: 'auto', borderRadius: 12, boxShadow: '0 4px 24px rgba(0,0,0,.10)' }}
+            />
+          </div>
+
           <div className="usage-tips">
             <h3>📋 Important Care &amp; Usage Tips</h3>
             <ul>
@@ -472,6 +482,21 @@ export default function Home() {
           <h2 className="section-title">Product Specifications</h2>
           <p className="section-sub">Everything you need to know about the Vedayu Vijaysar Wooden Glass</p>
           <div className="divider" />
+
+          {/* Product infographics */}
+          <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 36 }}>
+            <img
+              src="/images/specs.jpg"
+              alt="Vijaysar Wood Tumbler dimensions — 6.1 inch height, 80ml capacity"
+              style={{ width: '100%', maxWidth: 380, height: 'auto', borderRadius: 12, boxShadow: '0 4px 20px rgba(0,0,0,.10)' }}
+            />
+            <img
+              src="/images/authentic.jpg"
+              alt="100% Authentic Vijaysar Wood vs Jamun Wood — how to identify"
+              style={{ width: '100%', maxWidth: 380, height: 'auto', borderRadius: 12, boxShadow: '0 4px 20px rgba(0,0,0,.10)' }}
+            />
+          </div>
+
           <div className="specs-table">
             {[
               ['Product Name',       'Vedayu Vijaysar Wooden Herbal Glass / Tumbler'],
