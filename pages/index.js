@@ -50,14 +50,16 @@ export default function Home() {
   const router = useRouter();
 
   /* form state */
-  const [pack,    setPack]    = useState(2);
-  const [payment, setPayment] = useState('prepaid');
-  const [form,    setForm]    = useState({ name:'', mobile:'', email:'', address:'', pincode:'', city:'', state:'' });
-  const [loading, setLoading] = useState(false);
-  const [openFaq, setOpenFaq] = useState(null);
-  const [toast,   setToast]   = useState(null);
+  const [pack,       setPack]       = useState(2);
+  const [payment,    setPayment]    = useState('prepaid');
+  const [form,       setForm]       = useState({ name:'', mobile:'', email:'', address:'', pincode:'', city:'', state:'' });
+  const [loading,    setLoading]    = useState(false);
+  const [openFaq,    setOpenFaq]    = useState(null);
+  const [toast,      setToast]      = useState(null);
   const [showSticky, setShowSticky] = useState(false);
-  const pinTimer = useRef(null);
+  const [exitIntent, setExitIntent] = useState(false);
+  const pinTimer    = useRef(null);
+  const orderPlaced = useRef(false);
 
   /* sticky CTA on scroll */
   useEffect(() => {
@@ -65,6 +67,32 @@ export default function Home() {
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  /* exit intent — fires once when mouse leaves top of viewport */
+  useEffect(() => {
+    let shown = false;
+    const onMouseLeave = (e) => {
+      if (e.clientY <= 0 && !shown && !orderPlaced.current) {
+        shown = true;
+        setExitIntent(true);
+      }
+    };
+    document.addEventListener('mouseleave', onMouseLeave);
+    return () => document.removeEventListener('mouseleave', onMouseLeave);
+  }, []);
+
+  /* cart abandonment — beacon on page leave if form partially filled */
+  useEffect(() => {
+    const onUnload = () => {
+      if (orderPlaced.current) return;
+      const { name, mobile } = form;
+      if (!name.trim() && !mobile.trim()) return;
+      const payload = JSON.stringify({ name, mobile, email: form.email, pack, payment });
+      navigator.sendBeacon('/api/track-abandon', new Blob([payload], { type: 'application/json' }));
+    };
+    window.addEventListener('beforeunload', onUnload);
+    return () => window.removeEventListener('beforeunload', onUnload);
+  }, [form, pack, payment]);
 
   /* show toast */
   const showToast = useCallback((msg, type = 'error') => {
@@ -111,10 +139,11 @@ export default function Home() {
     if (err) { showToast(err); return; }
     setLoading(true);
 
-    const selectedPack = PACKS[pack];
+    const selectedPack  = PACKS[pack];
+    const finalPrice    = effectivePrice(pack, payment);
     const orderData = {
       pack:    selectedPack.name,
-      price:   selectedPack.price,
+      price:   finalPrice,
       qty:     selectedPack.qty,
       payment,
       ...form,
@@ -130,7 +159,8 @@ export default function Home() {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to place order');
-        router.push(`/order-confirmed?method=cod&pack=${encodeURIComponent(selectedPack.name)}&price=${selectedPack.price}&name=${encodeURIComponent(form.name)}&orderId=${encodeURIComponent(data.orderId)}`);
+        orderPlaced.current = true;
+        router.push(`/order-confirmed?method=cod&pack=${encodeURIComponent(selectedPack.name)}&price=${finalPrice}&name=${encodeURIComponent(form.name)}&orderId=${encodeURIComponent(data.orderId)}`);
 
       } else {
         /* ── Razorpay prepaid flow ── */
@@ -140,7 +170,7 @@ export default function Home() {
         const res  = await fetch('/api/create-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount: selectedPack.price, packName: selectedPack.name }),
+          body: JSON.stringify({ amount: finalPrice, packName: selectedPack.name }),
         });
         const { order_id, amount } = await res.json();
         if (!res.ok) throw new Error('Could not create payment order. Please try again.');
@@ -151,15 +181,16 @@ export default function Home() {
           currency:    'INR',
           order_id,
           name:        'Vedayu',
-          description: `Vijaysar Wooden Glass — ${selectedPack.name}`,
+          description: `Vijaysar Wooden Glass — ${selectedPack.name} (10% prepaid discount applied)`,
           image:       '/images/logo.png',
-          prefill:     { name: form.name, contact: `+91${form.mobile}` },
+          prefill:     { name: form.name, contact: `+91${form.mobile}`, email: form.email || '' },
           notes:       { address: `${form.address}, ${form.city}, ${form.state} - ${form.pincode}` },
           theme:       { color: '#5C3D1E' },
           modal:       { ondismiss: () => setLoading(false) },
           handler: (response) => {
+            orderPlaced.current = true;
             const rzpOrderId = response.razorpay_payment_id || order_id || '';
-            router.push(`/order-confirmed?method=prepaid&pack=${encodeURIComponent(selectedPack.name)}&price=${selectedPack.price}&name=${encodeURIComponent(form.name)}&orderId=${encodeURIComponent(rzpOrderId)}`);
+            router.push(`/order-confirmed?method=prepaid&pack=${encodeURIComponent(selectedPack.name)}&price=${finalPrice}&name=${encodeURIComponent(form.name)}&orderId=${encodeURIComponent(rzpOrderId)}`);
           },
         });
         rzp.open();
@@ -172,13 +203,23 @@ export default function Home() {
     }
   };
 
-  const scrollToCheckout = (packId) => {
+  const scrollToCheckout = (packId, forcePayment) => {
     if (packId) setPack(packId);
+    if (forcePayment) setPayment(forcePayment);
     document.getElementById('checkout')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const currentPack = PACKS[pack];
-  const WA_NUM = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '9999999999';
+  /* prepaid is 10% off */
+  const PREPAID_DISC = 0.10;
+  const effectivePrice = (packId, method) => {
+    const base = PACKS[packId].price;
+    return method === 'prepaid' ? Math.round(base * (1 - PREPAID_DISC)) : base;
+  };
+  const discountAmt = (packId) => PACKS[packId].price - effectivePrice(packId, 'prepaid');
+
+  const currentPack  = PACKS[pack];
+  const currentPrice = effectivePrice(pack, payment);
+  const WA_NUM       = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '9999999999';
 
   /* ═══════ JSX ═══════ */
   return (
@@ -619,8 +660,14 @@ export default function Home() {
               {/* Order summary */}
               <div className="order-summary">
                 <div className="order-row"><span>{currentPack.label}</span><span>{fmt(currentPack.price)}</span></div>
-                <div className={`order-row order-row-free`}><span>🚚 Delivery</span><span>FREE</span></div>
-                <div className={`order-row order-row-total`}><span>Total</span><span>{fmt(currentPack.price)}</span></div>
+                {payment === 'prepaid' && (
+                  <div className="order-row" style={{ color: '#4A7C59', fontWeight: 600 }}>
+                    <span>🎉 Prepaid Discount (10% off)</span>
+                    <span>− {fmt(discountAmt(pack))}</span>
+                  </div>
+                )}
+                <div className="order-row order-row-free"><span>🚚 Delivery</span><span>FREE</span></div>
+                <div className="order-row order-row-total"><span>Total</span><span>{fmt(currentPrice)}</span></div>
               </div>
 
               {/* Customer details */}
@@ -674,6 +721,7 @@ export default function Home() {
                   <span className="payment-icon">💳</span>
                   <span className="payment-label">Pay Online</span>
                   <span className="payment-sub">Razorpay · UPI · Cards · Wallets</span>
+                  <span style={{ display:'inline-block', marginTop:4, background:'#4A7C59', color:'#fff', fontSize:'.68rem', fontWeight:700, padding:'2px 8px', borderRadius:20 }}>🎉 10% OFF</span>
                 </div>
                 <div className={`payment-option${payment === 'cod' ? ' active' : ''}`} onClick={() => setPayment('cod')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setPayment('cod')}>
                   <span className="payment-icon">💵</span>
@@ -845,6 +893,42 @@ export default function Home() {
         <div className={`toast toast-${toast.type}`}>
           <span>{toast.type === 'error' ? '⚠️' : '✅'}</span>
           <span>{toast.msg}</span>
+        </div>
+      )}
+
+      {/* ── EXIT INTENT POPUP ── */}
+      {exitIntent && (
+        <div className="exit-overlay" onClick={() => setExitIntent(false)}>
+          <div className="exit-modal" onClick={e => e.stopPropagation()}>
+            <button className="exit-close" onClick={() => setExitIntent(false)} aria-label="Close">✕</button>
+            <div className="exit-badge">Limited Offer 🎁</div>
+            <h2 className="exit-title">Wait! Before You Go…</h2>
+            <p className="exit-sub">Pay online &amp; get <strong>10% OFF</strong> your order instantly — no coupon needed!</p>
+            <div className="exit-discount-box">
+              <div className="exit-pack-row">
+                {[1,2,5].map(p => (
+                  <div key={p} className="exit-pack-item">
+                    <span className="exit-pack-name">{PACKS[p].name}</span>
+                    <span className="exit-pack-old">{fmt(PACKS[p].price)}</span>
+                    <span className="exit-pack-new">{fmt(effectivePrice(p,'prepaid'))}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <button
+              className="btn btn-green btn-full"
+              style={{ marginTop: 20, fontSize: '1rem', padding: '14px' }}
+              onClick={() => { setExitIntent(false); scrollToCheckout(null, 'prepaid'); }}
+            >
+              🎉 Claim 10% Off — Pay Online
+            </button>
+            <button
+              className="exit-skip"
+              onClick={() => setExitIntent(false)}
+            >
+              No thanks, I'll pay full price on delivery
+            </button>
+          </div>
         </div>
       )}
     </>
