@@ -805,7 +805,7 @@ export default function Home() {
           <div style={{ textAlign: 'center', marginBottom: 32 }}>
             <div style={{ fontSize: '2.4rem', fontWeight: 800, color: 'var(--vd-brown)', lineHeight: 1 }}>4.8 / 5</div>
             <div style={{ color: 'var(--vd-gold)', fontSize: '1.4rem', letterSpacing: 4, margin: '5px 0' }}>★★★★★</div>
-            <div style={{ fontSize: '.82rem', color: 'var(--vd-text-light)' }}>Based on 200+ verified orders across India</div>
+            <div style={{ fontSize: '.82rem', color: 'var(--vd-text-light)' }}>Based on 5,000+ verified orders across India</div>
           </div>
           <div className="reviews-grid">
             {[
