@@ -236,10 +236,12 @@ export default function Home() {
       {/* ── MARQUEE ── */}
       <div className="marquee" aria-hidden="true">
         <div className="marquee-track">
-          {['Natural Vijaysar Wood','Free Delivery All Over India','Inspired by Traditional Ayurveda','COD Available','7-Day Replacement Guarantee','Premium Handcrafted Finish','Sugar-Conscious Wellness Ritual','Gift for Parents & Family'].flatMap((t,i) => [
-            <span key={`a${i}`} className="marquee-item">{t}</span>,
-            <span key={`b${i}`} className="marquee-item">{t}</span>,
-          ])}
+          {(() => {
+            const items = ['🌿 Natural Vijaysar Wood','🚚 Free Delivery All Over India','🏺 Inspired by Traditional Ayurveda','💳 COD Available','↩️ 7-Day Replacement Guarantee','✋ Premium Handcrafted Finish','☀️ Sugar-Conscious Wellness Ritual','🎁 Gift for Parents & Family'];
+            return [...items, ...items].map((t, i) => (
+              <span key={i} className="marquee-item">{t}</span>
+            ));
+          })()}
         </div>
       </div>
 
