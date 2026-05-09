@@ -24,7 +24,7 @@ export default function OrderConfirmed() {
         content_ids: ['vijaysar-glass'],
         content_type: 'product',
         order_id: orderId,
-      });
+      }, { eventID: orderId }); // eventID deduplicates with server-side CAPI event
     }
   }, [price, orderId]);
 

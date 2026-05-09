@@ -205,10 +205,28 @@ export default function Home() {
           notes:       { address: `${form.address}, ${form.city}, ${form.state} - ${form.pincode}` },
           theme:       { color: '#5C3D1E' },
           modal:       { ondismiss: () => setLoading(false) },
-          handler: (response) => {
+          handler: async (response) => {
             orderPlaced.current = true;
-            const rzpOrderId = response.razorpay_payment_id || order_id || '';
-            router.push(`/order-confirmed?method=prepaid&pack=${encodeURIComponent(selectedPack.name)}&price=${finalPrice}&name=${encodeURIComponent(form.name)}&orderId=${encodeURIComponent(rzpOrderId)}`);
+            let finalOrderId = response.razorpay_payment_id || order_id || '';
+            try {
+              // Verify payment server-side + fire CAPI Purchase
+              const vRes  = await fetch('/api/verify-payment', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({
+                  razorpay_order_id:   order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature:  response.razorpay_signature,
+                  amount,
+                  pack:    selectedPack.name,
+                  qty:     selectedPack.qty,
+                  ...form,
+                }),
+              });
+              const vData = await vRes.json();
+              if (vData.orderId) finalOrderId = vData.orderId;
+            } catch { /* non-blocking — redirect regardless */ }
+            router.push(`/order-confirmed?method=prepaid&pack=${encodeURIComponent(selectedPack.name)}&price=${finalPrice}&name=${encodeURIComponent(form.name)}&orderId=${encodeURIComponent(finalOrderId)}`);
           },
         });
         rzp.open();

@@ -7,6 +7,7 @@
  * Returns { success: true, orderId } on completion.
  */
 import { Resend } from 'resend';
+import { sendCapiPurchase } from '../../lib/meta-capi';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -152,6 +153,9 @@ export default async function handler(req, res) {
   } else {
     console.log('=== NEW COD ORDER ===', { orderId, name, mobile, email, fullAddr, pack, price });
   }
+
+  // ── Meta CAPI — server-side Purchase event (fires even if browser tab is closed) ──
+  sendCapiPurchase({ orderId, price, pack, qty, email, mobile: mobile.trim(), name, city, pincode }).catch(() => {});
 
   return res.status(200).json({ success: true, orderId });
 }
