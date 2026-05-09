@@ -3,6 +3,11 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import SiteFooter from '../components/SiteFooter';
 
+/* ─── Meta Pixel helper ──────────────────────────────────── */
+const fbq = (event, params = {}) => {
+  if (typeof window !== 'undefined' && window.fbq) window.fbq('track', event, params);
+};
+
 /* ─── pack data ─────────────────────────────────────────── */
 const PACKS = {
   1: { qty: 1, price: 499,  original: 699,  label: 'Vijaysar Glass × 1', name: 'Pack of 1',       tag: 'Try It Pack',        saving: 'You save ₹200' },
@@ -94,6 +99,18 @@ export default function Home() {
     window.addEventListener('beforeunload', onUnload);
     return () => window.removeEventListener('beforeunload', onUnload);
   }, [form, pack, payment]);
+
+  /* Meta Pixel — ViewContent on page load */
+  useEffect(() => {
+    fbq('ViewContent', { content_name: 'Vijaysar Wooden Glass', content_ids: ['vijaysar-glass'], content_type: 'product', currency: 'INR', value: 499 });
+  }, []);
+
+  /* Meta Pixel — AddToCart when pack changes (after first interaction) */
+  const didMount = useRef(false);
+  useEffect(() => {
+    if (!didMount.current) { didMount.current = true; return; }
+    fbq('AddToCart', { content_name: PACKS[pack].label, content_ids: [`vijaysar-${pack}`], content_type: 'product', currency: 'INR', value: PACKS[pack].price, num_items: PACKS[pack].qty });
+  }, [pack]);
 
   /* show toast */
   const showToast = useCallback((msg, type = 'error') => {
@@ -205,8 +222,10 @@ export default function Home() {
   };
 
   const scrollToCheckout = (packId, forcePayment) => {
+    const selectedPack = packId || pack;
     if (packId) setPack(packId);
     if (forcePayment) setPayment(forcePayment);
+    fbq('InitiateCheckout', { content_name: PACKS[selectedPack].label, content_ids: [`vijaysar-${selectedPack}`], content_type: 'product', currency: 'INR', value: PACKS[selectedPack].price, num_items: PACKS[selectedPack].qty });
     document.getElementById('checkout')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 

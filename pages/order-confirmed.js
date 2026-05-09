@@ -13,6 +13,21 @@ export default function OrderConfirmed() {
     return () => clearTimeout(t);
   }, []);
 
+  /* Meta Pixel — Purchase event (fires once query params are available) */
+  useEffect(() => {
+    if (!price || !orderId) return;
+    if (typeof window !== 'undefined' && window.fbq) {
+      window.fbq('track', 'Purchase', {
+        value: Number(price),
+        currency: 'INR',
+        content_name: 'Vijaysar Wooden Glass',
+        content_ids: ['vijaysar-glass'],
+        content_type: 'product',
+        order_id: orderId,
+      });
+    }
+  }, [price, orderId]);
+
   const isCOD    = method === 'cod';
   const priceStr = price ? '₹' + Number(price).toLocaleString('en-IN') : '';
   const WA_NUM   = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '9999999999';
