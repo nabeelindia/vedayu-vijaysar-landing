@@ -1,88 +1,113 @@
 /**
- * GET /api/delivery-estimate?pincode=560102&cod=1&price=999
+ * GET /api/delivery-estimate?pincode=560102&cod=1
  *
- * Returns a real-time delivery estimate for a customer pincode.
- * Called from the checkout form after the user enters their pincode.
+ * Returns a delivery estimate for a customer pincode using the bundled
+ * pincode-db.json (built from Velocity serviceability CSVs).
+ *
+ * No external API calls — pure in-memory lookup from zone field.
+ * Zone → estimated business days:
+ *   A → 1–2 days   (metros / top-tier cities)
+ *   B → 2–3 days
+ *   D → 3–5 days
+ *   E → 5–7 days
+ *   F → 7–10 days
  *
  * Response:
- *   { eta: "2024-01-19", carrier: "Delhivery Standard", zone: "zone_a", serviceable: true }
+ *   { serviceable: true, zone, eta: "2026-05-26", etaFormatted: "Tue, 26 May" }
+ *   { serviceable: true, codAvailable: false, zone, reason: "cod_not_available" }
  *   { serviceable: false, reason: "pincode_not_covered" }
+ *   { serviceable: false, reason: "invalid_pincode" }
  */
 
-import { getDeliveryEstimate } from '../../lib/velocity';
 import db from '../../lib/pincode-db.json';
 
-// Simple in-memory cache: pincode+type → { eta, carrier, zone, cachedAt }
-// Resets on each cold start — that's fine, just avoids hammering the API
-// for the same pincode within a single serverless invocation lifecycle.
-const cache = new Map();
-const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+// Zone → [minDays, maxDays] business days from today
+const ZONE_DAYS = {
+  A: [1, 2],
+  B: [2, 3],
+  C: [3, 4],
+  D: [3, 5],
+  E: [5, 7],
+  F: [7, 10],
+};
 
-export default async function handler(req, res) {
+const DEFAULT_DAYS = [5, 7]; // fallback for unknown zones
+
+/**
+ * Add business days to a date (skips Sundays only — Indian logistics
+ * typically delivers on Saturdays). Returns a Date object.
+ */
+function addBusinessDays(date, days) {
+  const result = new Date(date);
+  let added = 0;
+  while (added < days) {
+    result.setDate(result.getDate() + 1);
+    // Skip Sundays (0)
+    if (result.getDay() !== 0) added++;
+  }
+  return result;
+}
+
+/**
+ * Format a Date as "YYYY-MM-DD" in IST.
+ */
+function toISODate(date) {
+  return date.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }); // en-CA gives YYYY-MM-DD
+}
+
+/**
+ * Format a Date as "Mon, 26 May" in IST.
+ */
+function toReadable(date) {
+  return date.toLocaleDateString('en-IN', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    timeZone: 'Asia/Kolkata',
+  });
+}
+
+export default function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).end();
 
-  const { pincode, cod = '1', price = '999' } = req.query;
+  const { pincode, cod = '1' } = req.query;
 
   if (!pincode || !/^[1-9][0-9]{5}$/.test(pincode)) {
     return res.status(400).json({ serviceable: false, reason: 'invalid_pincode' });
   }
 
-  // Fast path: if pincode isn't in our serviceability DB, it's not deliverable.
-  // No API call needed — instant response from the bundled JSON.
   const dbEntry = db[pincode];
   if (!dbEntry) {
     return res.status(200).json({ serviceable: false, reason: 'pincode_not_covered' });
   }
+
   const [, , codSupported, zone] = dbEntry;
   const isCod = cod !== '0';
+
   if (isCod && !codSupported) {
-    return res.status(200).json({ serviceable: true, codAvailable: false, zone, reason: 'cod_not_available' });
-  }
-
-  if (!process.env.VELOCITY_USERNAME || !process.env.VELOCITY_PASSWORD || !process.env.VELOCITY_WAREHOUSE_ID) {
-    // Velocity Rates API not configured — pincode is serviceable but no live ETA
-    return res.status(200).json({ serviceable: true, zone, reason: 'not_configured' });
-  }
-
-  const cacheKey = `${pincode}-${isCod ? 'cod' : 'pre'}-${Math.round(Number(price) / 100) * 100}`;
-
-  // Return cached result if fresh
-  const cached = cache.get(cacheKey);
-  if (cached && Date.now() - cached.cachedAt < CACHE_TTL_MS) {
-    return res.status(200).json({ serviceable: true, ...cached });
-  }
-
-  try {
-    const result = await getDeliveryEstimate({
-      destination_pincode: pincode,
-      is_cod:              isCod,
-      price:               Number(price),
-    });
-
-    if (!result.eta) {
-      return res.status(200).json({ serviceable: false, reason: 'pincode_not_covered' });
-    }
-
-    const response = {
+    return res.status(200).json({
       serviceable: true,
-      eta:         result.eta,      // "2024-01-19"
-      carrier:     result.carrier,
-      zone:        result.zone,
-      cachedAt:    Date.now(),
-    };
-
-    cache.set(cacheKey, response);
-
-    // Format ETA as a readable string e.g. "Mon, 26 May"
-    const etaFormatted = result.eta
-      ? new Date(result.eta).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' })
-      : null;
-
-    return res.status(200).json({ ...response, etaFormatted });
-
-  } catch (err) {
-    console.error('Delivery estimate error:', err.message);
-    // Don't break checkout — just return not_configured silently
-    return res.status(200).json({ serviceable: false, reason: 'api_error' });
+      codAvailable: false,
+      zone,
+      reason: 'cod_not_available',
+    });
   }
+
+  // Compute ETA from zone
+  const [, maxDays] = ZONE_DAYS[zone] || DEFAULT_DAYS;
+  const now = new Date();
+  const etaDate = addBusinessDays(now, maxDays);
+
+  const eta = toISODate(etaDate);
+  const etaFormatted = toReadable(etaDate);
+
+  // Cache aggressively — zone data changes only when pincode DB is rebuilt
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
+
+  return res.status(200).json({
+    serviceable: true,
+    zone,
+    eta,
+    etaFormatted,
+  });
 }
