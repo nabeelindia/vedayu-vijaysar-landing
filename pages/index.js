@@ -41,6 +41,18 @@ function getDeliveryEst(pincode) {
  *   { label: 'Today',        note: 'Order by 1:00 PM IST'       }  ← < 60 min left
  *   { label: 'Mon, 26 May',  note: null                          }  ← after cutoff / Sunday
  * ─────────────────────────────────────────────────────────────── */
+/* ─── Bold-keyword renderer ─────────────────────────────────────
+ * Wrap key phrases in **double asterisks** and this helper renders
+ * them as <strong>. To remove: delete this function and strip the
+ * ** markers from the strings that use it.
+ * ─────────────────────────────────────────────────────────────── */
+function renderBold(str) {
+  const parts = str.split(/\*\*(.+?)\*\*/g);
+  return parts.map((part, i) =>
+    i % 2 === 1 ? <strong key={i}>{part}</strong> : part
+  );
+}
+
 function getShipsBy() {
   const now = new Date();
   // Convert to IST by adding UTC+5:30 offset
@@ -956,14 +968,14 @@ export default function Home() {
               <p style={{ marginBottom: 20 }}>Vijaysar wood has been used in traditional Indian wellness practices for generations. The Vedayu Vijaysar Wooden Glass brings this ancient tradition into your modern daily routine — simply, beautifully, and naturally.</p>
               <ul className="solution-points">
                 {[
-                  'Fill with room temperature water overnight — let the natural wood do its work while you sleep',
-                  'Drink your first glass of Vijaysar wood infused water every morning',
-                  'Support your sugar-conscious lifestyle with a purposeful natural hydration ritual',
-                  '100% natural, reusable, eco-friendly — no chemicals, no artificial ingredients',
-                  'Inspired by Ayurveda — a tradition trusted for thousands of years in India',
-                  'A deeply meaningful gift for parents, family, and wellness-conscious loved ones',
+                  'Fill with **room temperature** water **overnight** — let the natural wood do its work while you sleep',
+                  'Drink your first glass of **Vijaysar wood infused water** every morning',
+                  'Support your **sugar-conscious lifestyle** with a purposeful natural hydration ritual',
+                  '**100% natural**, reusable, eco-friendly — no chemicals, no artificial ingredients',
+                  'Inspired by **Ayurveda** — a tradition trusted for thousands of years in India',
+                  'A deeply meaningful **gift** for parents, family, and wellness-conscious loved ones',
                 ].map(pt => (
-                  <li key={pt}><span className="check" /><span>{pt}</span></li>
+                  <li key={pt}><span className="check" /><span>{renderBold(pt)}</span></li>
                 ))}
               </ul>
               <button className="btn btn-brown" onClick={() => scrollToCheckout()}>Get Yours — ₹499 Only →</button>
