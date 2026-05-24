@@ -32,6 +32,49 @@ function getDeliveryEst(pincode) {
   return `${fmt2(addDays(lo))} – ${fmt2(addDays(hi))}`;
 }
 
+/* ─── Ships-by helper ──────────────────────────────────────────
+ * Computes the expected dispatch date based on IST time.
+ * Cut-off: 1:00 PM IST every day except Sunday (off day).
+ *
+ * Returns one of:
+ *   { label: 'Today',        note: '2 hrs 30 min left to order' }
+ *   { label: 'Today',        note: 'Order by 1:00 PM IST'       }  ← < 60 min left
+ *   { label: 'Mon, 26 May',  note: null                          }  ← after cutoff / Sunday
+ * ─────────────────────────────────────────────────────────────── */
+function getShipsBy() {
+  const now = new Date();
+  // Convert to IST by adding UTC+5:30 offset
+  const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+  const ist = new Date(now.getTime() + IST_OFFSET_MS);
+
+  const dayOfWeek = ist.getUTCDay();   // 0 = Sunday
+  const hour      = ist.getUTCHours();
+  const minute    = ist.getUTCMinutes();
+
+  const isSunday    = dayOfWeek === 0;
+  const beforeCutoff = hour < 13;      // before 1:00 PM IST
+
+  if (!isSunday && beforeCutoff) {
+    const totalMinsLeft = (13 * 60) - (hour * 60 + minute);
+    const h = Math.floor(totalMinsLeft / 60);
+    const m = totalMinsLeft % 60;
+    const note = h > 0
+      ? `${h} hr${h > 1 ? 's' : ''} ${m} min left to order`
+      : `${totalMinsLeft} min left to order`;
+    return { label: 'Today', note };
+  }
+
+  // Find next working day (skip Sunday)
+  const next = new Date(ist);
+  next.setUTCDate(next.getUTCDate() + 1);
+  if (next.getUTCDay() === 0) next.setUTCDate(next.getUTCDate() + 1); // skip Sunday
+
+  const label = next.toLocaleDateString('en-IN', {
+    weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC',
+  });
+  return { label, note: null };
+}
+
 /* ─── Product gallery images ────────────────────────────────── */
 const GALLERY = [
   { src:'/images/product.jpg',   alt:'Vedayu Vijaysar Wooden Glass — front view' },
@@ -119,6 +162,7 @@ export default function Home() {
   const [showSticky, setShowSticky] = useState(false);
   const [exitIntent, setExitIntent] = useState(false);
   const [deliveryEst, setDeliveryEst] = useState('');
+  const [shipsBy,     setShipsBy]     = useState(null);
   const [touched,     setTouched]     = useState({});
   const [galleryIdx,  setGalleryIdx]  = useState(0);
   const [referralDiscount, setReferralDiscount] = useState(0);
@@ -133,6 +177,9 @@ export default function Home() {
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  /* compute ships-by once on mount (client-only — avoids SSR mismatch) */
+  useEffect(() => { setShipsBy(getShipsBy()); }, []);
 
   /* ── Cookie helpers ─────────────────────────────────────────────────────── */
   const readCustomerCookie = () => {
@@ -1366,9 +1413,18 @@ export default function Home() {
                 </select>
               </div>
 
-              {deliveryEst && (
-                <div style={{ background:'#F0F9F3', border:'1px solid #4A7C59', borderRadius:8, padding:'10px 14px', marginBottom:12, fontSize:'.88rem', color:'#2d6b40', display:'flex', alignItems:'center', gap:8 }}>
-                  🚚 <span>Expected delivery: <strong>{deliveryEst}</strong></span>
+              {(deliveryEst || shipsBy) && (
+                <div style={{ background:'#F0F9F3', border:'1px solid #4A7C59', borderRadius:8, padding:'10px 14px', marginBottom:12, fontSize:'.88rem', color:'#2d6b40' }}>
+                  {shipsBy && (
+                    <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom: deliveryEst ? 5 : 0 }}>
+                      📦 <span>Ships by: <strong>{shipsBy.label}</strong>{shipsBy.note && <span style={{ fontWeight:400, color:'#4A7C59', marginLeft:6 }}>· {shipsBy.note}</span>}</span>
+                    </div>
+                  )}
+                  {deliveryEst && (
+                    <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                      🚚 <span>Expected delivery: <strong>{deliveryEst}</strong></span>
+                    </div>
+                  )}
                 </div>
               )}
 
