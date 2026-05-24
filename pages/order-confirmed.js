@@ -190,6 +190,31 @@ export default function OrderConfirmed() {
             </div>
           )}
 
+          {/* ── REFERRAL TEASER (above the fold) ── */}
+          {orderId && (
+            <div
+              onClick={() => document.getElementById('referral-share')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                background: 'linear-gradient(90deg, #C9A84C, #e6c060)',
+                borderRadius: 12, padding: '12px 18px', margin: '-12px 0 20px',
+                cursor: 'pointer', userSelect: 'none',
+                animation: 'miswakPulse 2s ease-in-out infinite',
+              }}
+            >
+              <span style={{ fontSize: '1.4rem' }}>🤝</span>
+              <div style={{ textAlign: 'left' }}>
+                <p style={{ margin: 0, color: '#3D2610', fontWeight: 800, fontSize: '.88rem', lineHeight: 1.3 }}>
+                  Give ₹50 off to a friend!
+                </p>
+                <p style={{ margin: 0, color: 'rgba(61,38,16,.75)', fontSize: '.75rem' }}>
+                  Share your link — they save ₹50 instantly ↓
+                </p>
+              </div>
+              <span style={{ color: 'rgba(61,38,16,.6)', fontSize: '1.1rem', marginLeft: 'auto' }}>↓</span>
+            </div>
+          )}
+
           {/* ── ORDER ID BOX ── */}
           {orderId && (
             <div style={{
@@ -383,7 +408,7 @@ export default function OrderConfirmed() {
 
           {/* ── Referral share ── */}
           {orderId && (
-            <div style={{
+            <div id="referral-share" style={{
               background: '#FFF8E1', border: '2px solid #C9A84C',
               borderRadius: 14, padding: '18px 20px', marginBottom: 16, textAlign: 'center',
             }}>
