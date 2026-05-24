@@ -133,6 +133,8 @@ export default function Home() {
   const [deliveryEst, setDeliveryEst] = useState('');
   const [touched,     setTouched]     = useState({});
   const [galleryIdx,  setGalleryIdx]  = useState(0);
+  const [referralDiscount, setReferralDiscount] = useState(0);
+  const [referrerId,       setReferrerId]       = useState('');
   const orderPlaced  = useRef(false);
   const pincodeAbort = useRef(null);
   const swipeX       = useRef(null);
@@ -255,6 +257,13 @@ export default function Home() {
     if (utm_content) captured.content  = utm_content;
     if (fbclid)      captured.fbclid   = fbclid;
     if (Object.keys(captured).length) setUtm(captured);
+
+    /* Referral — ?ref=VED-COD-XXXX gives ₹50 off */
+    const { ref } = router.query;
+    if (ref && /^VED-(COD|PRE)-\d+$/.test(ref)) {
+      setReferrerId(ref);
+      setReferralDiscount(50);
+    }
   }, [router.isReady]);
 
   /* Meta Pixel — AddToCart when pack changes (after first interaction) */
@@ -379,11 +388,12 @@ export default function Home() {
     const selectedPack  = PACKS[pack];
     const finalPrice    = effectivePrice(pack, payment);
     const orderData = {
-      pack:    selectedPack.name,
-      price:   finalPrice,
-      qty:     selectedPack.qty,
+      pack:       selectedPack.name,
+      price:      finalPrice,
+      qty:        selectedPack.qty,
       payment,
       utm,
+      referrerId: referrerId || undefined,
       ...form,
     };
 
@@ -448,9 +458,10 @@ export default function Home() {
                   razorpay_payment_id: response.razorpay_payment_id,
                   razorpay_signature:  response.razorpay_signature,
                   amount,
-                  pack:    selectedPack.name,
-                  qty:     selectedPack.qty,
+                  pack:       selectedPack.name,
+                  qty:        selectedPack.qty,
                   utm,
+                  referrerId: referrerId || undefined,
                   ...form,
                 }),
               });
@@ -479,10 +490,10 @@ export default function Home() {
     document.getElementById('checkout')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  /* prepaid is 10% off */
+  /* prepaid is 10% off; referral gives flat ₹50 off the base price */
   const PREPAID_DISC = 0.10;
   const effectivePrice = (packId, method) => {
-    const base = PACKS[packId].price;
+    const base = Math.max(0, PACKS[packId].price - referralDiscount);
     return method === 'prepaid' ? Math.round(base * (1 - PREPAID_DISC)) : base;
   };
   const discountAmt = (packId) => PACKS[packId].price - effectivePrice(packId, 'prepaid');
@@ -1221,6 +1232,25 @@ export default function Home() {
           <h2 className="section-title">Complete Your Order</h2>
           <p className="section-sub">Free delivery &nbsp;·&nbsp; Secure payment &nbsp;·&nbsp; 7-day replacement</p>
           <div className="divider" />
+
+          {/* ── Referral discount banner ── */}
+          {referralDiscount > 0 && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 12,
+              background: 'linear-gradient(90deg, #2d6b40, #4A7C59)',
+              borderRadius: 12, padding: '14px 20px', marginBottom: 20,
+            }}>
+              <span style={{ fontSize: '1.6rem' }}>🎁</span>
+              <div>
+                <p style={{ margin: 0, color: '#fff', fontWeight: 800, fontSize: '.95rem' }}>
+                  ₹50 referral discount applied!
+                </p>
+                <p style={{ margin: 0, color: 'rgba(255,255,255,.8)', fontSize: '.78rem' }}>
+                  A friend shared this with you — your price is already reduced below.
+                </p>
+              </div>
+            </div>
+          )}
 
           <div className="checkout-wrap">
             <div className="checkout-head">

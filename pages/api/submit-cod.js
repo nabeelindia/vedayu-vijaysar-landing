@@ -11,6 +11,7 @@ import { sendCapiPurchase } from '../../lib/meta-capi';
 import { enqueueFollowup } from '../../lib/followup-queue';
 import { saveCustomer } from '../../lib/customer-cache';
 import { createOrder } from '../../lib/nimbuspost';
+import { kv } from '@vercel/kv';
 
 const formatUtm = (utm = {}) => {
   if (!Object.keys(utm).length) return 'Direct / Unknown';
@@ -29,7 +30,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { name, mobile, email, address, city, state, pincode, pack, price, qty, utm = {} } = req.body;
+  const { name, mobile, email, address, city, state, pincode, pack, price, qty, utm = {}, referrerId } = req.body;
 
   // Basic server-side validation
   if (!name?.trim() || !mobile?.trim() || !address?.trim() || !pincode?.trim() || !city?.trim() || !state) {
@@ -195,6 +196,11 @@ export default async function handler(req, res) {
     }).catch(err => {
       console.error('NimbusPost order push failed (order still placed):', err.message);
     });
+  }
+
+  // ── Referral tracking ────────────────────────────────────────────────────
+  if (referrerId) {
+    kv.set(`referral:used:${orderId}`, { referrerId, discount: 50, method: 'cod', at: Date.now() }, { ex: 15552000 }).catch(() => {});
   }
 
   return res.status(200).json({ success: true, orderId });

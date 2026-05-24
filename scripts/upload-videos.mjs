@@ -49,9 +49,17 @@ for (const { local, blob } of VIDEOS) {
   const stream = createReadStream(fullPath);
 
   const result = await put(blob, stream, {
-    access:      'public',
-    contentType: 'video/mp4',
-    addRandomSuffix: false,   // keep predictable URL
+    access:          'public',
+    contentType:     'video/mp4',
+    addRandomSuffix: false,
+  }).catch(err => {
+    if (err.message?.includes('private')) {
+      console.error(`\n❌  Your Blob store is set to PRIVATE access.`);
+      console.error(`   Videos must be publicly streamable in a browser.`);
+      console.error(`   Fix: Vercel dashboard → Storage → your Blob store → Settings → Access → set to Public\n`);
+      process.exit(1);
+    }
+    throw err;
   });
 
   console.log(`✅  ${result.url}`);

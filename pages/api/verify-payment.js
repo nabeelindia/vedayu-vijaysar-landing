@@ -13,6 +13,7 @@ import { sendCapiPurchase } from '../../lib/meta-capi';
 import { enqueueFollowup } from '../../lib/followup-queue';
 import { saveCustomer } from '../../lib/customer-cache';
 import { createOrder } from '../../lib/nimbuspost';
+import { kv } from '@vercel/kv';
 
 const formatUtm = (utm = {}) => {
   if (!Object.keys(utm).length) return 'Direct / Unknown';
@@ -37,6 +38,7 @@ export default async function handler(req, res) {
     pack, qty,
     name, mobile, email, address, city, state, pincode,
     utm = {},
+    referrerId,
   } = req.body;
 
   if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
@@ -211,6 +213,11 @@ export default async function handler(req, res) {
     }).catch(err => {
       console.error('NimbusPost order push failed (order still placed):', err.message);
     });
+  }
+
+  // ── Referral tracking ────────────────────────────────────────────────────
+  if (referrerId) {
+    kv.set(`referral:used:${orderId}`, { referrerId, discount: 50, method: 'prepaid', at: Date.now() }, { ex: 15552000 }).catch(() => {});
   }
 
   return res.status(200).json({ success: true, orderId });
