@@ -216,6 +216,8 @@ export default async function handler(req, res) {
   }
 
   // ── Referral tracking ────────────────────────────────────────────────────
+  // Store this order's mobile as the referral owner so future self-referral checks work
+  kv.set(`referral:owner:${orderId}`, mobile?.trim() || '', { ex: 15552000 }).catch(() => {});
   if (referrerId) {
     kv.set(`referral:used:${orderId}`, { referrerId, discount: 50, method: 'prepaid', at: Date.now() }, { ex: 15552000 }).catch(() => {});
   }

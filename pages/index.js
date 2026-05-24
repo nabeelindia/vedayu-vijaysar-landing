@@ -1308,7 +1308,7 @@ export default function Home() {
                 </div>
                 <div className="field-group">
                   <label className="field-label" htmlFor="mobile">Mobile Number *{vIcon('mobile')}</label>
-                  <input id="mobile" type="tel" placeholder="10-digit number" maxLength={10} inputMode="numeric" value={form.mobile} onChange={e => { const v = e.target.value.replace(/\D/g,''); setForm(f => ({ ...f, mobile: v })); tryLookup(v, form.email); }} onBlur={() => touch('mobile')} style={vStyle('mobile')} />
+                  <input id="mobile" type="tel" placeholder="10-digit number" maxLength={10} inputMode="numeric" value={form.mobile} onChange={e => { const v = e.target.value.replace(/\D/g,''); setForm(f => ({ ...f, mobile: v })); tryLookup(v, form.email); }} onBlur={async () => { touch('mobile'); if (referrerId && /^[6-9]\d{9}$/.test(form.mobile)) { try { const r = await fetch(`/api/referral-validate?ref=${referrerId}&mobile=${form.mobile}`); const d = await r.json(); if (!d.valid) { setReferralDiscount(0); setReferrerId(''); showToast('Referral discount cannot be applied to your own orders.', 'info'); } } catch {} } }} style={vStyle('mobile')} />
                 </div>
               </div>
 
