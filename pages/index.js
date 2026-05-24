@@ -47,12 +47,11 @@ function getShipsBy() {
   const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
   const ist = new Date(now.getTime() + IST_OFFSET_MS);
 
-  const dayOfWeek = ist.getUTCDay();   // 0 = Sunday
-  const hour      = ist.getUTCHours();
-  const minute    = ist.getUTCMinutes();
-
-  const isSunday    = dayOfWeek === 0;
-  const beforeCutoff = hour < 13;      // before 1:00 PM IST
+  const dayOfWeek    = ist.getUTCDay();   // 0 = Sunday
+  const hour         = ist.getUTCHours();
+  const minute       = ist.getUTCMinutes();
+  const isSunday     = dayOfWeek === 0;
+  const beforeCutoff = hour < 13;         // before 1:00 PM IST
 
   if (!isSunday && beforeCutoff) {
     const totalMinsLeft = (13 * 60) - (hour * 60 + minute);
@@ -69,9 +68,17 @@ function getShipsBy() {
   next.setUTCDate(next.getUTCDate() + 1);
   if (next.getUTCDay() === 0) next.setUTCDate(next.getUTCDate() + 1); // skip Sunday
 
-  const label = next.toLocaleDateString('en-IN', {
-    weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC',
-  });
+  // Use relative label when next ship day is literally tomorrow (IST)
+  const todayDateStr = ist.toLocaleDateString('en-CA', { timeZone: 'UTC' });   // YYYY-MM-DD
+  const nextDateStr  = next.toLocaleDateString('en-CA', { timeZone: 'UTC' });
+  const todayDate    = new Date(todayDateStr);
+  const nextDate     = new Date(nextDateStr);
+  const diffDays     = Math.round((nextDate - todayDate) / (24 * 60 * 60 * 1000));
+
+  const label = diffDays === 1
+    ? 'Tomorrow'
+    : next.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+
   return { label, note: null };
 }
 
@@ -1417,7 +1424,7 @@ export default function Home() {
                 <div style={{ background:'#F0F9F3', border:'1px solid #4A7C59', borderRadius:8, padding:'10px 14px', marginBottom:12, fontSize:'.88rem', color:'#2d6b40' }}>
                   {shipsBy && (
                     <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom: deliveryEst ? 5 : 0 }}>
-                      📦 <span>Ships by: <strong>{shipsBy.label}</strong>{shipsBy.note && <span style={{ fontWeight:400, color:'#4A7C59', marginLeft:6 }}>· {shipsBy.note}</span>}</span>
+                      📦 <span>Ships: <strong>{shipsBy.label}</strong>{shipsBy.note && <span style={{ fontWeight:400, color:'#4A7C59', marginLeft:6 }}>· {shipsBy.note}</span>}</span>
                     </div>
                   )}
                   {deliveryEst && (
