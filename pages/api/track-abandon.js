@@ -3,23 +3,37 @@
  * Called via navigator.sendBeacon() when a user leaves the page
  * after partially filling the checkout form.
  * Sends an abandonment alert to the store owner.
+ *
+ * sendBeacon sends Content-Type: text/plain — Next.js body parser
+ * doesn't handle that, so we disable it and read the raw stream.
  */
 import { Resend } from 'resend';
+
+export const config = {
+  api: { bodyParser: false },
+};
+
+/** Read raw request body with a 5-second safety timeout. */
+function readBody(req) {
+  return new Promise((resolve) => {
+    // Hard timeout — never hang the function if stream stalls
+    const timer = setTimeout(() => resolve(''), 5000);
+    let data = '';
+    req.on('data', chunk => { data += chunk; });
+    req.on('end', () => { clearTimeout(timer); resolve(data); });
+    req.on('error', () => { clearTimeout(timer); resolve(''); });
+  });
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
   let body;
   try {
-    // sendBeacon sends raw text — parse it
-    const raw = typeof req.body === 'string' ? req.body : await new Promise((resolve) => {
-      let data = '';
-      req.on('data', chunk => { data += chunk; });
-      req.on('end', () => resolve(data));
-    });
-    body = typeof raw === 'object' ? raw : JSON.parse(raw);
+    const raw = await readBody(req);
+    body = raw ? JSON.parse(raw) : {};
   } catch {
-    return res.status(400).end();
+    return res.status(200).end(); // don't error — beacon fire-and-forget
   }
 
   const { name, mobile, email, pack, payment } = body;
