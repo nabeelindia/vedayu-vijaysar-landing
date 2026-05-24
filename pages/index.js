@@ -266,6 +266,15 @@ export default function Home() {
     }
   }, [router.isReady]);
 
+  /* Self-referral guard — runs whenever referrerId or mobile changes (catches cookie pre-fill) */
+  useEffect(() => {
+    if (!referrerId || !/^[6-9]\d{9}$/.test(form.mobile)) return;
+    fetch(`/api/referral-validate?ref=${referrerId}&mobile=${form.mobile}`)
+      .then(r => r.json())
+      .then(d => { if (!d.valid) { setReferralDiscount(0); setReferrerId(''); showToast('Referral discount cannot be applied to your own orders.', 'info'); } })
+      .catch(() => {});
+  }, [referrerId, form.mobile]);
+
   /* Meta Pixel — AddToCart when pack changes (after first interaction) */
   const didMount = useRef(false);
   useEffect(() => {
