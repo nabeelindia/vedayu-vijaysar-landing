@@ -10,7 +10,7 @@ import { Resend } from 'resend';
 import { sendCapiPurchase } from '../../lib/meta-capi';
 import { enqueueFollowup } from '../../lib/followup-queue';
 import { saveCustomer } from '../../lib/customer-cache';
-import { createOrder } from '../../lib/nimbuspost';
+import { createOrder, storeAwbMapping } from '../../lib/velocity';
 import { kv } from '@vercel/kv';
 import { isNewCustomer } from './referral-validate';
 
@@ -198,15 +198,23 @@ export default async function handler(req, res) {
   await enqueueFollowup({ orderId, email, name, pack, price: safePrice, method: 'cod' }).catch(() => {});
   await saveCustomer({ mobile, email, name, address, city, state, pincode }).catch(() => {});
 
-  // ── NimbusPost — push order to dashboard for manual shipping ─────────────────
-  if (process.env.NIMBUSPOST_EMAIL && process.env.NIMBUSPOST_PASSWORD && process.env.PICKUP_PINCODE) {
+  // ── Velocity Shipping — push order to dashboard for auto-dispatch ────────────
+  if (process.env.VELOCITY_USERNAME && process.env.VELOCITY_PASSWORD && process.env.VELOCITY_WAREHOUSE_ID) {
     createOrder({
       orderId, name, mobile: mobile.trim(), address, city, state, pincode,
+      email: email?.trim() || undefined,
       pack, qty, price: safePrice, is_cod: true,
     }).then(result => {
-      console.log(`NimbusPost order created: ${orderId}`, result);
+      console.log(`Velocity order created: ${orderId}`, result);
+      if (result?.awb) {
+        storeAwbMapping({
+          orderId, awb: result.awb, shipmentId: result.shipmentId,
+          mobile: mobile.trim(), email: email?.trim() || undefined,
+          courierName: result.courierName,
+        }).catch(() => {});
+      }
     }).catch(err => {
-      console.error('NimbusPost order push failed (order still placed):', err.message);
+      console.error('Velocity order push failed (order still placed):', err.message);
     });
   }
 

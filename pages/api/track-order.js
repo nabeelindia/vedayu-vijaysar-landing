@@ -4,17 +4,16 @@
  * GET /api/track-order?phone=9876543210
  * GET /api/track-order?email=customer@example.com
  *
- * Returns tracking info for one or more shipments.
- * Public endpoint — no auth required (order IDs are already unguessable).
+ * Returns tracking info for one or more Velocity shipments.
+ * Public endpoint — order IDs are already unguessable.
  */
 
 import {
   getTracking,
-  getBulkTracking,
   getAwbByOrderId,
   getOrdersByPhone,
   getOrdersByEmail,
-} from '../../lib/nimbuspost';
+} from '../../lib/velocity';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).end();
@@ -24,10 +23,12 @@ export default async function handler(req, res) {
   // ── 1. Track by AWB directly ──────────────────────────────────────────────
   if (awb) {
     try {
-      const tracking = await getTracking(awb.trim());
-      return res.status(200).json({ success: true, type: 'awb', results: [normalizeTracking(awb, tracking)] });
+      const trackMap = await getTracking(awb.trim());
+      const trackData = trackMap[awb.trim()]?.tracking_data || null;
+      if (!trackData) return res.status(404).json({ success: false, error: 'No shipment found for AWB: ' + awb });
+      return res.status(200).json({ success: true, type: 'awb', results: [normalizeTracking(awb, trackData)] });
     } catch (err) {
-      return res.status(404).json({ success: false, error: 'No shipment found for AWB: ' + awb });
+      return res.status(404).json({ success: false, error: 'Tracking lookup failed: ' + err.message });
     }
   }
 
@@ -38,11 +39,12 @@ export default async function handler(req, res) {
       return res.status(404).json({ success: false, error: 'No shipment found for Order ID: ' + order });
     }
     try {
-      const tracking = await getTracking(record.awb);
+      const trackMap  = await getTracking(record.awb);
+      const trackData = trackMap[record.awb]?.tracking_data || null;
       return res.status(200).json({
         success: true,
-        type: 'order',
-        results: [normalizeTracking(record.awb, tracking, record)],
+        type:    'order',
+        results: [normalizeTracking(record.awb, trackData, record)],
       });
     } catch (err) {
       return res.status(404).json({ success: false, error: 'Tracking data unavailable. Try again shortly.' });
@@ -59,7 +61,7 @@ export default async function handler(req, res) {
     if (!orderIds.length) {
       return res.status(404).json({ success: false, error: 'No orders found for this number' });
     }
-    return await resolveAndReturn(orderIds, 'phone', res);
+    return resolveAndReturn(orderIds, 'phone', res);
   }
 
   // ── 4. Track by Email ─────────────────────────────────────────────────────
@@ -71,7 +73,7 @@ export default async function handler(req, res) {
     if (!orderIds.length) {
       return res.status(404).json({ success: false, error: 'No orders found for this email' });
     }
-    return await resolveAndReturn(orderIds, 'email', res);
+    return resolveAndReturn(orderIds, 'email', res);
   }
 
   return res.status(400).json({ success: false, error: 'Provide awb, order, phone, or email' });
@@ -81,21 +83,19 @@ export default async function handler(req, res) {
 
 async function resolveAndReturn(orderIds, type, res) {
   try {
-    // Fetch AWBs for each order ID
-    const { getAwbByOrderId } = await import('../../lib/nimbuspost');
-    const records = await Promise.all(orderIds.map(id => getAwbByOrderId(id)));
-    const validRecords = records.filter(Boolean);
+    const records      = await Promise.all(orderIds.map(id => getAwbByOrderId(id)));
+    const validRecords = records.filter(r => r?.awb);
 
     if (!validRecords.length) {
-      return res.status(404).json({ success: false, error: 'Shipments not yet created for these orders' });
+      return res.status(404).json({ success: false, error: 'Shipments not yet dispatched for these orders' });
     }
 
-    const awbs = validRecords.map(r => r.awb);
-    const trackingMap = await getBulkTracking(awbs);
+    const awbs     = validRecords.map(r => r.awb);
+    const trackMap = await getTracking(awbs);
 
     const results = validRecords.map(record => {
-      const tracking = trackingMap[record.awb] || null;
-      return normalizeTracking(record.awb, tracking, record);
+      const trackData = trackMap[record.awb]?.tracking_data || null;
+      return normalizeTracking(record.awb, trackData, record);
     });
 
     return res.status(200).json({ success: true, type, results });
@@ -106,41 +106,45 @@ async function resolveAndReturn(orderIds, type, res) {
 }
 
 /**
- * Normalize NimbusPost tracking response into a consistent shape for the frontend.
+ * Normalize Velocity tracking response into a consistent shape for the frontend.
+ * Velocity response shape:
+ *   tracking_data: {
+ *     shipment_status: "delivered",
+ *     shipment_track: [{ current_status, pickup_date, delivered_date, ... }],
+ *     shipment_track_activities: [{ date, activity, location }],
+ *     track_url: "..."
+ *   }
  */
-function normalizeTracking(awb, tracking, record = {}) {
-  // NimbusPost returns scan history as array — newest first
-  const scans = Array.isArray(tracking?.scans) ? tracking.scans
-    : Array.isArray(tracking)                  ? tracking
-    : [];
-
-  const latestScan = scans[0] || {};
-  const status     = latestScan.status || tracking?.current_status || 'Processing';
+function normalizeTracking(awb, trackData, record = {}) {
+  const activities = trackData?.shipment_track_activities || [];
+  const shipment   = trackData?.shipment_track?.[0] || {};
+  const status     = trackData?.shipment_status || shipment.current_status || 'Processing';
   const statusCode = normalizeStatus(status);
 
   return {
-    orderId:     record.orderId || null,
+    orderId:     record.orderId     || null,
     awb,
-    courierName: record.courierName || tracking?.courier_name || '',
+    courierName: record.courierName || shipment.courier_name || '',
     status,
-    statusCode,   // 'pending' | 'picked' | 'transit' | 'out' | 'delivered' | 'failed' | 'rto'
-    eta:         tracking?.expected_delivery_date || null,
-    scans:       scans.map(s => ({
-      status:    s.status || s.activity || '',
-      location:  s.location || s.city || '',
-      timestamp: s.timestamp || s.date || s.time || '',
-      remark:    s.remark || s.description || '',
+    statusCode, // 'pending' | 'picked' | 'transit' | 'out' | 'delivered' | 'failed' | 'rto'
+    eta:         shipment.delivered_date || null,
+    trackUrl:    trackData?.track_url   || `https://shipfastt.in/track/${awb}`,
+    scans: activities.map(a => ({
+      status:    a.activity  || '',
+      location:  a.location  || '',
+      timestamp: a.date      || '',
+      remark:    '',
     })),
   };
 }
 
 function normalizeStatus(raw = '') {
-  const s = raw.toLowerCase();
-  if (s.includes('delivered'))            return 'delivered';
-  if (s.includes('out for delivery'))     return 'out';
-  if (s.includes('transit') || s.includes('in transit')) return 'transit';
-  if (s.includes('picked'))               return 'picked';
-  if (s.includes('rto') || s.includes('return')) return 'rto';
+  const s = raw.toLowerCase().replace(/_/g, ' ');
+  if (s.includes('delivered') && !s.includes('rto'))    return 'delivered';
+  if (s.includes('out for delivery'))                   return 'out';
+  if (s.includes('in transit') || s.includes('transit')) return 'transit';
+  if (s.includes('picked'))                             return 'picked';
+  if (s.includes('rto'))                                return 'rto';
   if (s.includes('ndr') || s.includes('undelivered') || s.includes('failed')) return 'failed';
   return 'pending';
 }

@@ -332,9 +332,10 @@ export default function Home() {
     }, 400);
   }, []);
 
-  /* pincode auto-fill
-     Calls /api/pincode-lookup (same-origin proxy → zippopotam.us).
-     Same-origin = no CORS, no browser security issues, CDN-cached. */
+  /* pincode auto-fill + real-time delivery estimate
+     1. Calls /api/pincode-lookup to auto-fill city/state.
+     2. Calls /api/delivery-estimate (Velocity Rates API) for a real ETA.
+        Falls back to the static estimate if Velocity is unconfigured. */
   const handlePincode = useCallback(async (val) => {
     // always update the raw pincode value and clear stale city/state
     setForm(f => ({ ...f, pincode: val, city: '', state: '' }));
@@ -354,19 +355,35 @@ export default function Home() {
     pincodeAbort.current = new AbortController();
 
     try {
-      const res = await fetch(`/api/pincode-lookup?pin=${val}`, {
-        signal: pincodeAbort.current.signal,
-      });
-      if (res.ok) {
-        const data = await res.json();
+      // Run pincode lookup and delivery estimate in parallel
+      const [pinRes, estRes] = await Promise.allSettled([
+        fetch(`/api/pincode-lookup?pin=${val}`, { signal: pincodeAbort.current.signal }),
+        fetch(`/api/delivery-estimate?pincode=${val}&cod=1&price=999`),
+      ]);
+
+      // Auto-fill city/state
+      if (pinRes.status === 'fulfilled' && pinRes.value.ok) {
+        const data = await pinRes.value.json();
         if (data?.places?.length) {
           setForm(f => ({
             ...f,
             city:  pinExtractCity(data.places),
             state: pinNormaliseState(data.places[0].state),
           }));
+        }
+      }
+
+      // Real-time delivery estimate from Velocity
+      if (estRes.status === 'fulfilled' && estRes.value.ok) {
+        const est = await estRes.value.json();
+        if (est.serviceable && est.etaFormatted) {
+          setDeliveryEst(`by ${est.etaFormatted}`);
+        } else {
+          // Velocity not configured or pincode not covered — fall back to static estimate
           setDeliveryEst(getDeliveryEst(val));
         }
+      } else {
+        setDeliveryEst(getDeliveryEst(val));
       }
     } catch (_) {
       // AbortError from rapid typing — silently ignored
@@ -1356,7 +1373,7 @@ export default function Home() {
 
               {deliveryEst && (
                 <div style={{ background:'#F0F9F3', border:'1px solid #4A7C59', borderRadius:8, padding:'10px 14px', marginBottom:12, fontSize:'.88rem', color:'#2d6b40', display:'flex', alignItems:'center', gap:8 }}>
-                  🚚 <span>Estimated delivery: <strong>{deliveryEst}</strong></span>
+                  🚚 <span>Expected delivery: <strong>{deliveryEst}</strong></span>
                 </div>
               )}
 

@@ -19,9 +19,12 @@ export async function isNewCustomer(mobile) {
     const existing = await kv.get(`customer:${cleanMobile}`);
     if (existing) return false;
 
-    // Backup: NimbusPost phone index
-    const orderIds = await kv.lrange(`nimbuspost:phone:${cleanMobile}`, 0, 1);
-    if (orderIds?.length) return false;
+    // Backup: Velocity or legacy NimbusPost phone index
+    const [vIds, nIds] = await Promise.all([
+      kv.lrange(`velocity:phone:${cleanMobile}`, 0, 1).catch(() => []),
+      kv.lrange(`nimbuspost:phone:${cleanMobile}`, 0, 1).catch(() => []),
+    ]);
+    if (vIds?.length || nIds?.length) return false;
 
     return true; // no record — new customer
   } catch {
