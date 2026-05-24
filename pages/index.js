@@ -70,34 +70,22 @@ const FAQS = [
 /* ─── Indian states ─────────────────────────────────────── */
 const STATES = ['Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chandigarh','Chhattisgarh','Delhi','Goa','Gujarat','Haryana','Himachal Pradesh','Jammu & Kashmir','Jharkhand','Karnataka','Kerala','Ladakh','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Puducherry','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal'];
 
-/* ─── Pincode lookup helpers (module-level, no stale closure risk) ──────── */
+/* ─── Pincode lookup helpers ────────────────────────────────────────────── */
+// India Post API returns proper District/State names — just need a small
+// alias map for the handful of names that differ from our STATES dropdown.
 const PIN_STATE_FIX = {
-  'new delhi': 'Delhi',
-  'orissa': 'Odisha',
-  'uttaranchal': 'Uttarakhand',
-  'jammu and kashmir': 'Jammu & Kashmir',
-  'pondicherry': 'Puducherry',
+  'new delhi':          'Delhi',
+  'orissa':             'Odisha',
+  'uttaranchal':        'Uttarakhand',
+  'jammu and kashmir':  'Jammu & Kashmir',
+  'pondicherry':        'Puducherry',
+  'andaman and nicobar islands': 'Andaman & Nicobar Islands',
+  'dadra and nagar haveli':      'Dadra & Nagar Haveli',
 };
 function pinNormaliseState(raw) {
   if (!raw) return '';
   const lo = raw.trim().toLowerCase();
   return PIN_STATE_FIX[lo] || STATES.find(s => s.toLowerCase() === lo) || raw.trim();
-}
-function pinExtractCity(places) {
-  if (!places?.length) return '';
-  // Strip India-Post suffix patterns and trailing numbers from each place name
-  const clean = s => s
-    .replace(/\s+G\.?\s*P\.?\s*O\.?/gi, '')
-    .replace(/\s+[SHB]\.?\s*O\.?\s*$/gi, '')
-    .replace(/\s+\d+\s*$/, '')
-    .trim();
-  // Prefer a name that doesn't look like a street or landmark
-  const isStreet = /\b(road|street|lane|marg|chowk|market|bazar|nagar|colony|bridge|ganj)\b/i;
-  for (const p of places) {
-    const c = clean(p['place name']);
-    if (c.length > 3 && !isStreet.test(c)) return c;
-  }
-  return clean(places[0]['place name']);
 }
 
 /* ─── load Razorpay script ──────────────────────────────── */
@@ -361,14 +349,14 @@ export default function Home() {
         fetch(`/api/delivery-estimate?pincode=${val}&cod=1&price=999`),
       ]);
 
-      // Auto-fill city/state
+      // Auto-fill city/state from India Post API
       if (pinRes.status === 'fulfilled' && pinRes.value.ok) {
         const data = await pinRes.value.json();
-        if (data?.places?.length) {
+        if (data?.city || data?.state) {
           setForm(f => ({
             ...f,
-            city:  pinExtractCity(data.places),
-            state: pinNormaliseState(data.places[0].state),
+            city:  data.city  || f.city,
+            state: pinNormaliseState(data.state) || f.state,
           }));
         }
       }
