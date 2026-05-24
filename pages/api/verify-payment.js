@@ -204,23 +204,26 @@ export default async function handler(req, res) {
   await saveCustomer({ mobile, email, name, address, city, state, pincode }).catch(() => {});
 
   // ── 6. Velocity Shipping — push order to dashboard for auto-dispatch ─────────
+  // Must be awaited before res.json() — Vercel kills the function once the response
+  // is sent, so fire-and-forget promises are cut off and orders never reach Velocity.
   if (process.env.VELOCITY_USERNAME && process.env.VELOCITY_PASSWORD && process.env.VELOCITY_WAREHOUSE_ID) {
-    createOrder({
-      orderId, name, mobile: mobile?.trim(), address, city, state, pincode,
-      email: email?.trim() || undefined,
-      pack, qty, price, is_cod: false,
-    }).then(result => {
+    try {
+      const result = await createOrder({
+        orderId, name, mobile: mobile?.trim(), address, city, state, pincode,
+        email: email?.trim() || undefined,
+        pack, qty, price, is_cod: false,
+      });
       console.log(`Velocity order created: ${orderId}`, result);
       if (result?.awb) {
-        storeAwbMapping({
+        await storeAwbMapping({
           orderId, awb: result.awb, shipmentId: result.shipmentId,
           mobile: mobile?.trim(), email: email?.trim() || undefined,
           courierName: result.courierName, name,
         }).catch(() => {});
       }
-    }).catch(err => {
+    } catch (err) {
       console.error('Velocity order push failed (order still placed):', err.message);
-    });
+    }
   }
 
   // ── Referral tracking ────────────────────────────────────────────────────
