@@ -32,6 +32,18 @@ function getDeliveryEst(pincode) {
   return `${fmt2(addDays(lo))} – ${fmt2(addDays(hi))}`;
 }
 
+/* ─── Bold-keyword renderer ─────────────────────────────────────
+ * Wrap key phrases in **double asterisks** in any string and this
+ * helper renders them as <strong>. Easy to remove — just delete
+ * this function and revert the ** markers in the strings below.
+ * ─────────────────────────────────────────────────────────────── */
+function renderBold(str) {
+  const parts = str.split(/\*\*(.+?)\*\*/g);
+  return parts.map((part, i) =>
+    i % 2 === 1 ? <strong key={i}>{part}</strong> : part
+  );
+}
+
 /* ─── Ships-by helper ──────────────────────────────────────────
  * Computes the expected dispatch date based on IST time.
  * Cut-off: 1:00 PM IST every day except Sunday (off day).
@@ -93,9 +105,9 @@ const GALLERY = [
 /* ─── FAQ data ──────────────────────────────────────────── */
 const FAQS = [
   { q: 'What is a Vijaysar wooden glass?', a: 'A Vijaysar wooden glass is a traditional Indian tumbler handcrafted from Vijaysar wood (Pterocarpus marsupium), also known as the Indian Kino tree. Vijaysar wood has been used in Ayurvedic wellness traditions for centuries. Water stored overnight takes on a slight natural tinge from the wood — this is completely normal and safe. It is used as part of a daily wellness and hydration ritual.' },
-  { q: 'How do I use the Vijaysar tumbler?', a: '(1) Fill the tumbler with room temperature drinking water. (2) Cover and keep overnight for 6–8 hours. (3) Drink the Vijaysar wood infused water first thing in the morning on an empty stomach. (4) Rinse gently with plain water, dry thoroughly, and refill for the next day. Repeat daily.' },
+  { q: 'How do I use the Vijaysar tumbler?', a: '(1) Fill the tumbler with **room temperature** drinking water. (2) Cover and keep **overnight for 6–8 hours**. (3) Drink the Vijaysar wood infused water **first thing in the morning on an empty stomach**. (4) Rinse gently with plain water, dry thoroughly, and refill for the next day. Repeat daily.' },
   { q: 'Can Vijaysar glass cure diabetes?', a: 'No. The Vijaysar wooden glass is NOT a medicine and does NOT cure diabetes or any disease. It is a traditional Indian wellness product used as part of a healthy hydration routine. People with diabetes or any medical condition must consult their doctor before making changes to their routine.' },
-  { q: 'How long should water be kept in the Vijaysar glass?', a: 'Ideally 6–8 hours. An overnight soak is the most convenient option — fill it before bed and your infused water is ready each morning. Do not soak for more than 10 hours.' },
+  { q: 'How long should water be kept in the Vijaysar glass?', a: 'Ideally **6–8 hours**. An **overnight** soak is the most convenient option — fill it before bed and your infused water is ready each morning. Do not soak for **more than 10 hours**.' },
   { q: 'Can I use hot water?', a: 'No. Use only room temperature or cold drinking water. Hot water can damage the natural wood. Never pour boiling or warm water into the tumbler.' },
   { q: 'How do I clean the Vijaysar glass?', a: 'Rinse gently with plain water only. No soap, detergent, or harsh chemicals — these damage the natural wood. Do not use a dishwasher. Dry completely after rinsing and store in a dry, ventilated place.' },
   { q: 'Is Cash on Delivery (COD) available?', a: 'Yes! Cash on Delivery is available all across India. You pay in cash when the product is delivered. No advance payment required for COD orders.' },
@@ -109,10 +121,10 @@ const FAQS = [
 
   // ── High-search-volume additions — Week 2 SEO ──────────────────────────
   { q: 'Is Vijaysar glass safe for people with diabetes?', a: 'The Vijaysar wooden glass is a traditional Ayurvedic wellness product — it is NOT a medicine and does NOT treat, cure, or prevent diabetes or any other medical condition. Many people with diabetes use it as part of a healthy daily hydration habit, but it should not replace prescribed medication or medical advice. Always consult your doctor before making changes to your health routine.' },
-  { q: 'How many days should I use the Vijaysar glass continuously?', a: 'Traditional Ayurvedic practice recommends using the Vijaysar glass daily for 90 days for a complete wellness cycle, then taking a 15–30 day break before resuming. Most people notice a subtle change in their water taste within the first few days. Consistent daily use is key — occasional use will not give the same experience as a regular morning ritual.' },
+  { q: 'How many days should I use the Vijaysar glass continuously?', a: 'Traditional Ayurvedic practice recommends using the Vijaysar glass daily for **90 days** for a complete wellness cycle, then taking a **15–30 day break** before resuming. Most people notice a subtle change in their water taste within the first few days. **Consistent daily use is key** — occasional use will not give the same experience as a regular morning ritual.' },
   { q: 'Vijaysar glass vs copper glass — which is better?', a: 'They serve different purposes. Copper glasses are used in Ayurveda primarily for their antimicrobial properties and are recommended for drinking water stored overnight. Vijaysar wooden glasses are used specifically for the natural wood infusion — Vijaysar wood (Pterocarpus marsupium) has been used in traditional Indian wellness for centuries. Many households keep both. If you are new to Ayurvedic rituals, the Vijaysar glass is gentler to start with as it does not alter the water\'s mineral profile the way copper does.' },
   { q: 'Can children use the Vijaysar wooden glass?', a: 'Vijaysar wood is a natural material with no synthetic coatings or chemicals. However, as with any traditional wellness product, it is intended for adults. We do not specifically recommend it for young children without consulting a paediatrician or Ayurvedic practitioner first. Teenagers and adults can use it as part of a healthy daily routine.' },
-  { q: 'Why does the water turn pinkish or brownish overnight?', a: 'This is completely normal and expected — it is the natural tannins and botanical properties of the Vijaysar wood infusing into the water. The slight colour change (from pale pink to light brown) is a sign that the wood is authentic and active. The water is safe to drink. If your water shows no colour change at all after a week of use, contact us for a replacement.' },
+  { q: 'Why does the water turn pinkish or brownish overnight?', a: 'This is **completely normal and expected** — it is the natural tannins and botanical properties of the Vijaysar wood infusing into the water. The slight colour change (from pale pink to light brown) is a sign that the wood is **authentic and active**. The water is **safe to drink**. If your water shows no colour change at all after a week of use, contact us for a replacement.' },
   { q: 'Is Vijaysar glass better than plastic or steel bottles?', a: 'Yes, from a wellness perspective. Plastic bottles can leach microplastics and chemicals over time. Steel bottles are neutral — they add nothing to the water. The Vijaysar wooden glass is unique because it adds the natural wood infusion to water, making it part of an active Ayurvedic wellness ritual rather than just a storage container. It is not designed to replace a water bottle for carrying water — it is a dedicated daily-ritual tumbler.' },
   { q: 'What is Vijaysar wood (Pterocarpus marsupium)?', a: 'Vijaysar, botanically known as Pterocarpus marsupium, is a large deciduous tree native to India and Sri Lanka, commonly called the Indian Kino Tree or Malabar Kino. Its heartwood has been used in Ayurvedic medicine for centuries. The wood is dense, naturally fragrant, and has a rich reddish-brown colour. It is mentioned in classical Ayurvedic texts including Charaka Samhita. Our glasses are handcrafted from the heartwood of mature Vijaysar trees sourced responsibly from licensed suppliers.' },
 ];
@@ -956,14 +968,14 @@ export default function Home() {
               <p style={{ marginBottom: 20 }}>Vijaysar wood has been used in traditional Indian wellness practices for generations. The Vedayu Vijaysar Wooden Glass brings this ancient tradition into your modern daily routine — simply, beautifully, and naturally.</p>
               <ul className="solution-points">
                 {[
-                  'Fill with room temperature water overnight — let the natural wood do its work while you sleep',
-                  'Drink your first glass of Vijaysar wood infused water every morning',
-                  'Support your sugar-conscious lifestyle with a purposeful natural hydration ritual',
-                  '100% natural, reusable, eco-friendly — no chemicals, no artificial ingredients',
-                  'Inspired by Ayurveda — a tradition trusted for thousands of years in India',
-                  'A deeply meaningful gift for parents, family, and wellness-conscious loved ones',
+                  'Fill with **room temperature** water **overnight** — let the natural wood do its work while you sleep',
+                  'Drink your first glass of **Vijaysar wood infused water** every morning',
+                  'Support your **sugar-conscious lifestyle** with a purposeful natural hydration ritual',
+                  '**100% natural**, reusable, eco-friendly — no chemicals, no artificial ingredients',
+                  'Inspired by **Ayurveda** — a tradition trusted for thousands of years in India',
+                  'A deeply meaningful **gift** for parents, family, and wellness-conscious loved ones',
                 ].map(pt => (
-                  <li key={pt}><span className="check" /><span>{pt}</span></li>
+                  <li key={pt}><span className="check" /><span>{renderBold(pt)}</span></li>
                 ))}
               </ul>
               <button className="btn btn-brown" onClick={() => scrollToCheckout()}>Get Yours — ₹499 Only →</button>
@@ -1559,7 +1571,7 @@ export default function Home() {
                 <button className="faq-question" onClick={() => setOpenFaq(openFaq === i ? null : i)}>
                   {item.q}
                 </button>
-                <div className="faq-answer">{item.a}</div>
+                <div className="faq-answer">{renderBold(item.a)}</div>
               </div>
             ))}
           </div>
