@@ -399,6 +399,7 @@ export default function Home() {
         if (!res.ok) throw new Error(data.error || 'Failed to place order');
         orderPlaced.current = true;
         writeCustomerCookie({ name: form.name, mobile: form.mobile, email: form.email, address: form.address, pincode: form.pincode, city: form.city, state: form.state });
+        try { sessionStorage.setItem('vc_upsell_ctx', JSON.stringify({ mobile: form.mobile, email: form.email || '' })); } catch (_) {}
         router.push(`/order-confirmed?method=cod&pack=${encodeURIComponent(selectedPack.name)}&price=${finalPrice}&name=${encodeURIComponent(form.name)}&orderId=${encodeURIComponent(data.orderId)}`);
 
       } else {
@@ -456,6 +457,7 @@ export default function Home() {
               const vData = await vRes.json();
               if (vData.orderId) finalOrderId = vData.orderId;
             } catch { /* non-blocking — redirect regardless */ }
+            try { sessionStorage.setItem('vc_upsell_ctx', JSON.stringify({ mobile: form.mobile, email: form.email || '' })); } catch (_) {}
             router.push(`/order-confirmed?method=prepaid&pack=${encodeURIComponent(selectedPack.name)}&price=${finalPrice}&name=${encodeURIComponent(form.name)}&orderId=${encodeURIComponent(finalOrderId)}`);
           },
         });
