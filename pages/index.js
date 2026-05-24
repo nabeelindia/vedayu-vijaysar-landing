@@ -349,25 +349,32 @@ export default function Home() {
         fetch(`/api/delivery-estimate?pincode=${val}&cod=1&price=999`),
       ]);
 
-      // Auto-fill city/state from India Post API
-      if (pinRes.status === 'fulfilled' && pinRes.value.ok) {
-        const data = await pinRes.value.json();
-        if (data?.city || data?.state) {
+      // Auto-fill city/state from Velocity serviceability DB (pincode-lookup)
+      if (pinRes.status === 'fulfilled') {
+        const pinData = await pinRes.value.json().catch(() => null);
+        if (pinData?.city || pinData?.state) {
           setForm(f => ({
             ...f,
-            city:  data.city  || f.city,
-            state: pinNormaliseState(data.state) || f.state,
+            city:  pinData.city  || f.city,
+            state: pinNormaliseState(pinData.state) || f.state,
           }));
+        }
+        // Pincode not serviceable — clear estimate and show warning
+        if (pinData && pinData.serviceable === false) {
+          setDeliveryEst('⚠️ Delivery not available to this pincode');
+          setPincodeLoading(false);
+          return;
         }
       }
 
-      // Real-time delivery estimate from Velocity
-      if (estRes.status === 'fulfilled' && estRes.value.ok) {
-        const est = await estRes.value.json();
-        if (est.serviceable && est.etaFormatted) {
+      // Real-time delivery estimate from Velocity Rates API
+      if (estRes.status === 'fulfilled') {
+        const est = await estRes.value.json().catch(() => null);
+        if (est?.serviceable && est?.etaFormatted) {
           setDeliveryEst(`by ${est.etaFormatted}`);
+        } else if (est?.codAvailable === false) {
+          setDeliveryEst('⚠️ COD not available — prepaid only for this pincode');
         } else {
-          // Velocity not configured or pincode not covered — fall back to static estimate
           setDeliveryEst(getDeliveryEst(val));
         }
       } else {

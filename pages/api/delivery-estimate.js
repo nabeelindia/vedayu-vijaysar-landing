@@ -10,6 +10,7 @@
  */
 
 import { getDeliveryEstimate } from '../../lib/velocity';
+import db from '../../lib/pincode-db.json';
 
 // Simple in-memory cache: pincode+type → { eta, carrier, zone, cachedAt }
 // Resets on each cold start — that's fine, just avoids hammering the API
@@ -26,12 +27,23 @@ export default async function handler(req, res) {
     return res.status(400).json({ serviceable: false, reason: 'invalid_pincode' });
   }
 
-  if (!process.env.VELOCITY_USERNAME || !process.env.VELOCITY_PASSWORD || !process.env.VELOCITY_WAREHOUSE_ID) {
-    // Velocity not configured yet — silently skip, don't break checkout
-    return res.status(200).json({ serviceable: false, reason: 'not_configured' });
+  // Fast path: if pincode isn't in our serviceability DB, it's not deliverable.
+  // No API call needed — instant response from the bundled JSON.
+  const dbEntry = db[pincode];
+  if (!dbEntry) {
+    return res.status(200).json({ serviceable: false, reason: 'pincode_not_covered' });
+  }
+  const [, , codSupported, zone] = dbEntry;
+  const isCod = cod !== '0';
+  if (isCod && !codSupported) {
+    return res.status(200).json({ serviceable: true, codAvailable: false, zone, reason: 'cod_not_available' });
   }
 
-  const isCod = cod !== '0';
+  if (!process.env.VELOCITY_USERNAME || !process.env.VELOCITY_PASSWORD || !process.env.VELOCITY_WAREHOUSE_ID) {
+    // Velocity Rates API not configured — pincode is serviceable but no live ETA
+    return res.status(200).json({ serviceable: true, zone, reason: 'not_configured' });
+  }
+
   const cacheKey = `${pincode}-${isCod ? 'cod' : 'pre'}-${Math.round(Number(price) / 100) * 100}`;
 
   // Return cached result if fresh

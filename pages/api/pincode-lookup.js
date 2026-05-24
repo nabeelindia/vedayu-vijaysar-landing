@@ -1,52 +1,47 @@
 /**
- * GET /api/pincode-lookup?pin=400001
+ * GET /api/pincode-lookup?pin=560068
  *
- * Proxies to India Post's official pincode API (api.postalpincode.in).
- * Returns a normalised { city, state, pincode } object.
+ * Looks up city, state, COD availability and shipping zone for a pincode
+ * using the Velocity serviceability export bundled in lib/pincode-db.json.
  *
- * Why India Post instead of zippopotam.us?
- *  - India-specific → always correct District and State names
- *  - Returns "District" (clean city name) not raw post-office names
- *  - No auth, free, no CORS issues via same-origin proxy
+ * No external API calls — zero latency, zero dependency, zero failure rate.
+ * The JSON is ~550KB and is loaded once per cold start then stays in memory.
  *
- * Response cached at CDN edge for 24 h — repeated lookups are instant.
+ * Data format in pincode-db.json:
+ *   { "560068": ["Bengaluru", "Karnataka", 1, "D"], ... }
+ *   index:           0          1            2   3
+ *   [city, state, cod (0|1), zone]
+ *
+ * To refresh: re-export your Velocity serviceability CSV and run
+ *   node scripts/build-pincode-db.mjs
  */
-export default async function handler(req, res) {
+
+import db from '../../lib/pincode-db.json';
+
+export default function handler(req, res) {
   const pin = String(req.query.pin || '').replace(/\D/g, '');
+
   if (!/^[1-9]\d{5}$/.test(pin)) {
     return res.status(400).json({ error: 'invalid pincode' });
   }
 
-  try {
-    const upstream = await fetch(`https://api.postalpincode.in/pincode/${pin}`, {
-      headers: { 'Accept': 'application/json' },
-    });
+  const entry = db[pin];
 
-    if (!upstream.ok) {
-      return res.status(upstream.status).json({ error: 'not found' });
-    }
-
-    // India Post response shape:
-    // [{ Status: "Success", PostOffice: [{ District, State, Name, ... }] }]
-    const data = await upstream.json();
-    const record = Array.isArray(data) ? data[0] : data;
-
-    if (record?.Status !== 'Success' || !record?.PostOffice?.length) {
-      return res.status(404).json({ error: 'not found' });
-    }
-
-    const offices = record.PostOffice;
-
-    // District is the canonical city/district name — use the first entry's District.
-    // Some pincodes span multiple districts (rare); the first is always the primary.
-    const city  = offices[0].District || '';
-    const state = offices[0].State    || '';
-
-    res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600');
-    return res.status(200).json({ city, state, pincode: pin, offices });
-
-  } catch (err) {
-    console.error('pincode-lookup error:', err.message);
-    return res.status(500).json({ error: 'lookup failed' });
+  if (!entry) {
+    // Pincode not in Velocity serviceability list — not deliverable
+    return res.status(404).json({ error: 'not found', serviceable: false });
   }
+
+  const [city, state, cod, zone] = entry;
+
+  // Cache aggressively — pincode data changes rarely
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600');
+  return res.status(200).json({
+    city,
+    state,
+    pincode:     pin,
+    cod:         cod === 1,
+    zone,
+    serviceable: true,
+  });
 }
