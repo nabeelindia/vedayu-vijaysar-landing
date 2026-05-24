@@ -215,7 +215,7 @@ export default async function handler(req, res) {
         storeAwbMapping({
           orderId, awb: result.awb, shipmentId: result.shipmentId,
           mobile: mobile?.trim(), email: email?.trim() || undefined,
-          courierName: result.courierName,
+          courierName: result.courierName, name,
         }).catch(() => {});
       }
     }).catch(err => {
