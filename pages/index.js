@@ -266,12 +266,12 @@ export default function Home() {
     }
   }, [router.isReady]);
 
-  /* Self-referral guard — runs whenever referrerId or mobile changes (catches cookie pre-fill) */
+  /* New-customer guard — runs whenever referrerId or mobile changes */
   useEffect(() => {
     if (!referrerId || !/^[6-9]\d{9}$/.test(form.mobile)) return;
-    fetch(`/api/referral-validate?ref=${referrerId}&mobile=${form.mobile}`)
+    fetch(`/api/referral-validate?mobile=${form.mobile}`)
       .then(r => r.json())
-      .then(d => { if (!d.valid) { setReferralDiscount(0); setReferrerId(''); showToast('Referral discount cannot be applied to your own orders.', 'info'); } })
+      .then(d => { if (!d.valid) { setReferralDiscount(0); setReferrerId(''); showToast('Referral discount is for new customers only.', 'info'); } })
       .catch(() => {});
   }, [referrerId, form.mobile]);
 
@@ -1317,7 +1317,7 @@ export default function Home() {
                 </div>
                 <div className="field-group">
                   <label className="field-label" htmlFor="mobile">Mobile Number *{vIcon('mobile')}</label>
-                  <input id="mobile" type="tel" placeholder="10-digit number" maxLength={10} inputMode="numeric" value={form.mobile} onChange={e => { const v = e.target.value.replace(/\D/g,''); setForm(f => ({ ...f, mobile: v })); tryLookup(v, form.email); }} onBlur={async () => { touch('mobile'); if (referrerId && /^[6-9]\d{9}$/.test(form.mobile)) { try { const r = await fetch(`/api/referral-validate?ref=${referrerId}&mobile=${form.mobile}`); const d = await r.json(); if (!d.valid) { setReferralDiscount(0); setReferrerId(''); showToast('Referral discount cannot be applied to your own orders.', 'info'); } } catch {} } }} style={vStyle('mobile')} />
+                  <input id="mobile" type="tel" placeholder="10-digit number" maxLength={10} inputMode="numeric" value={form.mobile} onChange={e => { const v = e.target.value.replace(/\D/g,''); setForm(f => ({ ...f, mobile: v })); tryLookup(v, form.email); }} onBlur={async () => { touch('mobile'); if (referrerId && /^[6-9]\d{9}$/.test(form.mobile)) { try { const r = await fetch(`/api/referral-validate?mobile=${form.mobile}`); const d = await r.json(); if (!d.valid) { setReferralDiscount(0); setReferrerId(''); showToast('Referral discount is for new customers only.', 'info'); } } catch {} } }} style={vStyle('mobile')} />
                 </div>
               </div>
 

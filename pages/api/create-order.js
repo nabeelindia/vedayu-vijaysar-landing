@@ -4,22 +4,7 @@
  * The frontend then opens the Razorpay checkout with these values.
  */
 import Razorpay from 'razorpay';
-import { kv } from '@vercel/kv';
-
-async function isSelfReferral(referrerId, mobile) {
-  if (!referrerId || !mobile) return false;
-  const cleanMobile = String(mobile).replace(/\D/g, '');
-  if (!/^[6-9]\d{9}$/.test(cleanMobile)) return false;
-  try {
-    // Layer 1: direct owner lookup
-    const ownerMobile = await kv.get(`referral:owner:${referrerId}`);
-    if (ownerMobile) return ownerMobile === cleanMobile;
-    // Layer 2: phone → orderIds index
-    const orderIds = await kv.lrange(`nimbuspost:phone:${cleanMobile}`, 0, 49);
-    if (orderIds?.includes(referrerId)) return true;
-  } catch {}
-  return false;
-}
+import { isNewCustomer } from './referral-validate';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -32,12 +17,15 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid amount' });
   }
 
-  // ── Self-referral guard: if customer is using their own link,
-  //    add the ₹50 back regardless of what the frontend sent ──────────────
+  // ── New-customer guard: referral discount only applies to first-time customers.
+  //    If the mobile has placed any order before, add the ₹50 discount back. ────
   let safeAmount = Math.round(amount);
-  if (referrerId && mobile && await isSelfReferral(referrerId, mobile)) {
-    safeAmount = Math.round(safeAmount + 50);
-    console.warn(`Self-referral blocked server-side: ${referrerId} by ${mobile}`);
+  if (referrerId && mobile) {
+    const newCust = await isNewCustomer(mobile);
+    if (!newCust) {
+      safeAmount = Math.round(safeAmount + 50);
+      console.warn(`Referral discount denied — returning customer (prepaid): ${mobile}`);
+    }
   }
 
   if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {

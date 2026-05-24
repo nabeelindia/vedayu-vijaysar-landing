@@ -12,18 +12,7 @@ import { enqueueFollowup } from '../../lib/followup-queue';
 import { saveCustomer } from '../../lib/customer-cache';
 import { createOrder } from '../../lib/nimbuspost';
 import { kv } from '@vercel/kv';
-
-async function isSelfReferral(referrerId, mobile) {
-  if (!referrerId || !mobile) return false;
-  const cleanMobile = String(mobile).replace(/\D/g, '');
-  try {
-    const ownerMobile = await kv.get(`referral:owner:${referrerId}`);
-    if (ownerMobile) return ownerMobile === cleanMobile;
-    const orderIds = await kv.lrange(`nimbuspost:phone:${cleanMobile}`, 0, 49);
-    if (orderIds?.includes(referrerId)) return true;
-  } catch {}
-  return false;
-}
+import { isNewCustomer } from './referral-validate';
 
 const formatUtm = (utm = {}) => {
   if (!Object.keys(utm).length) return 'Direct / Unknown';
@@ -58,11 +47,15 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid email address' });
   }
 
-  // ── Self-referral guard: recalculate price server-side ──────────────────
+  // ── New-customer guard: referral discount only applies to first-time customers.
+  //    If the mobile has placed any order before, add the ₹50 discount back. ────
   let safePrice = Number(price);
-  if (referrerId && await isSelfReferral(referrerId, mobile.trim())) {
-    safePrice = Math.round(safePrice + 50);
-    console.warn(`Self-referral blocked server-side (COD): ${referrerId} by ${mobile.trim()}`);
+  if (referrerId) {
+    const newCust = await isNewCustomer(mobile.trim());
+    if (!newCust) {
+      safePrice = Math.round(safePrice + 50);
+      console.warn(`Referral discount denied — returning customer (COD): ${mobile.trim()}`);
+    }
   }
 
   const orderId   = `VED-COD-${Date.now()}`;
