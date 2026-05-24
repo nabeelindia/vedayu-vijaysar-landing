@@ -759,7 +759,7 @@ export default function Home() {
             <div className="hero-img-wrap">
               {/* Gallery */}
               <div
-                style={{ position:'relative', borderRadius:16, overflow:'hidden', cursor:'grab', userSelect:'none' }}
+                style={{ position:'relative', borderRadius:16, overflow:'hidden', cursor:'grab', userSelect:'none', aspectRatio:'1/1', background:'#f9f5f0' }}
                 onTouchStart={e => { swipeX.current = e.touches[0].clientX; }}
                 onTouchEnd={e => {
                   if (swipeX.current === null) return;
@@ -782,7 +782,7 @@ export default function Home() {
                   width={520}
                   height={520}
                   priority
-                  style={{ transition:'opacity .25s', display:'block' }}
+                  style={{ transition:'opacity .25s', display:'block', width:'100%', height:'100%', objectFit:'contain' }}
                 />
                 {/* Prev / Next arrows */}
                 {galleryIdx > 0 && (
@@ -1237,10 +1237,10 @@ export default function Home() {
                     {p === 5 && <span className="pack-popular-tag" style={{background:'#C9A84C',color:'#3D2610'}}>🏆 Best Value</span>}
                     <span className="pack-name">{PACKS[p].name}</span>
                     <span className="pack-price">{fmt(PACKS[p].price)}</span>
-                    <span style={{ fontSize:'.72rem', color: pack===p ? 'rgba(255,255,255,.8)' : '#4A7C59', fontWeight:600, marginTop:2 }}>
-                      {p === 1 ? `₹499/glass` : p === 2 ? `₹449.50/glass` : `₹399.80/glass`}
+                    <span style={{ fontSize:'.72rem', color:'#2d6b40', fontWeight:600, marginTop:2 }}>
+                      {p === 1 ? '₹499/glass' : p === 2 ? '₹449.50/glass' : '₹399.80/glass'}
                     </span>
-                    {p > 1 && <span style={{ fontSize:'.68rem', background: pack===p ? 'rgba(255,255,255,.2)' : '#F0F9F3', color: pack===p ? '#fff' : '#2d6b40', padding:'2px 6px', borderRadius:10, marginTop:3, display:'inline-block' }}>
+                    {p > 1 && <span style={{ fontSize:'.68rem', background:'#d4edda', color:'#1a5c2a', padding:'2px 6px', borderRadius:10, marginTop:3, display:'inline-block', fontWeight:600 }}>
                       Save {fmt(PACKS[p].original - PACKS[p].price)}
                     </span>}
                   </div>
