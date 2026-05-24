@@ -8,13 +8,28 @@
  */
 import { Resend } from 'resend';
 import { sendCapiPurchase } from '../../lib/meta-capi';
+import { enqueueFollowup } from '../../lib/followup-queue';
+import { saveCustomer } from '../../lib/customer-cache';
+import { createOrder } from '../../lib/nimbuspost';
+
+const formatUtm = (utm = {}) => {
+  if (!Object.keys(utm).length) return 'Direct / Unknown';
+  const parts = [
+    utm.source   && `Source: ${utm.source}`,
+    utm.medium   && `Medium: ${utm.medium}`,
+    utm.campaign && `Campaign: ${utm.campaign}`,
+    utm.content  && `Content: ${utm.content}`,
+    utm.fbclid   && `fbclid: ${utm.fbclid.slice(0, 16)}…`,
+  ].filter(Boolean);
+  return parts.join(' · ');
+};
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { name, mobile, email, address, city, state, pincode, pack, price, qty } = req.body;
+  const { name, mobile, email, address, city, state, pincode, pack, price, qty, utm = {} } = req.body;
 
   // Basic server-side validation
   if (!name?.trim() || !mobile?.trim() || !address?.trim() || !pincode?.trim() || !city?.trim() || !state) {
@@ -61,7 +76,8 @@ export default async function handler(req, res) {
                 <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:10px 0;font-weight:600;color:#3D2610;">Pack</td><td style="padding:10px 0;">${pack}</td></tr>
                 <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:10px 0;font-weight:600;color:#3D2610;">Qty</td><td style="padding:10px 0;">${qty} glass(es)</td></tr>
                 <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:10px 0;font-weight:600;color:#3D2610;">Amount</td><td style="padding:10px 0;font-size:1.1rem;font-weight:700;color:#5C3D1E;">${priceStr} (COD)</td></tr>
-                <tr><td style="padding:10px 0;font-weight:600;color:#3D2610;">Delivery</td><td style="padding:10px 0;color:#4A7C59;font-weight:600;">FREE</td></tr>
+                <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:10px 0;font-weight:600;color:#3D2610;">Delivery</td><td style="padding:10px 0;color:#4A7C59;font-weight:600;">FREE</td></tr>
+                <tr><td style="padding:10px 0;font-weight:600;color:#3D2610;">📍 Source</td><td style="padding:10px 0;font-size:.85rem;color:#555;">${formatUtm(utm)}</td></tr>
               </table>
               <div style="background:#FFF8E1;border-left:4px solid #C9A84C;padding:12px 16px;margin-top:20px;font-size:.82rem;color:#6D4C00;border-radius:0 6px 6px 0;">
                 ⚠️ This is a <strong>Cash on Delivery</strong> order. Please dispatch after verifying the address and contact number.
@@ -154,8 +170,24 @@ export default async function handler(req, res) {
     console.log('=== NEW COD ORDER ===', { orderId, name, mobile, email, fullAddr, pack, price });
   }
 
-  // ── Meta CAPI — server-side Purchase event (fires even if browser tab is closed) ──
-  sendCapiPurchase({ orderId, price, pack, qty, email, mobile: mobile.trim(), name, city, pincode }).catch(() => {});
+  // ── Meta CAPI — server-side Purchase event ──────────────────────────────────────
+  await sendCapiPurchase({ orderId, price, pack, qty, email, mobile: mobile.trim(), name, city, pincode }).catch(() => {});
+
+  // ── Post-purchase follow-up email queue ──────────────────────────────────────
+  await enqueueFollowup({ orderId, email, name, pack, price, method: 'cod' }).catch(() => {});
+  await saveCustomer({ mobile, email, name, address, city, state, pincode }).catch(() => {});
+
+  // ── NimbusPost — push order to dashboard for manual shipping ─────────────────
+  if (process.env.NIMBUSPOST_EMAIL && process.env.NIMBUSPOST_PASSWORD && process.env.PICKUP_PINCODE) {
+    createOrder({
+      orderId, name, mobile: mobile.trim(), address, city, state, pincode,
+      pack, qty, price, is_cod: true,
+    }).then(result => {
+      console.log(`NimbusPost order created: ${orderId}`, result);
+    }).catch(err => {
+      console.error('NimbusPost order push failed (order still placed):', err.message);
+    });
+  }
 
   return res.status(200).json({ success: true, orderId });
 }

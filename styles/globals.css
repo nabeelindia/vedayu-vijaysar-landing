@@ -245,10 +245,9 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
 .benefit-card {
   background: #fff; border-radius: 12px; padding: 26px 18px;
   text-align: center; box-shadow: 0 2px 16px rgba(92,61,30,.07);
-  border: 1px solid transparent;
-  transition: transform .18s, box-shadow .18s, border-color .18s;
+  border: 1px solid #f0e8d8;
+  cursor: default;
 }
-.benefit-card:hover { transform: translateY(-4px); box-shadow: 0 8px 32px rgba(92,61,30,.14); border-color: var(--vd-gold); }
 .benefit-icon { font-size: 2.2rem; margin-bottom: 12px; }
 .benefit-card h3 { font-size: .88rem; color: var(--vd-dark-brown); margin-bottom: 6px; }
 .benefit-card p  { font-size: .8rem; color: var(--vd-text-light); line-height: 1.55; }
@@ -419,6 +418,164 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
 /* ====================================================
    REVIEWS
    ==================================================== */
+/* ── Celebrity Endorsement ───────────────────────────── */
+.celebrity-label {
+  text-align: center;
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--vd-gold);
+  margin-bottom: 10px;
+}
+.celebrity-wrap {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 52px;
+  align-items: center;
+  max-width: 880px;
+  margin: 0 auto;
+}
+.celebrity-video-wrap {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 48px rgba(92,61,30,.22);
+  background: #000;
+  aspect-ratio: 9/16;
+}
+.celebrity-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+}
+.celebrity-quote-block {
+  border-left: 4px solid var(--vd-gold);
+  padding: 16px 20px;
+  background: var(--vd-off-white);
+  border-radius: 0 10px 10px 0;
+}
+.celebrity-quote {
+  font-family: Georgia, serif;
+  font-size: 1.08rem;
+  line-height: 1.8;
+  color: var(--vd-brown);
+  font-style: italic;
+  margin: 0;
+}
+.celebrity-byline {
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--vd-gold);
+  margin-top: 10px;
+}
+.celebrity-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+@media (max-width: 760px) {
+  .celebrity-wrap {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .celebrity-video-wrap {
+    max-width: 340px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .celebrity-side {
+    align-items: center;
+    text-align: center;
+  }
+  .celebrity-quote-block {
+    border-left: none;
+    border-top: 4px solid var(--vd-gold);
+    border-radius: 0 0 10px 10px;
+    text-align: left;
+  }
+  .celebrity-badges {
+    justify-content: center;
+  }
+}
+
+/* ── Video Testimonial ───────────────────────────────── */
+.video-duo-wrap {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  max-width: 680px;
+  margin: 0 auto;
+}
+.video-duo-item {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.video-player-wrap {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(92,61,30,.18);
+  background: #000;
+  aspect-ratio: 9/16;
+}
+.video-player {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+.video-duo-caption {
+  text-align: center;
+  padding: 0 4px;
+}
+.video-pull-quote {
+  font-size: .92rem;
+  line-height: 1.65;
+  color: var(--vd-brown);
+  font-style: italic;
+  margin: 8px 0 6px;
+}
+.video-stars {
+  color: var(--vd-gold);
+  font-size: 1rem;
+  letter-spacing: 3px;
+  margin-bottom: 4px;
+}
+.video-author-line {
+  font-size: .78rem;
+  color: var(--vd-text-light);
+}
+.video-section-cta {
+  text-align: center;
+  margin-top: 36px;
+}
+.video-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+.video-badge {
+  font-size: .75rem;
+  font-weight: 600;
+  background: #fff;
+  border: 1px solid var(--vd-border);
+  border-radius: 50px;
+  padding: 4px 12px;
+  color: var(--vd-brown);
+}
+@media (max-width: 720px) {
+  .video-duo-wrap {
+    grid-template-columns: 1fr;
+    gap: 32px;
+    max-width: 340px;
+  }
+  .video-pull-quote {
+    font-size: .88rem;
+  }
+}
+
 .reviews-grid  { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px,1fr)); gap: 18px; }
 .review-card   { background: #fff; border: 1px solid var(--vd-border); border-radius: 12px; padding: 22px; }
 .review-stars  { color: var(--vd-gold); font-size: 1rem; letter-spacing: 3px; margin-bottom: 10px; }
@@ -664,6 +821,32 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
 }
 .footer-contact-line a:hover { text-decoration: underline; }
 
+.footer-social {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+.footer-social-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(201,168,76,0.3);
+  border-radius: 8px;
+  padding: 7px 14px;
+  color: #b89a78;
+  font-size: .82rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background .2s, color .2s, border-color .2s;
+}
+.footer-social-btn:hover {
+  background: rgba(201,168,76,0.15);
+  border-color: var(--vd-gold);
+  color: var(--vd-gold);
+}
+
 .footer-links-heading {
   font-family: var(--font-sans);
   font-size: .72rem;
@@ -686,6 +869,23 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
   transition: color .2s;
 }
 .footer-links ul li a:hover { color: var(--vd-gold); }
+
+.footer-track-btn {
+  display: inline-block;
+  background: rgba(201,168,76,0.15);
+  border: 1px solid rgba(201,168,76,0.4);
+  color: #C9A84C !important;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-weight: 600 !important;
+  font-size: .85rem !important;
+  transition: background .2s, border-color .2s !important;
+}
+.footer-track-btn:hover {
+  background: rgba(201,168,76,0.25) !important;
+  border-color: #C9A84C !important;
+  color: #C9A84C !important;
+}
 
 .footer-bottom {
   padding: 24px 0;

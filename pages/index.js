@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Image from 'next/image';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import SiteFooter from '../components/SiteFooter';
@@ -32,10 +33,49 @@ const FAQS = [
   { q: 'Can I gift this product?', a: 'Absolutely! It makes a beautiful, meaningful gift — especially for parents, in-laws, and elders. The Family Pack of 5 is our most popular gifting option. We can deliver directly to your recipient\'s address.' },
   { q: 'Does the wood colour vary between glasses?', a: 'Yes. Since each glass is made from natural wood, grain pattern, colour, and texture will vary slightly between pieces. This is not a defect — it is a natural characteristic of handcrafted wooden products.' },
   { q: 'Is this product suitable for daily use?', a: 'Yes. With proper care — rinsing with plain water, drying thoroughly, and storing in a dry place — it will last a long time.' },
+
+  // ── High-search-volume additions — Week 2 SEO ──────────────────────────
+  { q: 'Is Vijaysar glass safe for people with diabetes?', a: 'The Vijaysar wooden glass is a traditional Ayurvedic wellness product — it is NOT a medicine and does NOT treat, cure, or prevent diabetes or any other medical condition. Many people with diabetes use it as part of a healthy daily hydration habit, but it should not replace prescribed medication or medical advice. Always consult your doctor before making changes to your health routine.' },
+  { q: 'How many days should I use the Vijaysar glass continuously?', a: 'Traditional Ayurvedic practice recommends using the Vijaysar glass daily for 90 days for a complete wellness cycle, then taking a 15–30 day break before resuming. Most people notice a subtle change in their water taste within the first few days. Consistent daily use is key — occasional use will not give the same experience as a regular morning ritual.' },
+  { q: 'Vijaysar glass vs copper glass — which is better?', a: 'They serve different purposes. Copper glasses are used in Ayurveda primarily for their antimicrobial properties and are recommended for drinking water stored overnight. Vijaysar wooden glasses are used specifically for the natural wood infusion — Vijaysar wood (Pterocarpus marsupium) has been used in traditional Indian wellness for centuries. Many households keep both. If you are new to Ayurvedic rituals, the Vijaysar glass is gentler to start with as it does not alter the water\'s mineral profile the way copper does.' },
+  { q: 'Can children use the Vijaysar wooden glass?', a: 'Vijaysar wood is a natural material with no synthetic coatings or chemicals. However, as with any traditional wellness product, it is intended for adults. We do not specifically recommend it for young children without consulting a paediatrician or Ayurvedic practitioner first. Teenagers and adults can use it as part of a healthy daily routine.' },
+  { q: 'Why does the water turn pinkish or brownish overnight?', a: 'This is completely normal and expected — it is the natural tannins and botanical properties of the Vijaysar wood infusing into the water. The slight colour change (from pale pink to light brown) is a sign that the wood is authentic and active. The water is safe to drink. If your water shows no colour change at all after a week of use, contact us for a replacement.' },
+  { q: 'Is Vijaysar glass better than plastic or steel bottles?', a: 'Yes, from a wellness perspective. Plastic bottles can leach microplastics and chemicals over time. Steel bottles are neutral — they add nothing to the water. The Vijaysar wooden glass is unique because it adds the natural wood infusion to water, making it part of an active Ayurvedic wellness ritual rather than just a storage container. It is not designed to replace a water bottle for carrying water — it is a dedicated daily-ritual tumbler.' },
+  { q: 'What is Vijaysar wood (Pterocarpus marsupium)?', a: 'Vijaysar, botanically known as Pterocarpus marsupium, is a large deciduous tree native to India and Sri Lanka, commonly called the Indian Kino Tree or Malabar Kino. Its heartwood has been used in Ayurvedic medicine for centuries. The wood is dense, naturally fragrant, and has a rich reddish-brown colour. It is mentioned in classical Ayurvedic texts including Charaka Samhita. Our glasses are handcrafted from the heartwood of mature Vijaysar trees sourced responsibly from licensed suppliers.' },
 ];
 
 /* ─── Indian states ─────────────────────────────────────── */
 const STATES = ['Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chandigarh','Chhattisgarh','Delhi','Goa','Gujarat','Haryana','Himachal Pradesh','Jammu & Kashmir','Jharkhand','Karnataka','Kerala','Ladakh','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Puducherry','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal'];
+
+/* ─── Pincode lookup helpers (module-level, no stale closure risk) ──────── */
+const PIN_STATE_FIX = {
+  'new delhi': 'Delhi',
+  'orissa': 'Odisha',
+  'uttaranchal': 'Uttarakhand',
+  'jammu and kashmir': 'Jammu & Kashmir',
+  'pondicherry': 'Puducherry',
+};
+function pinNormaliseState(raw) {
+  if (!raw) return '';
+  const lo = raw.trim().toLowerCase();
+  return PIN_STATE_FIX[lo] || STATES.find(s => s.toLowerCase() === lo) || raw.trim();
+}
+function pinExtractCity(places) {
+  if (!places?.length) return '';
+  // Strip India-Post suffix patterns and trailing numbers from each place name
+  const clean = s => s
+    .replace(/\s+G\.?\s*P\.?\s*O\.?/gi, '')
+    .replace(/\s+[SHB]\.?\s*O\.?\s*$/gi, '')
+    .replace(/\s+\d+\s*$/, '')
+    .trim();
+  // Prefer a name that doesn't look like a street or landmark
+  const isStreet = /\b(road|street|lane|marg|chowk|market|bazar|nagar|colony|bridge|ganj)\b/i;
+  for (const p of places) {
+    const c = clean(p['place name']);
+    if (c.length > 3 && !isStreet.test(c)) return c;
+  }
+  return clean(places[0]['place name']);
+}
 
 /* ─── load Razorpay script ──────────────────────────────── */
 function loadRazorpay() {
@@ -62,10 +102,13 @@ export default function Home() {
   const [loading,    setLoading]    = useState(false);
   const [openFaq,    setOpenFaq]    = useState(null);
   const [toast,      setToast]      = useState(null);
+  const [welcomeBack,    setWelcomeBack]    = useState(null);
+  const [pincodeLoading, setPincodeLoading] = useState(false);
+  const [utm,            setUtm]            = useState({});
   const [showSticky, setShowSticky] = useState(false);
   const [exitIntent, setExitIntent] = useState(false);
-  const pinTimer    = useRef(null);
-  const orderPlaced = useRef(false);
+  const orderPlaced  = useRef(false);
+  const pincodeAbort = useRef(null);
 
   /* sticky CTA on scroll */
   useEffect(() => {
@@ -74,16 +117,85 @@ export default function Home() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  /* exit intent — fires once when mouse leaves top of viewport */
+  /* ── Cookie helpers ─────────────────────────────────────────────────────── */
+  const readCustomerCookie = () => {
+    try {
+      const m = document.cookie.match('(^|;)\\s*vedayu_customer\\s*=\\s*([^;]+)');
+      return m ? JSON.parse(decodeURIComponent(m[2])) : null;
+    } catch (_) { return null; }
+  };
+  const writeCustomerCookie = (data) => {
+    try {
+      const v = encodeURIComponent(JSON.stringify(data));
+      // 180-day expiry, covers repeat purchases well
+      document.cookie = `vedayu_customer=${v}; max-age=${180 * 24 * 3600}; path=/; SameSite=Lax`;
+    } catch (_) {}
+  };
+
+  /* ── Restore from cookie on first load ──────────────────────────────────── */
+  useEffect(() => {
+    const c = readCustomerCookie();
+    if (c?.name) {
+      setForm(f => ({
+        name:    c.name    || f.name,
+        mobile:  c.mobile  || f.mobile,
+        email:   c.email   || f.email,
+        address: c.address || f.address,
+        pincode: c.pincode || f.pincode,
+        city:    c.city    || f.city,
+        state:   c.state   || f.state,
+      }));
+      setWelcomeBack(c.name);  // re-use the existing green welcome-back banner
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /* exit intent — desktop: mouse leaves top of viewport
+                  mobile:   back button, fast scroll-up, or tab switch      */
   useEffect(() => {
     let shown = false;
-    const onMouseLeave = (e) => {
-      if (e.clientY <= 0 && !shown && !orderPlaced.current) {
-        shown = true;
-        setExitIntent(true);
-      }
+    const show = () => {
+      if (shown || orderPlaced.current) return;
+      shown = true;
+      setExitIntent(true);
     };
+
+    // ── Desktop: cursor leaves through the top ────────────────────────────
+    const onMouseLeave = (e) => { if (e.clientY <= 0) show(); };
     document.addEventListener('mouseleave', onMouseLeave);
+
+    // ── Mobile: back button (push a dummy state so we can intercept it) ───
+    const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+    if (isMobile) {
+      history.pushState({ exitGuard: true }, '');
+      const onPopState = (e) => {
+        if (e.state?.exitGuard) { show(); history.pushState({ exitGuard: true }, ''); }
+      };
+      window.addEventListener('popstate', onPopState);
+
+      // ── Mobile: fast upward scroll (≥ 200px upward within 400ms) ────────
+      let lastY = window.scrollY;
+      let lastT = Date.now();
+      const onScroll = () => {
+        const y = window.scrollY;
+        const t = Date.now();
+        if (y < lastY && (lastY - y) > 200 && (t - lastT) < 400) show();
+        lastY = y; lastT = t;
+      };
+      window.addEventListener('scroll', onScroll, { passive: true });
+
+      // ── Mobile: tab/app switch ────────────────────────────────────────
+      const onVisibility = () => { if (document.visibilityState === 'hidden') show(); };
+      document.addEventListener('visibilitychange', onVisibility);
+
+      return () => {
+        document.removeEventListener('mouseleave', onMouseLeave);
+        window.removeEventListener('popstate', onPopState);
+        window.removeEventListener('scroll', onScroll);
+        document.removeEventListener('visibilitychange', onVisibility);
+      };
+    }
+
     return () => document.removeEventListener('mouseleave', onMouseLeave);
   }, []);
 
@@ -105,6 +217,19 @@ export default function Home() {
     fbq('ViewContent', { content_name: 'Vijaysar Wooden Glass', content_ids: ['vijaysar-glass'], content_type: 'product', currency: 'INR', value: 499 });
   }, []);
 
+  /* Capture UTM params + fbclid from URL on first load */
+  useEffect(() => {
+    if (!router.isReady) return;
+    const { utm_source, utm_medium, utm_campaign, utm_content, fbclid } = router.query;
+    const captured = {};
+    if (utm_source)  captured.source   = utm_source;
+    if (utm_medium)  captured.medium   = utm_medium;
+    if (utm_campaign) captured.campaign = utm_campaign;
+    if (utm_content) captured.content  = utm_content;
+    if (fbclid)      captured.fbclid   = fbclid;
+    if (Object.keys(captured).length) setUtm(captured);
+  }, [router.isReady]);
+
   /* Meta Pixel — AddToCart when pack changes (after first interaction) */
   const didMount = useRef(false);
   useEffect(() => {
@@ -118,32 +243,81 @@ export default function Home() {
     setTimeout(() => setToast(null), 4000);
   }, []);
 
-  /* pincode auto-fill */
-  const handlePincode = (val) => {
-    setForm(f => ({ ...f, pincode: val, city: '', state: '' }));
-    clearTimeout(pinTimer.current);
-    if (!/^[1-9][0-9]{5}$/.test(val)) return;
-    pinTimer.current = setTimeout(async () => {
+  /* returning customer lookup — triggers when both mobile (10 digits) + email are filled */
+  const lookupRef = useRef(null);
+  const tryLookup = useCallback(async (mobile, email) => {
+    if (!/^[6-9][0-9]{9}$/.test(mobile)) return;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+    clearTimeout(lookupRef.current);
+    lookupRef.current = setTimeout(async () => {
       try {
-        const res  = await fetch(`https://api.postalpincode.in/pincode/${val}`);
+        const res  = await fetch('/api/lookup-customer', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ mobile, email }),
+        });
         const data = await res.json();
-        if (data[0]?.Status === 'Success' && data[0].PostOffice?.length) {
-          const po = data[0].PostOffice[0];
+        if (data.found) {
+          const c = data.customer;
           setForm(f => ({
             ...f,
-            city:  f.city  || po.District || po.Name || '',
-            state: f.state || (STATES.find(s => s.toLowerCase() === (po.State||'').toLowerCase()) || ''),
+            name:    f.name    || c.name,
+            address: f.address || c.address,
+            pincode: f.pincode || c.pincode,
+            city:    f.city    || c.city,
+            state:   f.state   || c.state,
           }));
+          setWelcomeBack(c.name);
         }
       } catch (_) {}
-    }, 600);
-  };
+    }, 400);
+  }, []);
+
+  /* pincode auto-fill
+     Calls /api/pincode-lookup (same-origin proxy → zippopotam.us).
+     Same-origin = no CORS, no browser security issues, CDN-cached. */
+  const handlePincode = useCallback(async (val) => {
+    // always update the raw pincode value and clear stale city/state
+    setForm(f => ({ ...f, pincode: val, city: '', state: '' }));
+
+    // cancel any in-flight request from previous keystroke
+    if (pincodeAbort.current) pincodeAbort.current.abort();
+
+    if (!/^[1-9]\d{5}$/.test(val)) {
+      setPincodeLoading(false);
+      return;
+    }
+
+    setPincodeLoading(true);
+    pincodeAbort.current = new AbortController();
+
+    try {
+      const res = await fetch(`/api/pincode-lookup?pin=${val}`, {
+        signal: pincodeAbort.current.signal,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.places?.length) {
+          setForm(f => ({
+            ...f,
+            city:  pinExtractCity(data.places),
+            state: pinNormaliseState(data.places[0].state),
+          }));
+        }
+      }
+    } catch (_) {
+      // AbortError from rapid typing — silently ignored
+    }
+
+    setPincodeLoading(false);
+  }, []);
 
   /* validation */
   const validate = () => {
     if (!form.name.trim())                                        return 'Please enter your full name.';
     if (!/^[6-9][0-9]{9}$/.test(form.mobile.trim()))             return 'Please enter a valid 10-digit mobile number.';
-    if (form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) return 'Please enter a valid email address.';
+    if (!form.email.trim()) return 'Please enter your email address.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) return 'Please enter a valid email address.';
     if (!form.address.trim())                                     return 'Please enter your delivery address.';
     if (!/^[1-9][0-9]{5}$/.test(form.pincode))                   return 'Please enter a valid 6-digit pincode.';
     if (!form.city.trim())                                        return 'Please enter your city.';
@@ -164,6 +338,7 @@ export default function Home() {
       price:   finalPrice,
       qty:     selectedPack.qty,
       payment,
+      utm,
       ...form,
     };
 
@@ -178,6 +353,7 @@ export default function Home() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to place order');
         orderPlaced.current = true;
+        writeCustomerCookie({ name: form.name, mobile: form.mobile, email: form.email, address: form.address, pincode: form.pincode, city: form.city, state: form.state });
         router.push(`/order-confirmed?method=cod&pack=${encodeURIComponent(selectedPack.name)}&price=${finalPrice}&name=${encodeURIComponent(form.name)}&orderId=${encodeURIComponent(data.orderId)}`);
 
       } else {
@@ -188,7 +364,7 @@ export default function Home() {
         const res  = await fetch('/api/create-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount: finalPrice, packName: selectedPack.name }),
+          body: JSON.stringify({ amount: finalPrice, packName: selectedPack.name, customerName: form.name }),
         });
         const { order_id, amount } = await res.json();
         if (!res.ok) throw new Error('Could not create payment order. Please try again.');
@@ -207,6 +383,7 @@ export default function Home() {
           modal:       { ondismiss: () => setLoading(false) },
           handler: async (response) => {
             orderPlaced.current = true;
+            writeCustomerCookie({ name: form.name, mobile: form.mobile, email: form.email, address: form.address, pincode: form.pincode, city: form.city, state: form.state });
             let finalOrderId = response.razorpay_payment_id || order_id || '';
             try {
               // Verify payment server-side + fire CAPI Purchase
@@ -220,6 +397,7 @@ export default function Home() {
                   amount,
                   pack:    selectedPack.name,
                   qty:     selectedPack.qty,
+                  utm,
                   ...form,
                 }),
               });
@@ -263,42 +441,209 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Vedayu Vijaysar Wooden Glass — Natural Ayurvedic Wellness Tumbler | Free Delivery India</title>
-        <meta name="description" content="Order Vedayu Vijaysar Wooden Glass online. Natural Ayurvedic wellness tumbler inspired by Indian tradition. Free delivery all over India. COD available. Starting ₹499. 7-day replacement." />
-        <meta name="keywords" content="Vijaysar wooden glass, Vijaysar tumbler, Ayurvedic wooden glass, herbal wooden tumbler, natural wellness glass India, Vijaysar wood infused water, Vedayu" />
-        <meta property="og:title" content="Vedayu Vijaysar Wooden Glass — Natural Ayurvedic Wellness Tumbler" />
-        <meta property="og:description" content="Natural Vijaysar wood tumbler for daily wellness. Free delivery all over India. COD available. Starting ₹499." />
-        <link rel="canonical" href={`${process.env.NEXT_PUBLIC_SITE_URL || ''}/`} />
+        {/* ── Title — primary keyword first, commercial intent, price anchor ── */}
+        <title>Vijaysar Wooden Glass — Buy Online India | Vedayu | From ₹499</title>
 
-        {/* JSON-LD */}
+        {/* ── Meta description — keyword-rich, emotional hook, under 155 chars ── */}
+        <meta name="description" content="Vijaysar Wooden Glass — fill overnight, drink infused water each morning. Ancient Ayurvedic wellness ritual. Starting ₹499 · Free delivery across India · COD available." />
+
+        {/* ── Open Graph — WhatsApp / Facebook / Twitter share preview ── */}
+        <meta property="og:type"        content="product" />
+        <meta property="og:title"       content="Vijaysar Wooden Glass — Ayurvedic Wellness | Vedayu" />
+        <meta property="og:description" content="Fill overnight, drink infused water each morning. Natural Vijaysar wood wellness ritual. From ₹499 · Free delivery · COD available." />
+        <meta property="og:image"       content="https://vedayulife.com/images/og-image.jpg" />
+        <meta property="og:image:width"  content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:url"         content="https://vedayulife.com/" />
+        <meta property="og:site_name"   content="Vedayu" />
+        <meta property="product:price:amount"   content="499" />
+        <meta property="product:price:currency" content="INR" />
+
+        {/* ── Twitter card ── */}
+        <meta name="twitter:card"        content="summary_large_image" />
+        <meta name="twitter:title"       content="Vijaysar Wooden Glass — Ayurvedic Wellness | Vedayu" />
+        <meta name="twitter:description" content="Fill overnight, drink infused water each morning. From ₹499 · Free delivery · COD available." />
+        <meta name="twitter:image"       content="https://vedayulife.com/images/og-image.jpg" />
+
+        {/* ── Canonical ── */}
+        <link rel="canonical" href="https://vedayulife.com/" />
+
+        {/* ── JSON-LD Structured Data ── */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
           '@context': 'https://schema.org',
           '@graph': [
+
+            // 1. WebSite
+            {
+              '@type': 'WebSite',
+              '@id': 'https://vedayulife.com/#website',
+              url: 'https://vedayulife.com',
+              name: 'Vedayu',
+              description: 'Natural Ayurvedic wellness products — Vijaysar Wooden Glass for daily wellness rituals.',
+              inLanguage: 'en-IN',
+            },
+
+            // 2. Organization
             {
               '@type': 'Organization',
+              '@id': 'https://vedayulife.com/#organization',
               name: 'Vedayu',
-              url: process.env.NEXT_PUBLIC_SITE_URL,
-              description: 'Indian wellness brand offering natural Ayurvedic wellness products.',
+              legalName: 'Hashcart eCommerce Pvt. Ltd.',
+              url: 'https://vedayulife.com',
+              logo: 'https://vedayulife.com/favicon.svg',
+              contactPoint: {
+                '@type': 'ContactPoint',
+                telephone: '+91-70707-01956',
+                contactType: 'customer service',
+                email: 'hi@vedayulife.com',
+                areaServed: 'IN',
+                availableLanguage: ['English', 'Hindi'],
+              },
             },
+
+            // 3. Product — with images, seller, SKU, reviews
             {
               '@type': 'Product',
-              name: 'Vedayu Vijaysar Wooden Herbal Glass / Tumbler',
-              description: 'Natural wooden tumbler made from Vijaysar wood for daily wellness ritual inspired by Ayurveda.',
+              '@id': 'https://vedayulife.com/#product',
+              name: 'Vijaysar Wooden Glass',
+              alternateName: ['Vijaysar Tumbler', 'Vijaysar Wood Glass', 'Vijaysar Herbal Glass'],
+              description: 'Handcrafted tumbler made from 100% natural Vijaysar wood (Pterocarpus marsupium). Fill with water overnight, drink infused water each morning as part of an Ayurvedic wellness ritual. 6-inch height, 80ml capacity. Free delivery across India.',
               brand: { '@type': 'Brand', name: 'Vedayu' },
-              offers: [
-                { '@type': 'Offer', name: 'Pack of 1', price: '499', priceCurrency: 'INR', availability: 'https://schema.org/InStock' },
-                { '@type': 'Offer', name: 'Pack of 2', price: '899', priceCurrency: 'INR', availability: 'https://schema.org/InStock' },
-                { '@type': 'Offer', name: 'Pack of 5', price: '1999', priceCurrency: 'INR', availability: 'https://schema.org/InStock' },
+              manufacturer: { '@type': 'Organization', name: 'Vedayu', url: 'https://vedayulife.com' },
+              sku: 'VED-VWG-01',
+              material: 'Vijaysar Wood (Pterocarpus marsupium)',
+              image: [
+                'https://vedayulife.com/images/product.jpg',
+                'https://vedayulife.com/images/lifestyle.jpg',
+                'https://vedayulife.com/images/authentic.jpg',
+                'https://vedayulife.com/images/benefits.jpg',
+                'https://vedayulife.com/images/how-to-use.jpg',
               ],
-              aggregateRating: { '@type': 'AggregateRating', ratingValue: '4.8', reviewCount: '200' },
+              offers: [
+                {
+                  '@type': 'Offer',
+                  name: 'Pack of 1',
+                  sku: 'VED-VWG-01-P1',
+                  price: '499',
+                  priceCurrency: 'INR',
+                  availability: 'https://schema.org/InStock',
+                  url: 'https://vedayulife.com/',
+                  seller: { '@type': 'Organization', name: 'Vedayu', url: 'https://vedayulife.com' },
+                  shippingDetails: {
+                    '@type': 'OfferShippingDetails',
+                    shippingRate: { '@type': 'MonetaryAmount', value: '0', currency: 'INR' },
+                    deliveryTime: { '@type': 'ShippingDeliveryTime', businessDays: { '@type': 'QuantitativeValue', minValue: 2, maxValue: 6 } },
+                    shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'IN' },
+                  },
+                  hasMerchantReturnPolicy: {
+                    '@type': 'MerchantReturnPolicy',
+                    applicableCountry: 'IN',
+                    returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+                    merchantReturnDays: 7,
+                    returnMethod: 'https://schema.org/ReturnByMail',
+                    returnFees: 'https://schema.org/FreeReturn',
+                  },
+                },
+                {
+                  '@type': 'Offer',
+                  name: 'Pack of 2',
+                  sku: 'VED-VWG-01-P2',
+                  price: '899',
+                  priceCurrency: 'INR',
+                  availability: 'https://schema.org/InStock',
+                  url: 'https://vedayulife.com/',
+                  seller: { '@type': 'Organization', name: 'Vedayu', url: 'https://vedayulife.com' },
+                  shippingDetails: {
+                    '@type': 'OfferShippingDetails',
+                    shippingRate: { '@type': 'MonetaryAmount', value: '0', currency: 'INR' },
+                    deliveryTime: { '@type': 'ShippingDeliveryTime', businessDays: { '@type': 'QuantitativeValue', minValue: 2, maxValue: 6 } },
+                    shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'IN' },
+                  },
+                  hasMerchantReturnPolicy: {
+                    '@type': 'MerchantReturnPolicy',
+                    applicableCountry: 'IN',
+                    returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+                    merchantReturnDays: 7,
+                    returnMethod: 'https://schema.org/ReturnByMail',
+                    returnFees: 'https://schema.org/FreeReturn',
+                  },
+                },
+                {
+                  '@type': 'Offer',
+                  name: 'Pack of 5',
+                  sku: 'VED-VWG-01-P5',
+                  price: '1999',
+                  priceCurrency: 'INR',
+                  availability: 'https://schema.org/InStock',
+                  url: 'https://vedayulife.com/',
+                  seller: { '@type': 'Organization', name: 'Vedayu', url: 'https://vedayulife.com' },
+                  shippingDetails: {
+                    '@type': 'OfferShippingDetails',
+                    shippingRate: { '@type': 'MonetaryAmount', value: '0', currency: 'INR' },
+                    deliveryTime: { '@type': 'ShippingDeliveryTime', businessDays: { '@type': 'QuantitativeValue', minValue: 2, maxValue: 6 } },
+                    shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'IN' },
+                  },
+                  hasMerchantReturnPolicy: {
+                    '@type': 'MerchantReturnPolicy',
+                    applicableCountry: 'IN',
+                    returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+                    merchantReturnDays: 7,
+                    returnMethod: 'https://schema.org/ReturnByMail',
+                    returnFees: 'https://schema.org/FreeReturn',
+                  },
+                },
+              ],
+              aggregateRating: {
+                '@type': 'AggregateRating',
+                ratingValue: '4.8',
+                reviewCount: '200',
+                bestRating: '5',
+                worstRating: '1',
+              },
+              review: [
+                {
+                  '@type': 'Review',
+                  reviewRating: { '@type': 'Rating', ratingValue: '5', bestRating: '5' },
+                  author: { '@type': 'Person', name: 'Priya Sharma' },
+                  reviewBody: 'Been using it for 3 months. My morning feels more grounded and my digestion has improved noticeably. The wood quality is excellent.',
+                  datePublished: '2026-03-15',
+                },
+                {
+                  '@type': 'Review',
+                  reviewRating: { '@type': 'Rating', ratingValue: '5', bestRating: '5' },
+                  author: { '@type': 'Person', name: 'Rajesh Verma' },
+                  reviewBody: 'Gifted the family pack to my parents. They love the daily ritual. Very authentic Vijaysar wood and fast delivery.',
+                  datePublished: '2026-02-28',
+                },
+                {
+                  '@type': 'Review',
+                  reviewRating: { '@type': 'Rating', ratingValue: '5', bestRating: '5' },
+                  author: { '@type': 'Person', name: 'Sunita Patel' },
+                  reviewBody: 'The water does turn slightly pinkish-brown overnight which shows the wood is real. Simple habit, feels very Ayurvedic.',
+                  datePublished: '2026-04-10',
+                },
+              ],
             },
+
+            // 4. FAQPage
             {
               '@type': 'FAQPage',
               mainEntity: FAQS.map(f => ({
-                '@type': 'Question', name: f.q,
+                '@type': 'Question',
+                name: f.q,
                 acceptedAnswer: { '@type': 'Answer', text: f.a },
               })),
             },
+
+            // 5. BreadcrumbList
+            {
+              '@type': 'BreadcrumbList',
+              itemListElement: [
+                { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://vedayulife.com/' },
+                { '@type': 'ListItem', position: 2, name: 'Vijaysar Wooden Glass', item: 'https://vedayulife.com/' },
+              ],
+            },
+
           ],
         }) }} />
       </Head>
@@ -340,8 +685,8 @@ export default function Home() {
                 <span className="badge">💳 COD Available</span>
               </div>
               <p className="eyebrow">Vedayu — Indian Wellness</p>
-              <h1>Start Your Daily Sugar&#8209;Conscious Wellness Routine with Natural Vijaysar Wood Infused Water</h1>
-              <p className="hero-sub" style={{ marginTop: 14 }}>The traditional Vijaysar wooden tumbler — a simple, natural daily hydration ritual inspired by thousands of years of Ayurvedic wisdom. Just fill, wait, and drink.</p>
+              <h1>Vijaysar Wooden Glass — Start Your Daily Ayurvedic Wellness Ritual</h1>
+              <p className="hero-sub" style={{ marginTop: 14 }}>The traditional Vijaysar wooden tumbler — fill with water overnight, drink first thing each morning. A simple, natural hydration ritual inspired by thousands of years of Ayurvedic wisdom.</p>
               <div className="hero-price">
                 <span className="price-main">₹499</span>
                 <span className="price-original">₹699</span>
@@ -360,12 +705,13 @@ export default function Home() {
             </div>
 
             <div className="hero-img-wrap">
-              <img
+              <Image
                 src="/images/product.jpg"
                 alt="Vedayu Vijaysar Wooden Herbal Glass — with box and herbal tea"
                 className="hero-product-img"
                 width={520}
                 height={520}
+                priority
               />
               <div className="spec-pills">
                 <span className="spec-pill">📏 6 inch tall</span>
@@ -421,9 +767,11 @@ export default function Home() {
           <div className="solution-grid">
             <div className="solution-img-wrap">
               <div className="solution-circle">
-                <img
+                <Image
                   src="/images/lifestyle.jpg"
                   alt="Vedayu Vijaysar Wooden Glass — Premium Natural Wood"
+                  width={400}
+                  height={400}
                   style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
                 />
               </div>
@@ -447,6 +795,103 @@ export default function Home() {
               </ul>
               <button className="btn btn-brown" onClick={() => scrollToCheckout()}>Get Yours — ₹499 Only →</button>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════
+          CELEBRITY ENDORSEMENT
+          ══════════════════════════════════════════ */}
+      <section className="section" id="celebrity">
+        <div className="container">
+          <div className="celebrity-label">🎬 As Seen With</div>
+          <h2 className="section-title">Sanjay Mishra on Vijaysar Wood</h2>
+          <p className="section-sub">Popular Bollywood actor Sanjay Mishra shares why he swears by the power of Vijaysar wood</p>
+          <div className="divider" />
+          <div className="celebrity-wrap">
+            <div className="celebrity-video-wrap">
+              <video
+                className="video-player"
+                controls
+                playsInline
+                preload="metadata"
+                poster="/images/thumb-celebrity.jpg"
+              >
+                <source src="/videos/celebrity.mp4" type="video/mp4" />
+              </video>
+            </div>
+            <div className="celebrity-side">
+              <div className="celebrity-quote-block">
+                <p className="celebrity-quote">&ldquo;Vijaysar wood ke fayde hazaron saal se Ayurveda mein maane jaate hain. Yeh ek aisi cheez hai jo nature ne humein di hai — aur humein iska fayda uthana chahiye.&rdquo;</p>
+                <div className="celebrity-byline">— Sanjay Mishra, Actor</div>
+              </div>
+              <div className="celebrity-badges">
+                <span className="video-badge">🎬 Actor</span>
+                <span className="video-badge">✅ Verified Endorsement</span>
+              </div>
+              <a href="#checkout" className="btn btn-brown btn-lg">
+                🛒 Order Now — Free Delivery
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════
+          VIDEO TESTIMONIAL
+          ══════════════════════════════════════════ */}
+      <section className="section section-alt" id="video-testimonial">
+        <div className="container">
+          <h2 className="section-title">See Why 25,000+ Families Trust Vedayu</h2>
+          <p className="section-sub">Real customers, real stories — hear it in their own words</p>
+          <div className="divider" />
+          <div className="video-duo-wrap">
+            <div className="video-duo-item">
+              <div className="video-player-wrap">
+                <video
+                  className="video-player"
+                  controls
+                  playsInline
+                  preload="metadata"
+                  poster="/images/thumb-testimonial.jpg"
+                >
+                  <source src="/videos/testimonial.mp4" type="video/mp4" />
+                </video>
+              </div>
+              <div className="video-duo-caption">
+                <div className="video-stars">★★★★★</div>
+                <p className="video-pull-quote">&ldquo;Maine pehle kai products try kiye — kuch kaam aaya, kuch nahi. Vijaysar glass ne meri subah ki routine change kar di.&rdquo;</p>
+                <div className="video-author-line">Verified Customer &nbsp;·&nbsp; Vedayu Order</div>
+              </div>
+            </div>
+            <div className="video-duo-item">
+              <div className="video-player-wrap">
+                <video
+                  className="video-player"
+                  controls
+                  playsInline
+                  preload="metadata"
+                  poster="/images/thumb-meta-ad.jpg"
+                >
+                  <source src="/videos/meta-ad.mp4" type="video/mp4" />
+                </video>
+              </div>
+              <div className="video-duo-caption">
+                <div className="video-stars">★★★★★</div>
+                <p className="video-pull-quote">&ldquo;Vijaysar wood — 2,000 years of Ayurvedic tradition, one simple morning habit. Pure, natural, and genuinely effective.&rdquo;</p>
+                <div className="video-author-line">Vedayu &nbsp;·&nbsp; Official</div>
+              </div>
+            </div>
+          </div>
+          <div className="video-section-cta">
+            <div className="video-badges">
+              <span className="video-badge">✅ Real Customers</span>
+              <span className="video-badge">📦 25,000+ Orders</span>
+              <span className="video-badge">🇮🇳 Made in India</span>
+            </div>
+            <a href="#checkout" className="btn btn-brown btn-lg" style={{ marginTop: 20, display: 'inline-block' }}>
+              🛒 Order Now — Free Delivery
+            </a>
           </div>
         </div>
       </section>
@@ -493,9 +938,11 @@ export default function Home() {
 
             {/* Left — infographic image */}
             <div className="how-to-img-col">
-              <img
+              <Image
                 src="/images/how-to-use.jpg"
                 alt="How to use Vijaysar Wooden Glass — 4 steps infographic"
+                width={480}
+                height={480}
                 style={{ width: '100%', maxWidth: 480, height: 'auto', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,.12)', display: 'block', margin: '0 auto' }}
               />
             </div>
@@ -576,14 +1023,18 @@ export default function Home() {
 
           {/* Product infographics */}
           <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 36 }}>
-            <img
+            <Image
               src="/images/specs.jpg"
               alt="Vijaysar Wood Tumbler dimensions — 6.1 inch height, 80ml capacity"
+              width={380}
+              height={380}
               style={{ width: '100%', maxWidth: 380, height: 'auto', borderRadius: 12, boxShadow: '0 4px 20px rgba(0,0,0,.10)' }}
             />
-            <img
+            <Image
               src="/images/authentic.jpg"
               alt="100% Authentic Vijaysar Wood vs Jamun Wood — how to identify"
+              width={380}
+              height={380}
               style={{ width: '100%', maxWidth: 380, height: 'auto', borderRadius: 12, boxShadow: '0 4px 20px rgba(0,0,0,.10)' }}
             />
           </div>
@@ -717,6 +1168,13 @@ export default function Home() {
                 <div className="order-row order-row-total"><span>Total</span><span>{fmt(currentPrice)}</span></div>
               </div>
 
+              {/* Welcome back — cookie or server KV lookup restored details */}
+              {welcomeBack && (
+                <div style={{ background: '#F0F9F3', border: '1px solid #4A7C59', borderRadius: 8, padding: '10px 14px', marginBottom: 12, fontSize: '.88rem', color: '#2d6b40', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  👋 <span>Welcome back, <strong>{welcomeBack}</strong>! Your delivery details are pre-filled — just place your order.</span>
+                </div>
+              )}
+
               {/* Customer details */}
               <label className="field-label" style={{ marginBottom: 8 }}>Your Delivery Details:</label>
               <div className="field-row">
@@ -726,15 +1184,15 @@ export default function Home() {
                 </div>
                 <div className="field-group">
                   <label className="field-label" htmlFor="mobile">Mobile Number *</label>
-                  <input id="mobile" type="tel" placeholder="10-digit number" maxLength={10} inputMode="numeric" value={form.mobile} onChange={e => setForm(f => ({ ...f, mobile: e.target.value.replace(/\D/g,'') }))} />
+                  <input id="mobile" type="tel" placeholder="10-digit number" maxLength={10} inputMode="numeric" value={form.mobile} onChange={e => { const v = e.target.value.replace(/\D/g,''); setForm(f => ({ ...f, mobile: v })); tryLookup(v, form.email); }} />
                 </div>
               </div>
 
               <div className="field-group">
                 <label className="field-label" htmlFor="email">
-                  Email Address <span style={{ fontWeight: 400, color: 'var(--vd-text-light)' }}>(optional — for order confirmation)</span>
+                  Email Address
                 </label>
-                <input id="email" type="email" placeholder="yourname@gmail.com" autoComplete="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+                <input id="email" type="email" placeholder="yourname@gmail.com" autoComplete="email" required value={form.email} onChange={e => { const v = e.target.value; setForm(f => ({ ...f, email: v })); tryLookup(form.mobile, v); }} />
               </div>
 
               <div className="field-group">
@@ -744,19 +1202,21 @@ export default function Home() {
 
               <div className="field-row">
                 <div className="field-group">
-                  <label className="field-label" htmlFor="pincode">Pincode *</label>
+                  <label className="field-label" htmlFor="pincode">
+                    Pincode *{pincodeLoading && <span style={{ fontWeight:400, color:'#4A7C59', fontSize:'.76rem', marginLeft:6 }}>🔍 detecting…</span>}
+                  </label>
                   <input id="pincode" type="text" placeholder="6-digit pincode" maxLength={6} inputMode="numeric" value={form.pincode} onChange={e => handlePincode(e.target.value.replace(/\D/g,''))} />
                 </div>
                 <div className="field-group">
                   <label className="field-label" htmlFor="city">City *</label>
-                  <input id="city" type="text" placeholder="City / Town" value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} />
+                  <input id="city" type="text" placeholder={pincodeLoading ? 'Detecting city…' : 'City / Town'} value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} />
                 </div>
               </div>
 
               <div className="field-group">
                 <label className="field-label" htmlFor="state">State *</label>
                 <select id="state" value={form.state} onChange={e => setForm(f => ({ ...f, state: e.target.value }))}>
-                  <option value="">Select State</option>
+                  <option value="">{pincodeLoading ? 'Detecting state…' : 'Select State'}</option>
                   {STATES.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
@@ -843,22 +1303,22 @@ export default function Home() {
           <div style={{ textAlign: 'center', marginBottom: 32 }}>
             <div style={{ fontSize: '2.4rem', fontWeight: 800, color: 'var(--vd-brown)', lineHeight: 1 }}>4.8 / 5</div>
             <div style={{ color: 'var(--vd-gold)', fontSize: '1.4rem', letterSpacing: 4, margin: '5px 0' }}>★★★★★</div>
-            <div style={{ fontSize: '.82rem', color: 'var(--vd-text-light)' }}>Based on 5,000+ verified orders across India</div>
+            <div style={{ fontSize: '.82rem', color: 'var(--vd-text-light)' }}>Based on 25,000+ verified orders across India</div>
           </div>
           <div className="reviews-grid">
             {[
-              { avatar:'https://i.pravatar.cc/80?img=47', name:'Priya Sharma',   loc:'Pune, Maharashtra',      ago:'3 weeks ago',  stars:'★★★★★', text:'Bought this for my father after my aunt recommended it. The wood quality is really premium — you can tell it\'s handcrafted. He uses it every morning now and loves the ritual. Packaging was very safe. Fast delivery to Pune within 3 days!' },
-              { avatar:'https://i.pravatar.cc/80?img=13', name:'Rajesh Verma',   loc:'Delhi',                  ago:'1 month ago',  stars:'★★★★★', text:'Bought the couple pack for me and my wife. Beautiful wooden finish — looks very premium. We\'ve made it part of our morning routine. Fill at night, drink together every morning. The natural wood fragrance is also very pleasant!' },
-              { avatar:'https://i.pravatar.cc/80?img=44', name:'Sunita Patel',   loc:'Ahmedabad, Gujarat',     ago:'2 months ago', stars:'★★★★☆', text:'Gifted the family pack to my in-laws for Diwali. They were very happy — it\'s a meaningful, practical gift. All 5 glasses came well packed with no damage. Follow the care instructions carefully. Overall excellent product!' },
-              { avatar:'https://i.pravatar.cc/80?img=57', name:'Arjun Nair',     loc:'Bangalore, Karnataka',   ago:'6 weeks ago',  stars:'★★★★★', text:'I was a bit skeptical at first but decided to try. The Vijaysar glass is beautifully made. Each piece has a unique grain pattern. Delivery in 3 days to Bangalore. My mother loves it and uses it every single morning. Worth every rupee!' },
-              { avatar:'https://i.pravatar.cc/80?img=25', name:'Meera Krishnan', loc:'Chennai, Tamil Nadu',    ago:'5 weeks ago',  stars:'★★★★★', text:'Good quality wooden glass. COD option was very convenient. The tumbler is sturdy and the natural finish looks great. I like that it\'s 100% natural with no coating. Already recommended to 3 friends. Very good value, especially the couple pack!' },
-              { avatar:'https://i.pravatar.cc/80?img=32', name:'Kavita Singh',   loc:'Lucknow, Uttar Pradesh', ago:'7 weeks ago',  stars:'★★★★★', text:'Perfect gift idea for parents! Bought the family pack — 5 glasses. Everyone impressed by the packaging and quality. Vijaysar wood is authentic. The natural grain on each glass is slightly different — very premium feel. Highly recommend!' },
-            ].map(({ avatar, name, loc, ago, stars, text }) => (
+              { color:'#C9A84C', name:'Rama Devi',      loc:'Varanasi, Uttar Pradesh', ago:'2 weeks ago',  stars:'★★★★★', text:'बहुत अच्छा उत्पाद है। मेरे पति पिछले 3 महीनों से रोज़ सुबह इस गिलास का पानी पी रहे हैं। लकड़ी की गुणवत्ता बहुत अच्छी है, असली विजयसर की लकड़ी है। पानी रात भर रखने के बाद हल्का गुलाबी रंग हो जाता है — यह देख कर मन को संतोष होता है। पैकिंग भी बहुत सुरक्षित थी।' },
+              { color:'#5C3D1E', name:'Kumar Raghav',   loc:'Patna, Bihar',            ago:'3 weeks ago',  stars:'★★★★★', text:'Bhai, 2 mahine ho gaye use karte hue. Subah uthke seedha yahi paani peeta hoon. Pehle koi routine nahi tha, ab yeh glass yaad dilata hai. Delivery bhi 4 din mein aa gayi — COD mein koi problem nahi hui. Quality ekdum solid hai, koi plastic smell nahi, pure wood.' },
+              { color:'#4A7C59', name:'Priya Sharma',   loc:'Pune, Maharashtra',       ago:'1 month ago',  stars:'★★★★★', text:'Bought this for my father after my aunt recommended it. The wood quality is really premium — you can tell it\'s handcrafted. He uses it every morning now and genuinely enjoys the ritual. Packaging was very safe, no damage at all. Fast delivery to Pune within 3 days!' },
+              { color:'#7a5028', name:'Kavita Jha',     loc:'Jaipur, Rajasthan',       ago:'5 weeks ago',  stars:'★★★★★', text:'पहले पानी पीने का कोई नियम नहीं था, बस जब मन करे पी लिया। अब रोज़ रात को गिलास भर देती हूँ और सुबह सबसे पहले यही पानी पीती हूँ। 90 दिन का ritual complete किया — अब दूसरा गिलास मँगवाया है। बहुत सुंदर तोहफ़ा भी है बुज़ुर्गों के लिए।' },
+              { color:'#3D2610', name:'Arjun Nair',     loc:'Bangalore, Karnataka',    ago:'6 weeks ago',  stars:'★★★★★', text:'Was skeptical initially but glad I ordered. The glass is beautifully crafted — each piece has a unique grain pattern which shows it\'s genuinely handmade. My mother uses it every single morning without fail. Delivery in 3 days to Bangalore. Totally worth it!' },
+              { color:'#9e5c2e', name:'Pooja Mehta',    loc:'Surat, Gujarat',          ago:'7 weeks ago',  stars:'★★★★☆', text:'Mummy ke liye family pack liya tha — 5 glasses. Sabko bahut pasand aaya. Ek ek glass ka grain pattern alag hai, toh pata chalta hai ki handmade hai. COD tha toh tension nahi thi. Packaging bhi dam se ki thi, ek bhi glass nahi toota. Recommend karunga sabko!' },
+            ].map(({ color, name, loc, ago, stars, text }) => (
               <div className="review-card" key={name}>
                 <div className="review-stars">{stars}</div>
                 <p className="review-text">&ldquo;{text}&rdquo;</p>
                 <div className="review-author">
-                  <img src={avatar} alt={name} className="review-avatar-img" />
+                  <div className="review-avatar-img" style={{ background: color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: '1.1rem', flexShrink: 0 }}>{name[0]}</div>
                   <div>
                     <div className="review-name">{name}</div>
                     <div className="review-meta">{loc} · {ago}</div>
