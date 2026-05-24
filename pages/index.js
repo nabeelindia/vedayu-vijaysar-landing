@@ -17,6 +17,29 @@ const PACKS = {
 };
 const fmt = (n) => '₹' + Number(n).toLocaleString('en-IN');
 
+/* ─── Delivery estimate helper ──────────────────────────────── */
+function getDeliveryEst(pincode) {
+  const p = parseInt((pincode || '').slice(0, 3), 10);
+  const isMetro = [110,111,400,401,402,560,561,600,601,700,500,380,411,122,302,226,208].some(m => p === m);
+  const [lo, hi] = isMetro ? [3, 5] : [5, 8];
+  const addDays = (n) => {
+    const d = new Date();
+    let added = 0;
+    while (added < n) { d.setDate(d.getDate() + 1); if (d.getDay() !== 0) added++; }
+    return d;
+  };
+  const fmt2 = d => d.toLocaleDateString('en-IN', { weekday:'short', day:'numeric', month:'short' });
+  return `${fmt2(addDays(lo))} – ${fmt2(addDays(hi))}`;
+}
+
+/* ─── Product gallery images ────────────────────────────────── */
+const GALLERY = [
+  { src:'/images/product.jpg',   alt:'Vedayu Vijaysar Wooden Glass — front view' },
+  { src:'/images/lifestyle.jpg', alt:'Vijaysar Glass — morning wellness ritual' },
+  { src:'/images/authentic.jpg', alt:'100% authentic Vijaysar wood — how to identify' },
+  { src:'/images/specs.jpg',     alt:'Vijaysar Glass dimensions — 6 inch, 80ml' },
+];
+
 /* ─── FAQ data ──────────────────────────────────────────── */
 const FAQS = [
   { q: 'What is a Vijaysar wooden glass?', a: 'A Vijaysar wooden glass is a traditional Indian tumbler handcrafted from Vijaysar wood (Pterocarpus marsupium), also known as the Indian Kino tree. Vijaysar wood has been used in Ayurvedic wellness traditions for centuries. Water stored overnight takes on a slight natural tinge from the wood — this is completely normal and safe. It is used as part of a daily wellness and hydration ritual.' },
@@ -107,8 +130,12 @@ export default function Home() {
   const [utm,            setUtm]            = useState({});
   const [showSticky, setShowSticky] = useState(false);
   const [exitIntent, setExitIntent] = useState(false);
+  const [deliveryEst, setDeliveryEst] = useState('');
+  const [touched,     setTouched]     = useState({});
+  const [galleryIdx,  setGalleryIdx]  = useState(0);
   const orderPlaced  = useRef(false);
   const pincodeAbort = useRef(null);
+  const swipeX       = useRef(null);
 
   /* sticky CTA on scroll */
   useEffect(() => {
@@ -243,6 +270,20 @@ export default function Home() {
     setTimeout(() => setToast(null), 4000);
   }, []);
 
+  /* inline validation helpers */
+  const touch = (f) => setTouched(t => ({ ...t, [f]: true }));
+  const fieldOk = {
+    name:    () => form.name.trim().length > 1,
+    mobile:  () => /^[6-9][0-9]{9}$/.test(form.mobile.trim()),
+    email:   () => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()),
+    address: () => form.address.trim().length > 5,
+    pincode: () => /^[1-9][0-9]{5}$/.test(form.pincode),
+    city:    () => form.city.trim().length > 0,
+    state:   () => form.state.length > 0,
+  };
+  const vStyle = (f) => touched[f] ? { borderColor: fieldOk[f]() ? '#4A7C59' : '#e53e3e', boxShadow: fieldOk[f]() ? '0 0 0 2px rgba(74,124,89,.15)' : '0 0 0 2px rgba(229,62,62,.15)' } : {};
+  const vIcon  = (f) => touched[f] ? (fieldOk[f]() ? <span style={{color:'#4A7C59',marginLeft:4,fontSize:'.8rem'}}>✓</span> : <span style={{color:'#e53e3e',marginLeft:4,fontSize:'.8rem'}}>✗</span>) : null;
+
   /* returning customer lookup — triggers when both mobile (10 digits) + email are filled */
   const lookupRef = useRef(null);
   const tryLookup = useCallback(async (mobile, email) => {
@@ -280,6 +321,9 @@ export default function Home() {
     // always update the raw pincode value and clear stale city/state
     setForm(f => ({ ...f, pincode: val, city: '', state: '' }));
 
+    // clear delivery estimate if pincode is incomplete
+    if (val.length < 6) setDeliveryEst('');
+
     // cancel any in-flight request from previous keystroke
     if (pincodeAbort.current) pincodeAbort.current.abort();
 
@@ -303,6 +347,7 @@ export default function Home() {
             city:  pinExtractCity(data.places),
             state: pinNormaliseState(data.places[0].state),
           }));
+          setDeliveryEst(getDeliveryEst(val));
         }
       }
     } catch (_) {
@@ -380,7 +425,14 @@ export default function Home() {
           prefill:     { name: form.name, contact: `+91${form.mobile}`, email: form.email || '' },
           notes:       { address: `${form.address}, ${form.city}, ${form.state} - ${form.pincode}` },
           theme:       { color: '#5C3D1E' },
-          modal:       { ondismiss: () => setLoading(false) },
+          modal: {
+            ondismiss: () => {
+              setLoading(false);
+              showToast('Payment incomplete — you can try COD to pay on delivery instead.', 'info');
+              setPayment('cod');
+              setTimeout(() => document.getElementById('checkout')?.scrollIntoView({ behavior:'smooth', block:'center' }), 300);
+            }
+          },
           handler: async (response) => {
             orderPlaced.current = true;
             writeCustomerCookie({ name: form.name, mobile: form.mobile, email: form.email, address: form.address, pincode: form.pincode, city: form.city, state: form.state });
@@ -705,14 +757,47 @@ export default function Home() {
             </div>
 
             <div className="hero-img-wrap">
-              <Image
-                src="/images/product.jpg"
-                alt="Vedayu Vijaysar Wooden Herbal Glass — with box and herbal tea"
-                className="hero-product-img"
-                width={520}
-                height={520}
-                priority
-              />
+              {/* Gallery */}
+              <div
+                style={{ position:'relative', borderRadius:16, overflow:'hidden', cursor:'grab', userSelect:'none' }}
+                onTouchStart={e => { swipeX.current = e.touches[0].clientX; }}
+                onTouchEnd={e => {
+                  if (swipeX.current === null) return;
+                  const dx = e.changedTouches[0].clientX - swipeX.current;
+                  if (Math.abs(dx) > 40) setGalleryIdx(i => dx < 0 ? Math.min(i+1, GALLERY.length-1) : Math.max(i-1, 0));
+                  swipeX.current = null;
+                }}
+                onMouseDown={e => { swipeX.current = e.clientX; }}
+                onMouseUp={e => {
+                  if (swipeX.current === null) return;
+                  const dx = e.clientX - swipeX.current;
+                  if (Math.abs(dx) > 40) setGalleryIdx(i => dx < 0 ? Math.min(i+1, GALLERY.length-1) : Math.max(i-1, 0));
+                  swipeX.current = null;
+                }}
+              >
+                <Image
+                  src={GALLERY[galleryIdx].src}
+                  alt={GALLERY[galleryIdx].alt}
+                  className="hero-product-img"
+                  width={520}
+                  height={520}
+                  priority
+                  style={{ transition:'opacity .25s', display:'block' }}
+                />
+                {/* Prev / Next arrows */}
+                {galleryIdx > 0 && (
+                  <button onClick={() => setGalleryIdx(i => i-1)} style={{ position:'absolute', left:8, top:'50%', transform:'translateY(-50%)', background:'rgba(255,255,255,.85)', border:'none', borderRadius:'50%', width:36, height:36, fontSize:'1.1rem', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 2px 8px rgba(0,0,0,.15)' }} aria-label="Previous image">‹</button>
+                )}
+                {galleryIdx < GALLERY.length - 1 && (
+                  <button onClick={() => setGalleryIdx(i => i+1)} style={{ position:'absolute', right:8, top:'50%', transform:'translateY(-50%)', background:'rgba(255,255,255,.85)', border:'none', borderRadius:'50%', width:36, height:36, fontSize:'1.1rem', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 2px 8px rgba(0,0,0,.15)' }} aria-label="Next image">›</button>
+                )}
+                {/* Dot indicators */}
+                <div style={{ position:'absolute', bottom:10, left:'50%', transform:'translateX(-50%)', display:'flex', gap:6 }}>
+                  {GALLERY.map((_, i) => (
+                    <button key={i} onClick={() => setGalleryIdx(i)} style={{ width: i===galleryIdx ? 20 : 8, height:8, borderRadius:4, border:'none', background: i===galleryIdx ? '#5C3D1E' : 'rgba(255,255,255,.7)', cursor:'pointer', transition:'all .2s', padding:0 }} aria-label={`Image ${i+1}`} />
+                  ))}
+                </div>
+              </div>
               <div className="spec-pills">
                 <span className="spec-pill">📏 6 inch tall</span>
                 <span className="spec-pill">💧 80 ml capacity</span>
@@ -1148,9 +1233,16 @@ export default function Home() {
               <div className="pack-selector">
                 {[1, 2, 5].map(p => (
                   <div key={p} className={`pack-option${pack === p ? ' active' : ''}`} onClick={() => setPack(p)} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setPack(p)}>
-                    {p === 2 && <span className="pack-popular-tag">⭐ Popular</span>}
+                    {p === 2 && <span className="pack-popular-tag">⭐ Most Popular</span>}
+                    {p === 5 && <span className="pack-popular-tag" style={{background:'#C9A84C',color:'#3D2610'}}>🏆 Best Value</span>}
                     <span className="pack-name">{PACKS[p].name}</span>
                     <span className="pack-price">{fmt(PACKS[p].price)}</span>
+                    <span style={{ fontSize:'.72rem', color: pack===p ? 'rgba(255,255,255,.8)' : '#4A7C59', fontWeight:600, marginTop:2 }}>
+                      {p === 1 ? `₹499/glass` : p === 2 ? `₹449.50/glass` : `₹399.80/glass`}
+                    </span>
+                    {p > 1 && <span style={{ fontSize:'.68rem', background: pack===p ? 'rgba(255,255,255,.2)' : '#F0F9F3', color: pack===p ? '#fff' : '#2d6b40', padding:'2px 6px', borderRadius:10, marginTop:3, display:'inline-block' }}>
+                      Save {fmt(PACKS[p].original - PACKS[p].price)}
+                    </span>}
                   </div>
                 ))}
               </div>
@@ -1179,47 +1271,53 @@ export default function Home() {
               <label className="field-label" style={{ marginBottom: 8 }}>Your Delivery Details:</label>
               <div className="field-row">
                 <div className="field-group">
-                  <label className="field-label" htmlFor="name">Full Name *</label>
-                  <input id="name" type="text" placeholder="Your full name" autoComplete="name" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+                  <label className="field-label" htmlFor="name">Full Name *{vIcon('name')}</label>
+                  <input id="name" type="text" placeholder="Your full name" autoComplete="name" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} onBlur={() => touch('name')} style={vStyle('name')} />
                 </div>
                 <div className="field-group">
-                  <label className="field-label" htmlFor="mobile">Mobile Number *</label>
-                  <input id="mobile" type="tel" placeholder="10-digit number" maxLength={10} inputMode="numeric" value={form.mobile} onChange={e => { const v = e.target.value.replace(/\D/g,''); setForm(f => ({ ...f, mobile: v })); tryLookup(v, form.email); }} />
+                  <label className="field-label" htmlFor="mobile">Mobile Number *{vIcon('mobile')}</label>
+                  <input id="mobile" type="tel" placeholder="10-digit number" maxLength={10} inputMode="numeric" value={form.mobile} onChange={e => { const v = e.target.value.replace(/\D/g,''); setForm(f => ({ ...f, mobile: v })); tryLookup(v, form.email); }} onBlur={() => touch('mobile')} style={vStyle('mobile')} />
                 </div>
               </div>
 
               <div className="field-group">
                 <label className="field-label" htmlFor="email">
-                  Email Address
+                  Email Address{vIcon('email')}
                 </label>
-                <input id="email" type="email" placeholder="yourname@gmail.com" autoComplete="email" required value={form.email} onChange={e => { const v = e.target.value; setForm(f => ({ ...f, email: v })); tryLookup(form.mobile, v); }} />
+                <input id="email" type="email" placeholder="yourname@gmail.com" autoComplete="email" required value={form.email} onChange={e => { const v = e.target.value; setForm(f => ({ ...f, email: v })); tryLookup(form.mobile, v); }} onBlur={() => touch('email')} style={vStyle('email')} />
               </div>
 
               <div className="field-group">
-                <label className="field-label" htmlFor="address">Full Delivery Address *</label>
-                <textarea id="address" rows={2} placeholder="House no., Street, Area, Landmark" value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} style={{ resize: 'vertical' }} />
+                <label className="field-label" htmlFor="address">Full Delivery Address *{vIcon('address')}</label>
+                <textarea id="address" rows={2} placeholder="House no., Street, Area, Landmark" value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} onBlur={() => touch('address')} style={{ resize: 'vertical', ...vStyle('address') }} />
               </div>
 
               <div className="field-row">
                 <div className="field-group">
                   <label className="field-label" htmlFor="pincode">
-                    Pincode *{pincodeLoading && <span style={{ fontWeight:400, color:'#4A7C59', fontSize:'.76rem', marginLeft:6 }}>🔍 detecting…</span>}
+                    Pincode *{vIcon('pincode')}{pincodeLoading && <span style={{ fontWeight:400, color:'#4A7C59', fontSize:'.76rem', marginLeft:6 }}>🔍 detecting…</span>}
                   </label>
-                  <input id="pincode" type="text" placeholder="6-digit pincode" maxLength={6} inputMode="numeric" value={form.pincode} onChange={e => handlePincode(e.target.value.replace(/\D/g,''))} />
+                  <input id="pincode" type="text" placeholder="6-digit pincode" maxLength={6} inputMode="numeric" value={form.pincode} onChange={e => handlePincode(e.target.value.replace(/\D/g,''))} onBlur={() => touch('pincode')} style={vStyle('pincode')} />
                 </div>
                 <div className="field-group">
-                  <label className="field-label" htmlFor="city">City *</label>
-                  <input id="city" type="text" placeholder={pincodeLoading ? 'Detecting city…' : 'City / Town'} value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} />
+                  <label className="field-label" htmlFor="city">City *{vIcon('city')}</label>
+                  <input id="city" type="text" placeholder={pincodeLoading ? 'Detecting city…' : 'City / Town'} value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} onBlur={() => touch('city')} style={vStyle('city')} />
                 </div>
               </div>
 
               <div className="field-group">
-                <label className="field-label" htmlFor="state">State *</label>
-                <select id="state" value={form.state} onChange={e => setForm(f => ({ ...f, state: e.target.value }))}>
+                <label className="field-label" htmlFor="state">State *{vIcon('state')}</label>
+                <select id="state" value={form.state} onChange={e => setForm(f => ({ ...f, state: e.target.value }))} onBlur={() => touch('state')} style={vStyle('state')}>
                   <option value="">{pincodeLoading ? 'Detecting state…' : 'Select State'}</option>
                   {STATES.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
+
+              {deliveryEst && (
+                <div style={{ background:'#F0F9F3', border:'1px solid #4A7C59', borderRadius:8, padding:'10px 14px', marginBottom:12, fontSize:'.88rem', color:'#2d6b40', display:'flex', alignItems:'center', gap:8 }}>
+                  🚚 <span>Estimated delivery: <strong>{deliveryEst}</strong></span>
+                </div>
+              )}
 
               {/* Payment */}
               <label className="field-label" style={{ marginBottom: 8 }}>Payment Method:</label>
@@ -1410,7 +1508,7 @@ export default function Home() {
       {/* ── TOAST ── */}
       {toast && (
         <div className={`toast toast-${toast.type}`}>
-          <span>{toast.type === 'error' ? '⚠️' : '✅'}</span>
+          <span>{toast.type === 'error' ? '⚠️' : toast.type === 'info' ? 'ℹ️' : '✅'}</span>
           <span>{toast.msg}</span>
         </div>
       )}

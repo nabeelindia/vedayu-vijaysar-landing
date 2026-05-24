@@ -143,6 +143,14 @@ export default async function handler(req, res) {
                   </ol>
                 </div>
 
+                <!-- Track order CTA -->
+                <div style="text-align:center;margin-bottom:16px;">
+                  <a href="https://vedayulife.com/track?order=${orderId}"
+                    style="display:inline-block;background:#5C3D1E;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:700;font-size:.9rem;">
+                    📦 Track My Order
+                  </a>
+                </div>
+
                 <!-- WhatsApp CTA -->
                 <div style="text-align:center;margin-bottom:8px;">
                   <a href="https://wa.me/91${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '9999999999'}?text=Hi%20Vedayu!%20My%20order%20ID%20is%20${orderId}.%20I%20have%20a%20query."
