@@ -4,16 +4,40 @@
  * The frontend then opens the Razorpay checkout with these values.
  */
 import Razorpay from 'razorpay';
+import { kv } from '@vercel/kv';
+
+async function isSelfReferral(referrerId, mobile) {
+  if (!referrerId || !mobile) return false;
+  const cleanMobile = String(mobile).replace(/\D/g, '');
+  if (!/^[6-9]\d{9}$/.test(cleanMobile)) return false;
+  try {
+    // Layer 1: direct owner lookup
+    const ownerMobile = await kv.get(`referral:owner:${referrerId}`);
+    if (ownerMobile) return ownerMobile === cleanMobile;
+    // Layer 2: phone → orderIds index
+    const orderIds = await kv.lrange(`nimbuspost:phone:${cleanMobile}`, 0, 49);
+    if (orderIds?.includes(referrerId)) return true;
+  } catch {}
+  return false;
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { amount, packName } = req.body;
+  const { amount, packName, customerName, referrerId, mobile } = req.body;
 
   if (!amount || isNaN(amount) || amount < 1) {
     return res.status(400).json({ error: 'Invalid amount' });
+  }
+
+  // ── Self-referral guard: if customer is using their own link,
+  //    add the ₹50 back regardless of what the frontend sent ──────────────
+  let safeAmount = Math.round(amount);
+  if (referrerId && mobile && await isSelfReferral(referrerId, mobile)) {
+    safeAmount = Math.round(safeAmount + 50);
+    console.warn(`Self-referral blocked server-side: ${referrerId} by ${mobile}`);
   }
 
   if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
@@ -28,13 +52,15 @@ export default async function handler(req, res) {
     });
 
     const order = await razorpay.orders.create({
-      amount:   Math.round(amount) * 100, // Razorpay expects paise
-      currency: 'INR',
-      receipt:  `vedayu_${Date.now()}`,
+      amount:          safeAmount * 100, // Razorpay expects paise
+      currency:        'INR',
+      receipt:         `vedayu_${Date.now()}`,
+      payment_capture: 1, // auto-capture on authorization — no manual capture needed
       notes: {
-        pack:    packName || 'Vijaysar Wooden Glass',
-        brand:   'Vedayu',
-        product: 'Vijaysar Wooden Herbal Glass / Tumbler',
+        customer: customerName || '',
+        pack:     packName || 'Vijaysar Wooden Glass',
+        brand:    'Vedayu',
+        product:  'Vijaysar Wooden Herbal Glass / Tumbler',
       },
     });
 

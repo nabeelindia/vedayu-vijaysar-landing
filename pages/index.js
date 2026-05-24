@@ -429,7 +429,7 @@ export default function Home() {
         const res  = await fetch('/api/create-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount: finalPrice, packName: selectedPack.name, customerName: form.name }),
+          body: JSON.stringify({ amount: finalPrice, packName: selectedPack.name, customerName: form.name, referrerId: referrerId || undefined, mobile: form.mobile }),
         });
         const { order_id, amount } = await res.json();
         if (!res.ok) throw new Error('Could not create payment order. Please try again.');

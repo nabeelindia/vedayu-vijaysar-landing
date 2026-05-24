@@ -13,6 +13,18 @@ import { saveCustomer } from '../../lib/customer-cache';
 import { createOrder } from '../../lib/nimbuspost';
 import { kv } from '@vercel/kv';
 
+async function isSelfReferral(referrerId, mobile) {
+  if (!referrerId || !mobile) return false;
+  const cleanMobile = String(mobile).replace(/\D/g, '');
+  try {
+    const ownerMobile = await kv.get(`referral:owner:${referrerId}`);
+    if (ownerMobile) return ownerMobile === cleanMobile;
+    const orderIds = await kv.lrange(`nimbuspost:phone:${cleanMobile}`, 0, 49);
+    if (orderIds?.includes(referrerId)) return true;
+  } catch {}
+  return false;
+}
+
 const formatUtm = (utm = {}) => {
   if (!Object.keys(utm).length) return 'Direct / Unknown';
   const parts = [
@@ -46,9 +58,16 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid email address' });
   }
 
+  // ── Self-referral guard: recalculate price server-side ──────────────────
+  let safePrice = Number(price);
+  if (referrerId && await isSelfReferral(referrerId, mobile.trim())) {
+    safePrice = Math.round(safePrice + 50);
+    console.warn(`Self-referral blocked server-side (COD): ${referrerId} by ${mobile.trim()}`);
+  }
+
   const orderId   = `VED-COD-${Date.now()}`;
   const fullAddr  = `${address}, ${city}, ${state} - ${pincode}`;
-  const priceStr  = '₹' + Number(price).toLocaleString('en-IN');
+  const priceStr  = '₹' + safePrice.toLocaleString('en-IN');
   const orderDate = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
 
   if (process.env.RESEND_API_KEY && process.env.ORDERS_EMAIL) {
@@ -180,17 +199,17 @@ export default async function handler(req, res) {
   }
 
   // ── Meta CAPI — server-side Purchase event ──────────────────────────────────────
-  await sendCapiPurchase({ orderId, price, pack, qty, email, mobile: mobile.trim(), name, city, pincode }).catch(() => {});
+  await sendCapiPurchase({ orderId, price: safePrice, pack, qty, email, mobile: mobile.trim(), name, city, pincode }).catch(() => {});
 
   // ── Post-purchase follow-up email queue ──────────────────────────────────────
-  await enqueueFollowup({ orderId, email, name, pack, price, method: 'cod' }).catch(() => {});
+  await enqueueFollowup({ orderId, email, name, pack, price: safePrice, method: 'cod' }).catch(() => {});
   await saveCustomer({ mobile, email, name, address, city, state, pincode }).catch(() => {});
 
   // ── NimbusPost — push order to dashboard for manual shipping ─────────────────
   if (process.env.NIMBUSPOST_EMAIL && process.env.NIMBUSPOST_PASSWORD && process.env.PICKUP_PINCODE) {
     createOrder({
       orderId, name, mobile: mobile.trim(), address, city, state, pincode,
-      pack, qty, price, is_cod: true,
+      pack, qty, price: safePrice, is_cod: true,
     }).then(result => {
       console.log(`NimbusPost order created: ${orderId}`, result);
     }).catch(err => {
