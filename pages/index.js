@@ -904,7 +904,7 @@ export default function Home() {
                 preload="metadata"
                 poster="/images/thumb-celebrity.jpg"
               >
-                <source src="/videos/celebrity.mp4" type="video/mp4" />
+                <source src={process.env.NEXT_PUBLIC_VIDEO_CELEBRITY || "/videos/celebrity.mp4"} type="video/mp4" />
               </video>
             </div>
             <div className="celebrity-side">
@@ -942,7 +942,7 @@ export default function Home() {
                   preload="metadata"
                   poster="/images/thumb-testimonial.jpg"
                 >
-                  <source src="/videos/testimonial.mp4" type="video/mp4" />
+                  <source src={process.env.NEXT_PUBLIC_VIDEO_TESTIMONIAL || "/videos/testimonial.mp4"} type="video/mp4" />
                 </video>
               </div>
               <div className="video-duo-caption">
@@ -960,7 +960,7 @@ export default function Home() {
                   preload="metadata"
                   poster="/images/thumb-meta-ad.jpg"
                 >
-                  <source src="/videos/meta-ad.mp4" type="video/mp4" />
+                  <source src={process.env.NEXT_PUBLIC_VIDEO_METAAD || "/videos/meta-ad.mp4"} type="video/mp4" />
                 </video>
               </div>
               <div className="video-duo-caption">

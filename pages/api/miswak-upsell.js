@@ -18,9 +18,10 @@ export default async function handler(req, res) {
     });
 
     const order = await razorpay.orders.create({
-      amount:   5000,   // ₹50 in paise
-      currency: 'INR',
-      receipt:  `MISK-${Date.now()}`,
+      amount:          5000,   // ₹50 in paise
+      currency:        'INR',
+      receipt:         `MISK-${Date.now()}`,
+      payment_capture: 1,      // auto-capture — do not leave as authorized
       notes: {
         product:      'miswak_upsell',
         parent_order: orderId,
