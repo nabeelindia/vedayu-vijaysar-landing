@@ -323,7 +323,6 @@ export default function OrderConfirmed() {
                       borderRadius: 8, padding: '8px 12px',
                     }}>
                       <p style={{ margin: 0, fontSize: '.78rem', color: '#6D4C00', lineHeight: 1.5 }}>
-                        <strong>Ships FREE in the same box</strong> as your glass.<br />
                         Just pay <strong>₹50 shipping</strong> — that&apos;s it.
                       </p>
                     </div>
