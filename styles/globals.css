@@ -5,6 +5,11 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+@keyframes miswakPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(45,107,64,.4); }
+  50%       { box-shadow: 0 0 0 8px rgba(45,107,64,0); }
+}
+
 :root {
   --vd-brown:       #5C3D1E;
   --vd-dark-brown:  #3D2610;

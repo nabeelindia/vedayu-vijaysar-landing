@@ -165,6 +165,31 @@ export default function OrderConfirmed() {
               : 'Your payment was successful. Your Vijaysar Wooden Glass is being prepared for dispatch.'}
           </p>
 
+          {/* ── MISWAK GIFT TEASER (above the fold) ── */}
+          {miswakState !== 'done' && miswakState !== 'declined' && (
+            <div
+              onClick={() => document.getElementById('miswak-upsell')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                background: 'linear-gradient(90deg, #2d6b40, #4A7C59)',
+                borderRadius: 12, padding: '12px 18px', margin: '4px 0 20px',
+                cursor: 'pointer', userSelect: 'none',
+                animation: 'miswakPulse 2s ease-in-out infinite',
+              }}
+            >
+              <span style={{ fontSize: '1.4rem' }}>🎁</span>
+              <div style={{ textAlign: 'left' }}>
+                <p style={{ margin: 0, color: '#fff', fontWeight: 800, fontSize: '.88rem', lineHeight: 1.3 }}>
+                  A free gift is waiting for you!
+                </p>
+                <p style={{ margin: 0, color: 'rgba(255,255,255,.8)', fontSize: '.75rem' }}>
+                  FREE Miswak with your order — tap to claim ↓
+                </p>
+              </div>
+              <span style={{ color: 'rgba(255,255,255,.7)', fontSize: '1.1rem', marginLeft: 'auto' }}>↓</span>
+            </div>
+          )}
+
           {/* ── ORDER ID BOX ── */}
           {orderId && (
             <div style={{
@@ -218,7 +243,7 @@ export default function OrderConfirmed() {
 
           {miswakState === 'done' ? (
             /* ── Success state ── */
-            <div style={{
+            <div id="miswak-upsell" style={{
               background: 'linear-gradient(135deg, #F0F9F3 0%, #e6f4ea 100%)',
               border: '2px solid #4A7C59', borderRadius: 16,
               padding: '20px 24px', margin: '24px 0', textAlign: 'center',
@@ -235,7 +260,7 @@ export default function OrderConfirmed() {
 
           ) : miswakState !== 'declined' && (
             /* ── Offer card ── */
-            <div style={{
+            <div id="miswak-upsell" style={{
               background: 'linear-gradient(135deg, #f7fef9 0%, #edf7f0 100%)',
               border: '2px solid #4A7C59', borderRadius: 16,
               margin: '24px 0', overflow: 'hidden',
