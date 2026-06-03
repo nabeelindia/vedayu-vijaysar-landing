@@ -964,9 +964,15 @@ export default function Home() {
                   >
                     {+k === 2 && <span className="pack-popular-tag">⭐ Most Popular</span>}
                     {+k === 5 && <span className="pack-popular-tag" style={{ background:'var(--vd-gold)' }}>🏆 Best Value</span>}
-                    <span className="pack-name">{p.tag}</span>
+                    {+k === 1 && <span style={{ display:'block', height:18, marginBottom:2 }} />}
+                    <span className="pack-name">{p.name}</span>
                     <span className="pack-price">₹{p.price.toLocaleString('en-IN')}</span>
-                    <span style={{ fontSize:'.65rem', color:'var(--vd-text-light)', display:'block' }}>× {p.qty} glass{p.qty > 1 ? 'es' : ''}</span>
+                    <span style={{ fontSize:'.68rem', color:'var(--vd-text-light)', display:'block', marginTop:2 }}>
+                      {+k === 1 ? '₹499/glass' : +k === 2 ? '₹449/glass' : '₹400/glass'}
+                    </span>
+                    {+k > 1 && <span style={{ fontSize:'.62rem', background:'var(--vd-off-white)', color:'var(--vd-green)', padding:'1px 5px', borderRadius:8, marginTop:3, display:'inline-block', fontWeight:700 }}>
+                      Save ₹{(p.original - p.price).toLocaleString('en-IN')}
+                    </span>}
                   </div>
                 ))}
               </div>

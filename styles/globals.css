@@ -632,7 +632,8 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
 .sticky-cta-inner { display: flex; align-items: center; justify-content: space-between; gap: 10px; max-width: 540px; margin: 0 auto; }
 .sticky-text { color: #fff; font-size: .8rem; line-height: 1.3; }
 .sticky-text strong { display: block; font-size: .9rem; }
-.sticky-cta a { background: var(--vd-gold); color: var(--vd-dark-brown); font-weight: 700; padding: 11px 22px; border-radius: 6px; font-size: .88rem; flex-shrink: 0; white-space: nowrap; }
+.sticky-cta a { background: var(--vd-gold); color: #fff; font-weight: 700; padding: 11px 22px; border-radius: 6px; font-size: .88rem; flex-shrink: 0; white-space: nowrap; }
+.sticky-cta button { color: #fff !important; }
 
 /* ====================================================
    WHATSAPP FLOAT
@@ -1177,8 +1178,8 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
     padding: 2px 4px;
   }
 
-  /* Sticky CTA button — force dark text so it reads on gold */
-  .sticky-cta button { color: #1a0800 !important; }
+  /* Sticky CTA button — white text in dark mode */
+  .sticky-cta button { color: #fff !important; }
 
   /* Pricing badge gold — keep text readable */
   .pricing-badge-gold { color: #fff !important; }
