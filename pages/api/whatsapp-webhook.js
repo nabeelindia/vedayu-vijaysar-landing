@@ -127,7 +127,7 @@ async function notifyAdmin({ phone, contact, text, botReply }) {
   // ── Email notification (only when bot can't answer) ───────────────────
   if (isFallback && process.env.RESEND_API_KEY) {
     await resend.emails.send({
-      from:    'Vedayu Bot <bot@vedayu.in>',
+      from:    'Vedayu Bot <bot@vedayulife.com>',
       to:      process.env.ORDERS_EMAIL,
       subject: `⚠️ Customer needs help on WhatsApp — ${displayName}`,
       html: `
