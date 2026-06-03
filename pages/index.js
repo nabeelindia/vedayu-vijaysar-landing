@@ -830,7 +830,7 @@ export default function Home() {
               <div className="nav-trust-bar">
                 <div style={{ maxWidth:1280, margin:'0 auto', padding:'0 20px', display:'flex', alignItems:'center', justifyContent:'center', gap:24, flexWrap:'nowrap' }}>
                   {['🚚 Free Delivery All Over India','↩️ 7-Day Replacement','💳 Razorpay Secure | COD','🌿 100% Natural Wood','🇮🇳 Indian Brand'].map(t => (
-                    <span key={t} style={{ fontSize:'.7rem', fontWeight:600, color:'rgba(255,255,255,.9)', whiteSpace:'nowrap' }}>{t}</span>
+                    <span key={t} style={{ fontSize:'.85rem', fontWeight:600, color:'rgba(255,255,255,.9)', whiteSpace:'nowrap' }}>{t}</span>
                   ))}
                 </div>
               </div>
@@ -842,13 +842,13 @@ export default function Home() {
                 <div style={{ display:'flex', gap:0, alignItems:'center', flexWrap:'nowrap' }} className="nav-desktop">
                   {NAV.filter(n => !n.desktopHide).map(({ label, href }) => (
                     <a key={href} href={href} onClick={e => navClick(e, href)}
-                      style={{ fontSize:'.85rem', fontWeight:600, color:'#5C3D1E', textDecoration:'none', padding:'5px 10px', borderRadius:6, whiteSpace:'nowrap', transition:'background .15s' }}
+                      style={{ fontSize:'.90rem', fontWeight:600, color:'#5C3D1E', textDecoration:'none', padding:'5px 10px', borderRadius:6, whiteSpace:'nowrap', transition:'background .15s' }}
                       onMouseEnter={e => e.currentTarget.style.background='#fdf6ec'}
                       onMouseLeave={e => e.currentTarget.style.background='transparent'}
                     >{label}</a>
                   ))}
                   <a href="#checkout" onClick={e => navClick(e, '#checkout')}
-                    style={{ fontSize:'.85rem', fontWeight:800, color:'#fff', background:'#5C3D1E', padding:'6px 16px', borderRadius:20, textDecoration:'none', whiteSpace:'nowrap', marginLeft:8, flexShrink:0 }}>
+                    style={{ fontSize:'.90rem', fontWeight:800, color:'#fff', background:'#5C3D1E', padding:'6px 16px', borderRadius:20, textDecoration:'none', whiteSpace:'nowrap', marginLeft:8, flexShrink:0 }}>
                     Order Now
                   </a>
                 </div>
