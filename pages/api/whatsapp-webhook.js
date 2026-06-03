@@ -54,21 +54,34 @@ export default async function handler(req, res) {
   }
 }
 
-async function sendWAMessage(to, body) {
+async function sendWAMessage(to, body, retries = 3) {
   const phoneId = process.env.WA_PHONE_NUMBER_ID;
   const token   = process.env.WA_TOKEN;
   if (!phoneId || !token) return;
 
-  await fetch(`https://graph.facebook.com/v21.0/${phoneId}/messages`, {
-    method:  'POST',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      messaging_product: 'whatsapp',
-      to,
-      type: 'text',
-      text: { body },
-    }),
-  });
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(`https://graph.facebook.com/v21.0/${phoneId}/messages`, {
+        method:  'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messaging_product: 'whatsapp',
+          to,
+          type: 'text',
+          text: { body },
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) console.error(`WA send error (attempt ${attempt}):`, JSON.stringify(json));
+      else return json; // success
+    } catch (err) {
+      const isLast = attempt === retries;
+      console.error(`WA send failed (attempt ${attempt}/${retries}): ${err.message}`);
+      if (isLast) throw err;
+      // Wait before retrying: 500ms, 1500ms, 3500ms
+      await new Promise(r => setTimeout(r, 500 * (2 ** (attempt - 1))));
+    }
+  }
 }
 
 async function notifyAdmin({ phone, contact, text, isFallback }) {
