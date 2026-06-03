@@ -1,12 +1,6 @@
 import { getBotReply, FALLBACK_REPLY } from '../../lib/wa-knowledge';
-import { createClient } from '@supabase/supabase-js';
 import webpush from 'web-push';
 import { Resend } from 'resend';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
-);
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -29,46 +23,31 @@ export default async function handler(req, res) {
   }
 
   if (req.method !== 'POST') return res.status(405).end();
-  res.status(200).json({ status: 'ok' }); // ACK immediately
+  res.status(200).json({ status: 'ok' }); // ACK Meta immediately
 
   try {
-    const entry   = req.body?.entry?.[0];
-    const change  = entry?.changes?.[0]?.value;
-    const msgArr  = change?.messages;
+    const entry  = req.body?.entry?.[0];
+    const change = entry?.changes?.[0]?.value;
+    const msgArr = change?.messages;
     if (!msgArr?.length) return;
 
     for (const msg of msgArr) {
-      if (msg.type !== 'text') continue; // ignore media for now
+      if (msg.type !== 'text') continue;
 
-      const waId    = msg.id;
       const phone   = msg.from;
       const text    = msg.text?.body || '';
-      const contact = change?.contacts?.[0]?.profile?.name || null;
+      const contact = change?.contacts?.[0]?.profile?.name || phone;
 
-      // Dedup — skip if already processed
-      const { data: existing } = await supabase
-        .from('wa_messages')
-        .select('id')
-        .eq('wa_id', waId)
-        .single();
-      if (existing) continue;
+      const botReply   = getBotReply(text) ?? FALLBACK_REPLY;
+      const isFallback = botReply === FALLBACK_REPLY;
 
-      const botReply = getBotReply(text) ?? FALLBACK_REPLY;
-
-      // Send reply via WhatsApp Cloud API
+      // Send WhatsApp reply
       await sendWAMessage(phone, botReply);
 
-      // Save to Supabase
-      await supabase.from('wa_messages').insert({
-        wa_id:      waId,
-        from_phone: phone,
-        from_name:  contact,
-        message:    text,
-        bot_replied: botReply,
-      });
+      console.log(`[WA] ${contact} (${phone}): "${text}" → ${isFallback ? 'FALLBACK' : 'BOT'}`);
 
-      // Notify admin — browser push + email (fire and forget)
-      notifyAdmin({ phone, contact, text, botReply }).catch(console.error);
+      // Notify admin
+      await notifyAdmin({ phone, contact, text, botReply, isFallback });
     }
   } catch (err) {
     console.error('WA webhook error:', err);
@@ -81,11 +60,8 @@ async function sendWAMessage(to, body) {
   if (!phoneId || !token) return;
 
   await fetch(`https://graph.facebook.com/v21.0/${phoneId}/messages`, {
-    method: 'POST',
-    headers: {
-      Authorization:  `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
+    method:  'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       messaging_product: 'whatsapp',
       to,
@@ -95,49 +71,46 @@ async function sendWAMessage(to, body) {
   });
 }
 
-async function notifyAdmin({ phone, contact, text, botReply }) {
-  const displayName = contact || phone;
-  const isFallback  = botReply === FALLBACK_REPLY;
-
-  // ── Browser push notifications ─────────────────────────────────────────
-  const { data: subs } = await supabase.from('push_subscriptions').select('*');
-  if (subs?.length) {
-    const payload = JSON.stringify({
-      title: isFallback
-        ? `⚠️ Needs reply — ${displayName}`
-        : `💬 New WA message — ${displayName}`,
-      body:  text.slice(0, 120),
-      url:   '/wa-inbox',
-    });
-    await Promise.allSettled(
-      subs.map(sub =>
-        webpush.sendNotification(
-          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-          payload
-        ).catch(async err => {
-          // Remove expired subscriptions
-          if (err.statusCode === 404 || err.statusCode === 410) {
-            await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
-          }
-        })
-      )
-    );
-  }
-
-  // ── Email notification (only when bot can't answer) ───────────────────
+async function notifyAdmin({ phone, contact, text, isFallback }) {
+  // ── Email (always on fallback, so admin knows a human reply is needed) ──
   if (isFallback && process.env.RESEND_API_KEY) {
     await resend.emails.send({
       from:    'Vedayu Bot <bot@vedayulife.com>',
       to:      process.env.ORDERS_EMAIL,
-      subject: `⚠️ Customer needs help on WhatsApp — ${displayName}`,
+      subject: `⚠️ WA message needs reply — ${contact}`,
       html: `
-        <h2 style="color:#5a3e2b">New WhatsApp message — human reply needed</h2>
-        <table style="font-family:sans-serif;font-size:15px;line-height:1.6">
-          <tr><td><b>From:</b></td><td>${displayName} (${phone})</td></tr>
+        <h2 style="color:#5a3e2b;font-family:sans-serif">WhatsApp — human reply needed</h2>
+        <table style="font-family:sans-serif;font-size:15px;line-height:1.8">
+          <tr><td><b>From:</b></td><td>${contact} &nbsp;(${phone})</td></tr>
           <tr><td><b>Message:</b></td><td>${text}</td></tr>
         </table>
-        <p style="margin-top:20px;color:#888">Bot could not answer — please reply directly on WhatsApp.</p>
+        <p style="color:#888;font-family:sans-serif;font-size:13px;margin-top:20px">
+          Bot could not answer — please reply directly on WhatsApp.
+        </p>
       `,
-    });
+    }).catch(err => console.error('Email error:', err));
   }
+
+  // ── Browser push (requires VAPID keys + active subscriptions) ───────────
+  if (!process.env.VAPID_PUBLIC_KEY) return;
+
+  const pushEndpointsRaw = process.env.PUSH_SUBSCRIPTIONS;
+  if (!pushEndpointsRaw) return;
+
+  let subs = [];
+  try { subs = JSON.parse(pushEndpointsRaw); } catch { return; }
+
+  const payload = JSON.stringify({
+    title: isFallback ? `⚠️ Needs reply — ${contact}` : `💬 WA message — ${contact}`,
+    body:  text.slice(0, 120),
+  });
+
+  await Promise.allSettled(
+    subs.map(sub =>
+      webpush.sendNotification(
+        { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+        payload
+      ).catch(err => console.error('Push error:', err.message))
+    )
+  );
 }

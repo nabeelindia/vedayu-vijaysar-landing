@@ -1,10 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
-);
-
+// Push subscription endpoint — logs the subscription object to console.
+// To enable persistent push, store the subscription in your preferred DB.
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
@@ -13,10 +8,8 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid subscription object' });
   }
 
-  await supabase.from('push_subscriptions').upsert(
-    { endpoint, p256dh: keys.p256dh, auth: keys.auth },
-    { onConflict: 'endpoint' }
-  );
+  // Log so you can copy into PUSH_SUBSCRIPTIONS env var if needed
+  console.log('[push-sub]', JSON.stringify({ endpoint, p256dh: keys.p256dh, auth: keys.auth }));
 
   res.status(201).json({ ok: true });
 }
