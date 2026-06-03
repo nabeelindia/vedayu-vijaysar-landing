@@ -892,7 +892,7 @@ export default function Home() {
               ))}
               <a href="#checkout" onClick={e => navClick(e, '#checkout')}
                 style={{ marginTop:24, background:'#5C3D1E', color:'#fff', textAlign:'center', padding:'14px', borderRadius:10, fontWeight:800, fontSize:'1rem', textDecoration:'none' }}>
-                🛒 Order Now
+                Order Now →
               </a>
             </div>
             <style>{`
@@ -977,7 +977,7 @@ export default function Home() {
               </div>
 
               <div className="hero-cta">
-                <button className="btn btn-brown btn-lg" onClick={() => scrollToCheckout()}>🛒 Order Now — Free Delivery</button>
+                <button className="btn btn-brown btn-lg" onClick={() => scrollToCheckout()}>Order Now — Free Delivery →</button>
                 <a href="#how-it-works" className="btn btn-outline">How It Works ↓</a>
               </div>
               <div className="hero-micro">
@@ -1074,7 +1074,7 @@ export default function Home() {
       <div className="cta-strip">
         <div className="container">
           <p>Start a simple, natural daily wellness ritual today.</p>
-          <button className="btn btn-gold btn-lg" onClick={() => scrollToCheckout()}>🛒 Order Now — Free Delivery All Over India</button>
+          <button className="btn btn-gold btn-lg" onClick={() => scrollToCheckout()}>Order Now — Free Delivery →</button>
         </div>
       </div>
 
@@ -1150,7 +1150,7 @@ export default function Home() {
                 <span className="video-badge">✅ Verified Endorsement</span>
               </div>
               <a href="#checkout" className="btn btn-brown btn-lg">
-                🛒 Order Now — Free Delivery
+                Order Now — Free Delivery →
               </a>
             </div>
           </div>
@@ -1210,7 +1210,7 @@ export default function Home() {
               <span className="video-badge">🇮🇳 Made in India</span>
             </div>
             <a href="#checkout" className="btn btn-brown btn-lg" style={{ marginTop: 20, display: 'inline-block' }}>
-              🛒 Order Now — Free Delivery
+              Order Now — Free Delivery →
             </a>
           </div>
         </div>
@@ -1300,7 +1300,7 @@ export default function Home() {
               </div>
 
               <button className="btn btn-brown btn-lg" style={{ marginTop: 28, width: '100%' }} onClick={() => scrollToCheckout()}>
-                🛒 Order Now — Starting ₹499
+                Order Now — Starting ₹499 →
               </button>
             </div>
 
@@ -1772,7 +1772,7 @@ export default function Home() {
               </div>
 
               <button className="btn btn-brown btn-full" style={{ padding: '17px', fontSize: '1.05rem' }} onClick={placeOrder} disabled={loading}>
-                {loading ? <><span className="spinner" />Processing...</> : '🛒 Place Order — Free Delivery'}
+                {loading ? <><span className="spinner" />Processing...</> : 'Place Order — Free Delivery →'}
               </button>
               <p className="form-footer">🔒 100% Secure &nbsp;·&nbsp; Your details are safe &nbsp;·&nbsp; No spam</p>
             </div>
@@ -1819,7 +1819,7 @@ export default function Home() {
           <h2 style={{ color: 'var(--vd-dark-brown)', marginBottom: 10 }}>Ready to Start Your Daily Wellness Ritual?</h2>
           <p style={{ color: 'var(--vd-text-light)', marginBottom: 26 }}>Join Indian families building healthier morning habits — naturally, simply, daily.</p>
           <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button className="btn btn-brown btn-lg" onClick={() => scrollToCheckout()}>🛒 Order Now — Starting ₹499</button>
+            <button className="btn btn-brown btn-lg" onClick={() => scrollToCheckout()}>Order Now — Starting ₹499 →</button>
             <a href="#pricing" className="btn btn-outline">View All Packs →</a>
           </div>
           <p style={{ marginTop: 14, fontSize: '.76rem', color: 'var(--vd-text-light)' }}>Free delivery · 7-day replacement · Razorpay + COD</p>
@@ -1841,18 +1841,18 @@ export default function Home() {
           </div>
           <div className="reviews-grid">
             {[
-              { color:'#C9A84C', name:'Rama Devi',      loc:'Varanasi, Uttar Pradesh', ago:'2 weeks ago',  stars:'★★★★★', text:'बहुत अच्छा उत्पाद है। मेरे पति पिछले 3 महीनों से रोज़ सुबह इस गिलास का पानी पी रहे हैं। लकड़ी की गुणवत्ता बहुत अच्छी है, असली विजयसर की लकड़ी है। पानी रात भर रखने के बाद हल्का गुलाबी रंग हो जाता है — यह देख कर मन को संतोष होता है। पैकिंग भी बहुत सुरक्षित थी।' },
-              { color:'#5C3D1E', name:'Kumar Raghav',   loc:'Patna, Bihar',            ago:'3 weeks ago',  stars:'★★★★★', text:'Bhai, 2 mahine ho gaye use karte hue. Subah uthke seedha yahi paani peeta hoon. Pehle koi routine nahi tha, ab yeh glass yaad dilata hai. Delivery bhi 4 din mein aa gayi — COD mein koi problem nahi hui. Quality ekdum solid hai, koi plastic smell nahi, pure wood.' },
-              { color:'#4A7C59', name:'Priya Sharma',   loc:'Pune, Maharashtra',       ago:'1 month ago',  stars:'★★★★★', text:'Bought this for my father after my aunt recommended it. The wood quality is really premium — you can tell it\'s handcrafted. He uses it every morning now and genuinely enjoys the ritual. Packaging was very safe, no damage at all. Fast delivery to Pune within 3 days!' },
-              { color:'#7a5028', name:'Kavita Jha',     loc:'Jaipur, Rajasthan',       ago:'5 weeks ago',  stars:'★★★★★', text:'पहले पानी पीने का कोई नियम नहीं था, बस जब मन करे पी लिया। अब रोज़ रात को गिलास भर देती हूँ और सुबह सबसे पहले यही पानी पीती हूँ। 90 दिन का ritual complete किया — अब दूसरा गिलास मँगवाया है। बहुत सुंदर तोहफ़ा भी है बुज़ुर्गों के लिए।' },
-              { color:'#3D2610', name:'Arjun Nair',     loc:'Bangalore, Karnataka',    ago:'6 weeks ago',  stars:'★★★★★', text:'Was skeptical initially but glad I ordered. The glass is beautifully crafted — each piece has a unique grain pattern which shows it\'s genuinely handmade. My mother uses it every single morning without fail. Delivery in 3 days to Bangalore. Totally worth it!' },
-              { color:'#9e5c2e', name:'Pooja Mehta',    loc:'Surat, Gujarat',          ago:'7 weeks ago',  stars:'★★★★☆', text:'Mummy ke liye family pack liya tha — 5 glasses. Sabko bahut pasand aaya. Ek ek glass ka grain pattern alag hai, toh pata chalta hai ki handmade hai. COD tha toh tension nahi thi. Packaging bhi dam se ki thi, ek bhi glass nahi toota. Recommend karunga sabko!' },
-            ].map(({ color, name, loc, ago, stars, text }) => (
+              { avatar:'https://api.dicebear.com/9.x/lorelei/svg?seed=RamaDevi&backgroundColor=e8d5b0',     name:'Rama Devi',    loc:'Varanasi, Uttar Pradesh', ago:'2 weeks ago',  stars:'★★★★★', text:'बहुत अच्छा उत्पाद है। मेरे पति पिछले 3 महीनों से रोज़ सुबह इस गिलास का पानी पी रहे हैं। लकड़ी की गुणवत्ता बहुत अच्छी है, असली विजयसर की लकड़ी है। पानी रात भर रखने के बाद हल्का गुलाबी रंग हो जाता है — यह देख कर मन को संतोष होता है। पैकिंग भी बहुत सुरक्षित थी।' },
+              { avatar:'https://api.dicebear.com/9.x/lorelei/svg?seed=KumarRaghav&backgroundColor=c8a87a',  name:'Kumar Raghav', loc:'Patna, Bihar',            ago:'3 weeks ago',  stars:'★★★★★', text:'Bhai, 2 mahine ho gaye use karte hue. Subah uthke seedha yahi paani peeta hoon. Pehle koi routine nahi tha, ab yeh glass yaad dilata hai. Delivery bhi 4 din mein aa gayi — COD mein koi problem nahi hui. Quality ekdum solid hai, koi plastic smell nahi, pure wood.' },
+              { avatar:'https://api.dicebear.com/9.x/lorelei/svg?seed=PriyaSharma&backgroundColor=a8d8b0', name:'Priya Sharma',  loc:'Pune, Maharashtra',       ago:'1 month ago',  stars:'★★★★★', text:'Bought this for my father after my aunt recommended it. The wood quality is really premium — you can tell it\'s handcrafted. He uses it every morning now and genuinely enjoys the ritual. Packaging was very safe, no damage at all. Fast delivery to Pune within 3 days!' },
+              { avatar:'https://api.dicebear.com/9.x/lorelei/svg?seed=KavitaJha&backgroundColor=d4b896',   name:'Kavita Jha',   loc:'Jaipur, Rajasthan',       ago:'5 weeks ago',  stars:'★★★★★', text:'पहले पानी पीने का कोई नियम नहीं था, बस जब मन करे पी लिया। अब रोज़ रात को गिलास भर देती हूँ और सुबह सबसे पहले यही पानी पीती हूँ। 90 दिन का ritual complete किया — अब दूसरा गिलास मँगवाया है। बहुत सुंदर तोहफ़ा भी है बुज़ुर्गों के लिए।' },
+              { avatar:'https://api.dicebear.com/9.x/lorelei/svg?seed=ArjunNair&backgroundColor=b8c8e8',   name:'Arjun Nair',   loc:'Bangalore, Karnataka',    ago:'6 weeks ago',  stars:'★★★★★', text:'Was skeptical initially but glad I ordered. The glass is beautifully crafted — each piece has a unique grain pattern which shows it\'s genuinely handmade. My mother uses it every single morning without fail. Delivery in 3 days to Bangalore. Totally worth it!' },
+              { avatar:'https://api.dicebear.com/9.x/lorelei/svg?seed=PoojaMehta&backgroundColor=f0c8a0',  name:'Pooja Mehta',  loc:'Surat, Gujarat',          ago:'7 weeks ago',  stars:'★★★★☆', text:'Mummy ke liye family pack liya tha — 5 glasses. Sabko bahut pasand aaya. Ek ek glass ka grain pattern alag hai, toh pata chalta hai ki handmade hai. COD tha toh tension nahi thi. Packaging bhi dam se ki thi, ek bhi glass nahi toota. Recommend karunga sabko!' },
+            ].map(({ avatar, name, loc, ago, stars, text }) => (
               <div className="review-card" key={name}>
                 <div className="review-stars">{stars}</div>
                 <p className="review-text">&ldquo;{text}&rdquo;</p>
                 <div className="review-author">
-                  <div className="review-avatar-img" style={{ background: color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: '1.1rem', flexShrink: 0 }}>{name[0]}</div>
+                  <img src={avatar} alt={name} className="review-avatar-img" style={{ flexShrink:0, background:'var(--vd-off-white)' }} />
                   <div>
                     <div className="review-name">{name}</div>
                     <div className="review-meta">{loc} · {ago}</div>
@@ -1893,7 +1893,7 @@ export default function Home() {
         <div className="container">
           <h2 style={{ color: '#fff', marginBottom: 10 }}>Your Daily Wellness Ritual Starts Today</h2>
           <p style={{ color: 'rgba(255,255,255,.82)', marginBottom: 30 }}>Natural Vijaysar wood infused water. Simple routine. Ayurvedic tradition. Starting at just ₹499.</p>
-          <button className="btn btn-gold btn-lg" onClick={() => scrollToCheckout()}>🛒 Order Now — Free Delivery</button>
+          <button className="btn btn-gold btn-lg" onClick={() => scrollToCheckout()}>Order Now — Free Delivery →</button>
           <p style={{ color: 'rgba(255,255,255,.5)', fontSize: '.76rem', marginTop: 18 }}>✅ Free delivery &nbsp;·&nbsp; ✅ 7-day replacement &nbsp;·&nbsp; ✅ Razorpay + COD &nbsp;·&nbsp; ✅ Made in India</p>
         </div>
       </section>
@@ -1924,7 +1924,7 @@ export default function Home() {
                 disabled={loading}
                 style={{ background: formReady ? '#4A7C59' : 'var(--vd-gold)', color: formReady ? '#fff' : 'var(--vd-dark-brown)', fontWeight: 700, padding: '11px 22px', borderRadius: 6, fontSize: '.88rem', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'background .3s' }}
               >
-                {loading ? '⏳' : formReady ? '✅ Place Order' : '🛒 Buy Now'}
+                {loading ? '⏳' : formReady ? '✅ Place Order' : 'Buy Now →'}
               </button>
             </div>
           </div>

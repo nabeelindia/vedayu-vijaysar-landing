@@ -1062,3 +1062,109 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
   .grievance-box { padding: 20px 16px; }
   .grievance-table td:first-child { width: 42%; }
 }
+
+/* ====================================================
+   DARK MODE
+   ==================================================== */
+@media (prefers-color-scheme: dark) {
+
+  :root {
+    --vd-brown:       #A0703A;
+    --vd-dark-brown:  #C8944A;
+    --vd-green:       #5D9970;
+    --vd-light-green: #7AB88A;
+    --vd-cream:       #0F0B06;
+    --vd-off-white:   #1A1208;
+    --vd-gold:        #D4AE50;
+    --vd-text:        #EDE0CC;
+    --vd-text-light:  #B8946A;
+    --vd-border:      #3A2810;
+  }
+
+  body { background: #0F0B06; color: #EDE0CC; }
+
+  /* Nav */
+  nav { background: #120D07 !important; border-bottom-color: #2A1E10 !important; }
+  nav a { color: #D4AE50 !important; }
+  nav a[style*="background:#5C3D1E"], nav a[style*="background: #5C3D1E"] {
+    background: #A0703A !important;
+    color: #fff !important;
+  }
+  .nav-trust-bar { background: #1E1508 !important; }
+  .nav-trust-bar span { color: rgba(212,174,80,.85) !important; }
+
+  /* Hero */
+  .hero { background: linear-gradient(135deg, #1A1208 0%, #150E05 55%, #100C04 100%) !important; }
+  .badge { background: #1E1508 !important; color: #D4AE50 !important; border-color: #3A2810 !important; }
+  .spec-pill { background: #1E1508 !important; border-color: #3A2810 !important; color: #B8946A !important; }
+
+  /* Cards — white surfaces */
+  .problem-card,
+  .benefit-card,
+  .review-card,
+  .pricing-card,
+  .contact-card,
+  .usage-tips,
+  .grievance-box {
+    background: #1E1508 !important;
+    border-color: #3A2810 !important;
+  }
+
+  .specs-table { border-color: #3A2810 !important; }
+  .spec-row { border-bottom-color: #3A2810 !important; }
+  .spec-label { background: #1A1208 !important; }
+  .spec-value { background: #1E1508 !important; }
+
+  /* Checkout */
+  .checkout-wrap { background: #1E1508 !important; box-shadow: 0 4px 40px rgba(0,0,0,.4) !important; }
+  .field-group input,
+  .field-group select,
+  .field-group textarea {
+    background: #0F0B06 !important;
+    border-color: #3A2810 !important;
+    color: #EDE0CC !important;
+  }
+  .pack-option { border-color: #3A2810 !important; }
+  .pack-option.active { background: #1A2E1A !important; border-color: #5D9970 !important; }
+  .payment-option { border-color: #3A2810 !important; }
+  .payment-option.active { background: #1E160A !important; border-color: #A0703A !important; }
+  .order-summary { background: #1A1208 !important; }
+  .pricing-features li { border-bottom-color: #3A2810 !important; }
+
+  /* Price save badge */
+  .price-save { background: #0F2010 !important; color: #5D9970 !important; }
+
+  /* Video badges */
+  .video-badge { background: #1E1508 !important; border-color: #3A2810 !important; }
+
+  /* FAQ */
+  .faq-item { border-bottom-color: #3A2810 !important; }
+
+  /* Disclaimer / policy highlight */
+  .disclaimer { background: #1E1508 !important; border-color: #3A2810 !important; color: #B8946A !important; }
+  .policy-highlight { background: #1E1508 !important; border-left-color: #D4AE50 !important; }
+  .exit-discount-box { background: #1E1508 !important; border-color: #3A2810 !important; }
+  .exit-pack-item { background: #0F0B06 !important; border-color: #3A2810 !important; }
+
+  /* Exit modal & toast */
+  .exit-modal { background: #1E1508 !important; }
+  .toast { background: #1E1508 !important; border-color: #3A2810 !important; color: #EDE0CC !important; }
+
+  /* Confirm page */
+  .confirm-card { background: #1E1508 !important; }
+  .confirm-details { background: #1A1208 !important; }
+  .confirm-row { border-bottom-color: #3A2810 !important; }
+
+  /* Policy pages */
+  .policy-content h2 { border-bottom-color: #2A1E10 !important; }
+
+  /* Footer already dark — just ensure borders */
+  .footer-top { border-bottom-color: rgba(255,255,255,.08) !important; }
+
+  /* Hamburger icon — gold so it's visible on dark nav */
+  .nav-hamburger svg { stroke: #D4AE50 !important; }
+
+  /* Payment icons — invert dark SVGs for dark background */
+  .payment-option img { filter: brightness(0) invert(1) opacity(0.7); }
+  .payment-option.active img { filter: brightness(0) invert(1) opacity(1); }
+}
