@@ -58,6 +58,7 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
   letter-spacing: .3px; cursor: pointer; border: none;
   text-align: center; transition: transform .18s, box-shadow .18s;
   font-family: var(--font-sans); text-decoration: none;
+  white-space: nowrap;
 }
 .btn:hover { transform: translateY(-2px); }
 
@@ -372,10 +373,10 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
 .field-group textarea:focus { outline: none; border-color: var(--vd-brown); }
 
 /* Pack selector */
-.pack-selector { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 18px; }
+.pack-selector { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 18px; }
 .pack-option {
   border: 2px solid var(--vd-border); border-radius: 10px;
-  padding: 13px 8px; text-align: center; cursor: pointer;
+  padding: 10px 6px; text-align: center; cursor: pointer;
   transition: border-color .18s, background .18s; position: relative;
   user-select: none;
 }
@@ -689,7 +690,10 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
   .solution-grid { grid-template-columns: 1fr; gap: 36px; }
   .steps::before { display: none; }
   .field-row { grid-template-columns: 1fr; gap: 0; }
-  .pack-selector { grid-template-columns: 1fr; }
+  .pack-selector { grid-template-columns: repeat(3,1fr); }
+  .pack-option { padding: 8px 4px; }
+  .pack-name { font-size: .68rem; }
+  .pack-price { font-size: .95rem; }
   .payment-grid { grid-template-columns: 1fr; }
   .pricing-card-popular { transform: none; }
   .pricing-card-popular:hover { transform: translateY(-4px); }
@@ -1178,6 +1182,14 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
   .btn-gold { color: #1a0800 !important; }
   .pricing-badge-gold { color: #1a0800 !important; }
 
-  /* Lab cert card values */
-  div[style*="color:#5C3D1E"] { color: var(--vd-brown) !important; }
+  /* Pack selector — dark mode */
+  .pack-option { background: #1A1208; }
+  .pack-name { color: var(--vd-text) !important; }
+  .pack-price { color: var(--vd-gold) !important; }
+
+  /* Footer — override golden variable with true dark */
+  .site-footer { background: #0d0905 !important; }
+  .footer-top { border-bottom-color: rgba(255,255,255,.08) !important; }
+  .footer-tagline { color: #7a5c3e !important; }
+  .footer-bottom p, .footer-bottom a { color: #5a3c24 !important; }
 }

@@ -875,23 +875,23 @@ export default function Home() {
             }} onClick={() => setDrawerOpen(false)} aria-hidden />
             <div style={{
               position:'fixed', top:0, right:0, bottom:0, zIndex:300,
-              width:270, background:'#fff', boxShadow:'-4px 0 24px rgba(0,0,0,.15)',
+              width:270, background:'var(--vd-cream)', boxShadow:'-4px 0 24px rgba(0,0,0,.35)',
               transform: drawerOpen ? 'translateX(0)' : 'translateX(100%)',
               transition:'transform .3s cubic-bezier(.4,0,.2,1)',
               display:'flex', flexDirection:'column', padding:'60px 24px 32px',
               overflowY:'hidden',
             }}>
               <button onClick={() => setDrawerOpen(false)} aria-label="Close menu"
-                style={{ position:'absolute', top:14, right:16, background:'none', border:'none', cursor:'pointer', color:'#5C3D1E', fontSize:'1.5rem', lineHeight:1 }}>✕</button>
+                style={{ position:'absolute', top:14, right:16, background:'none', border:'none', cursor:'pointer', color:'var(--vd-brown)', fontSize:'1.5rem', lineHeight:1 }}>✕</button>
               <p style={{ fontSize:'.65rem', fontWeight:800, color:'#aaa', letterSpacing:1.5, textTransform:'uppercase', marginBottom:16 }}>Navigate</p>
               {NAV.filter(n => !n.mobileHide).map(({ label, href }) => (
                 <a key={href} href={href} onClick={e => navClick(e, href)}
-                  style={{ fontSize:'.97rem', fontWeight:600, color:'#5C3D1E', textDecoration:'none', padding:'11px 0', borderBottom:'1px solid #f0e8d8', flexShrink:0 }}>
+                  style={{ fontSize:'.97rem', fontWeight:600, color:'var(--vd-brown)', textDecoration:'none', padding:'11px 0', borderBottom:'1px solid var(--vd-border)', flexShrink:0 }}>
                   {label}
                 </a>
               ))}
               <a href="#checkout" onClick={e => navClick(e, '#checkout')}
-                style={{ marginTop:24, background:'#5C3D1E', color:'#fff', textAlign:'center', padding:'14px', borderRadius:10, fontWeight:800, fontSize:'1rem', textDecoration:'none' }}>
+                style={{ marginTop:24, background:'var(--vd-brown)', color:'#fff', textAlign:'center', padding:'14px', borderRadius:10, fontWeight:800, fontSize:'1rem', textDecoration:'none' }}>
                 Order Now →
               </a>
             </div>
@@ -1656,7 +1656,7 @@ export default function Home() {
                     <span style={{ fontSize:'.72rem', color:'#2d6b40', fontWeight:600, marginTop:2 }}>
                       {p === 1 ? '₹499/glass' : p === 2 ? '₹449.50/glass' : '₹399.80/glass'}
                     </span>
-                    {p > 1 && <span style={{ fontSize:'.68rem', background:'#d4edda', color:'#1a5c2a', padding:'2px 6px', borderRadius:10, marginTop:3, display:'inline-block', fontWeight:600 }}>
+                    {p > 1 && <span style={{ fontSize:'.68rem', background:'var(--vd-off-white)', color:'var(--vd-green)', padding:'2px 6px', borderRadius:10, marginTop:3, display:'inline-block', fontWeight:600 }}>
                       Save {fmt(PACKS[p].original - PACKS[p].price)}
                     </span>}
                   </div>
@@ -1841,12 +1841,12 @@ export default function Home() {
           </div>
           <div className="reviews-grid">
             {[
-              { avatar:'https://i.pravatar.cc/80?img=47',     name:'Rama Devi',    loc:'Varanasi, Uttar Pradesh', ago:'2 weeks ago',  stars:'★★★★★', text:'बहुत अच्छा उत्पाद है। मेरे पति पिछले 3 महीनों से रोज़ सुबह इस गिलास का पानी पी रहे हैं। लकड़ी की गुणवत्ता बहुत अच्छी है, असली विजयसर की लकड़ी है। पानी रात भर रखने के बाद हल्का गुलाबी रंग हो जाता है — यह देख कर मन को संतोष होता है। पैकिंग भी बहुत सुरक्षित थी।' },
-              { avatar:'https://i.pravatar.cc/80?img=11',  name:'Kumar Raghav', loc:'Patna, Bihar',            ago:'3 weeks ago',  stars:'★★★★★', text:'Bhai, 2 mahine ho gaye use karte hue. Subah uthke seedha yahi paani peeta hoon. Pehle koi routine nahi tha, ab yeh glass yaad dilata hai. Delivery bhi 4 din mein aa gayi — COD mein koi problem nahi hui. Quality ekdum solid hai, koi plastic smell nahi, pure wood.' },
+              { avatar:'https://i.pravatar.cc/80?img=33',     name:'Rama Devi',    loc:'Varanasi, Uttar Pradesh', ago:'2 weeks ago',  stars:'★★★★★', text:'बहुत अच्छा उत्पाद है। मेरे पति पिछले 3 महीनों से रोज़ सुबह इस गिलास का पानी पी रहे हैं। लकड़ी की गुणवत्ता बहुत अच्छी है, असली विजयसर की लकड़ी है। पानी रात भर रखने के बाद हल्का गुलाबी रंग हो जाता है — यह देख कर मन को संतोष होता है। पैकिंग भी बहुत सुरक्षित थी।' },
+              { avatar:'https://i.pravatar.cc/80?img=13',  name:'Kumar Raghav', loc:'Patna, Bihar',            ago:'3 weeks ago',  stars:'★★★★★', text:'Bhai, 2 mahine ho gaye use karte hue. Subah uthke seedha yahi paani peeta hoon. Pehle koi routine nahi tha, ab yeh glass yaad dilata hai. Delivery bhi 4 din mein aa gayi — COD mein koi problem nahi hui. Quality ekdum solid hai, koi plastic smell nahi, pure wood.' },
               { avatar:'https://i.pravatar.cc/80?img=44', name:'Priya Sharma',  loc:'Pune, Maharashtra',       ago:'1 month ago',  stars:'★★★★★', text:'Bought this for my father after my aunt recommended it. The wood quality is really premium — you can tell it\'s handcrafted. He uses it every morning now and genuinely enjoys the ritual. Packaging was very safe, no damage at all. Fast delivery to Pune within 3 days!' },
-              { avatar:'https://i.pravatar.cc/80?img=39',   name:'Kavita Jha',   loc:'Jaipur, Rajasthan',       ago:'5 weeks ago',  stars:'★★★★★', text:'पहले पानी पीने का कोई नियम नहीं था, बस जब मन करे पी लिया। अब रोज़ रात को गिलास भर देती हूँ और सुबह सबसे पहले यही पानी पीती हूँ। 90 दिन का ritual complete किया — अब दूसरा गिलास मँगवाया है। बहुत सुंदर तोहफ़ा भी है बुज़ुर्गों के लिए।' },
+              { avatar:'https://i.pravatar.cc/80?img=32',   name:'Kavita Jha',   loc:'Jaipur, Rajasthan',       ago:'5 weeks ago',  stars:'★★★★★', text:'पहले पानी पीने का कोई नियम नहीं था, बस जब मन करे पी लिया। अब रोज़ रात को गिलास भर देती हूँ और सुबह सबसे पहले यही पानी पीती हूँ। 90 दिन का ritual complete किया — अब दूसरा गिलास मँगवाया है। बहुत सुंदर तोहफ़ा भी है बुज़ुर्गों के लिए।' },
               { avatar:'https://i.pravatar.cc/80?img=52',   name:'Arjun Nair',   loc:'Bangalore, Karnataka',    ago:'6 weeks ago',  stars:'★★★★★', text:'Was skeptical initially but glad I ordered. The glass is beautifully crafted — each piece has a unique grain pattern which shows it\'s genuinely handmade. My mother uses it every single morning without fail. Delivery in 3 days to Bangalore. Totally worth it!' },
-              { avatar:'https://i.pravatar.cc/80?img=57',  name:'Pooja Mehta',  loc:'Surat, Gujarat',          ago:'7 weeks ago',  stars:'★★★★☆', text:'Mummy ke liye family pack liya tha — 5 glasses. Sabko bahut pasand aaya. Ek ek glass ka grain pattern alag hai, toh pata chalta hai ki handmade hai. COD tha toh tension nahi thi. Packaging bhi dam se ki thi, ek bhi glass nahi toota. Recommend karunga sabko!' },
+              { avatar:'https://i.pravatar.cc/80?img=26',  name:'Pooja Mehta',  loc:'Surat, Gujarat',          ago:'7 weeks ago',  stars:'★★★★☆', text:'Mummy ke liye family pack liya tha — 5 glasses. Sabko bahut pasand aaya. Ek ek glass ka grain pattern alag hai, toh pata chalta hai ki handmade hai. COD tha toh tension nahi thi. Packaging bhi dam se ki thi, ek bhi glass nahi toota. Recommend karunga sabko!' },
             ].map(({ avatar, name, loc, ago, stars, text }) => (
               <div className="review-card" key={name}>
                 <div className="review-stars">{stars}</div>
