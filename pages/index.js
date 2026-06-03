@@ -1774,10 +1774,6 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="disclaimer">
-            <strong>⚠️ Important Disclaimer</strong>
-            This product is not a medicine and is not intended to diagnose, treat, cure, or prevent any disease. The Vijaysar Wooden Glass is a traditional wellness product used as part of a healthy hydration routine, inspired by Ayurvedic practice. People with diabetes or any medical condition should consult a qualified doctor before making any changes to their routine.
-          </div>
         </div>
       </section>
 
@@ -1894,15 +1890,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── DISCLAIMER FOOTER ── */}
-      <div style={{ background: '#FFF8E1', borderTop: '2px solid #FFD54F', padding: '20px' }}>
-        <div className="container">
-          <p style={{ fontSize: '.76rem', color: '#6D4C00', textAlign: 'center', lineHeight: 1.7 }}>
-            <strong>Disclaimer:</strong> This product is not a medicine and is not intended to diagnose, treat, cure, or prevent any disease. The Vedayu Vijaysar Wooden Glass is a traditional wellness product used as part of a healthy hydration routine, inspired by Ayurvedic practice. People with diabetes or any medical condition should consult a qualified doctor before making any changes to their routine. Results may vary.
-          </p>
-        </div>
-      </div>
-
       {/* ── STICKY CTA (mobile) ── */}
       {showSticky && (() => {
         const formReady = !validate();
@@ -1918,7 +1905,7 @@ export default function Home() {
               <button
                 onClick={formReady ? placeOrder : () => scrollToCheckout()}
                 disabled={loading}
-                style={{ background: formReady ? '#4A7C59' : 'var(--vd-gold)', color: formReady ? '#fff' : 'var(--vd-dark-brown)', fontWeight: 700, padding: '11px 22px', borderRadius: 6, fontSize: '.88rem', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'background .3s' }}
+                style={{ background: formReady ? '#4A7C59' : 'var(--vd-gold)', color: '#fff', fontWeight: 700, padding: '11px 22px', borderRadius: 6, fontSize: '.88rem', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'background .3s' }}
               >
                 {loading ? '⏳' : formReady ? '✅ Place Order' : 'Buy Now →'}
               </button>

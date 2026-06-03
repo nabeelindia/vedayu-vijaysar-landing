@@ -60,7 +60,7 @@ export default function SiteFooter() {
 
         <div className="footer-bottom">
           <p>© {YEAR} Hashcart eCommerce Pvt. Ltd. All rights reserved. &nbsp;·&nbsp; <a href="https://vedayulife.com">vedayulife.com</a></p>
-          <p className="footer-disclaimer">This product is not a medicine and is not intended to diagnose, treat, cure, or prevent any disease. Results may vary.</p>
+          <p className="footer-disclaimer">⚠️ Disclaimer: This product is not a medicine and is not intended to diagnose, treat, cure, or prevent any disease. The Vedayu Vijaysar Wooden Glass is a traditional wellness product inspired by Ayurvedic practice. People with diabetes or any medical condition should consult a qualified doctor before making changes to their routine. Results may vary.</p>
         </div>
       </div>
     </footer>

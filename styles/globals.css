@@ -247,7 +247,7 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
 /* ====================================================
    BENEFITS
    ==================================================== */
-.benefits-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px,1fr)); gap: 18px; }
+.benefits-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 18px; }
 .benefit-card {
   background: #fff; border-radius: 12px; padding: 26px 18px;
   text-align: center; box-shadow: 0 2px 16px rgba(92,61,30,.07);
@@ -703,6 +703,7 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
   .spec-label { border-bottom: none; }
   .checkout-body { padding: 20px; }
   .confirm-card { padding: 32px 22px; }
+  .benefits-grid { grid-template-columns: repeat(2,1fr); }
 }
 
 @media (min-width: 769px) {
@@ -1191,5 +1192,7 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
   .site-footer { background: #0d0905 !important; }
   .footer-top { border-bottom-color: rgba(255,255,255,.08) !important; }
   .footer-tagline { color: #7a5c3e !important; }
-  .footer-bottom p, .footer-bottom a { color: #5a3c24 !important; }
+  .footer-bottom p, .footer-bottom a { color: #8a6a50 !important; }
+  .footer-bottom a:hover { color: var(--vd-gold) !important; }
+  .footer-disclaimer { color: #6a5040 !important; }
 }
