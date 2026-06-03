@@ -187,6 +187,7 @@ export default function Home() {
   const [referralDiscount, setReferralDiscount] = useState(0);
   const [referrerId,       setReferrerId]       = useState('');
   const [lightbox,         setLightbox]         = useState(null); // { imgs: [...], idx: 0 }
+  const [drawerOpen,       setDrawerOpen]       = useState(false);
   const orderPlaced  = useRef(false);
   const pincodeAbort = useRef(null);
   const swipeX       = useRef(null);
@@ -800,6 +801,100 @@ export default function Home() {
           ],
         }) }} />
       </Head>
+
+      {/* ── NAVBAR ── */}
+      {(() => {
+        const NAV = [
+          { label: 'The Problem',    href: '#problem' },
+          { label: 'The Solution',   href: '#solution' },
+          { label: 'Benefits',       href: '#benefits',       mobileHide: true },
+          { label: 'How It Works',   href: '#how-it-works' },
+          { label: 'Videos',         href: '#video-testimonial', mobileHide: true },
+          { label: 'Certifications', href: '#lab-certified' },
+          { label: 'Specifications', href: '#product-details', mobileHide: true },
+          { label: 'Packs & Price',  href: '#pricing' },
+          { label: 'Reviews',        href: '#reviews' },
+          { label: 'FAQs',           href: '#faq' },
+        ];
+        const navClick = (e, href) => {
+          e.preventDefault();
+          setDrawerOpen(false);
+          setTimeout(() => {
+            document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
+          }, drawerOpen ? 320 : 0);
+        };
+        return (
+          <>
+            <nav style={{ position:'sticky', top:0, zIndex:200, background:'#fff', borderBottom:'1px solid #e8d5b0', boxShadow:'0 2px 8px rgba(92,61,30,.07)' }}>
+              <div style={{ maxWidth:1100, margin:'0 auto', padding:'0 16px', display:'flex', alignItems:'center', justifyContent:'space-between', height:48 }}>
+                {/* Logo / brand */}
+                <a href="#hero" onClick={e => navClick(e, '#hero')} style={{ fontWeight:800, fontSize:'1.05rem', color:'#5C3D1E', textDecoration:'none', letterSpacing:-.3, flexShrink:0 }}>🌿 Vedayu</a>
+                {/* Desktop links */}
+                <div style={{ display:'flex', gap:4, alignItems:'center', flexWrap:'nowrap', overflow:'hidden' }} className="nav-desktop">
+                  {NAV.map(({ label, href }) => (
+                    <a key={href} href={href} onClick={e => navClick(e, href)}
+                      style={{ fontSize:'.78rem', fontWeight:600, color:'#5C3D1E', textDecoration:'none', padding:'6px 10px', borderRadius:6, whiteSpace:'nowrap', transition:'background .15s' }}
+                      onMouseEnter={e => e.currentTarget.style.background='#fdf6ec'}
+                      onMouseLeave={e => e.currentTarget.style.background='transparent'}
+                    >{label}</a>
+                  ))}
+                  <a href="#checkout" onClick={e => navClick(e, '#checkout')}
+                    style={{ fontSize:'.78rem', fontWeight:800, color:'#fff', background:'#5C3D1E', padding:'6px 14px', borderRadius:20, textDecoration:'none', whiteSpace:'nowrap', marginLeft:6 }}>
+                    Order Now
+                  </a>
+                </div>
+                {/* Hamburger (mobile) */}
+                <button onClick={() => setDrawerOpen(o => !o)} aria-label="Menu"
+                  style={{ display:'none', background:'none', border:'none', cursor:'pointer', padding:6, color:'#5C3D1E' }}
+                  className="nav-hamburger">
+                  <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
+                    {drawerOpen
+                      ? <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>
+                      : <><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/></>
+                    }
+                  </svg>
+                </button>
+              </div>
+            </nav>
+            {/* Mobile drawer */}
+            <div style={{
+              position:'fixed', top:0, left:0, right:0, bottom:0, zIndex:199,
+              background:'rgba(0,0,0,.45)',
+              opacity: drawerOpen ? 1 : 0,
+              pointerEvents: drawerOpen ? 'auto' : 'none',
+              transition:'opacity .3s',
+            }} onClick={() => setDrawerOpen(false)} aria-hidden />
+            <div style={{
+              position:'fixed', top:0, right:0, bottom:0, zIndex:300,
+              width:270, background:'#fff', boxShadow:'-4px 0 24px rgba(0,0,0,.15)',
+              transform: drawerOpen ? 'translateX(0)' : 'translateX(100%)',
+              transition:'transform .3s cubic-bezier(.4,0,.2,1)',
+              display:'flex', flexDirection:'column', padding:'60px 24px 32px',
+              overflowY:'hidden',
+            }}>
+              <button onClick={() => setDrawerOpen(false)} aria-label="Close menu"
+                style={{ position:'absolute', top:14, right:16, background:'none', border:'none', cursor:'pointer', color:'#5C3D1E', fontSize:'1.5rem', lineHeight:1 }}>✕</button>
+              <p style={{ fontSize:'.65rem', fontWeight:800, color:'#aaa', letterSpacing:1.5, textTransform:'uppercase', marginBottom:16 }}>Navigate</p>
+              {NAV.filter(n => !n.mobileHide).map(({ label, href }) => (
+                <a key={href} href={href} onClick={e => navClick(e, href)}
+                  style={{ fontSize:'.97rem', fontWeight:600, color:'#5C3D1E', textDecoration:'none', padding:'11px 0', borderBottom:'1px solid #f0e8d8', flexShrink:0 }}>
+                  {label}
+                </a>
+              ))}
+              <a href="#checkout" onClick={e => navClick(e, '#checkout')}
+                style={{ marginTop:24, background:'#5C3D1E', color:'#fff', textAlign:'center', padding:'14px', borderRadius:10, fontWeight:800, fontSize:'1rem', textDecoration:'none' }}>
+                🛒 Order Now
+              </a>
+            </div>
+            <style>{`
+              @media (max-width: 768px) {
+                .nav-desktop { display: none !important; }
+                .nav-hamburger { display: block !important; }
+              }
+            `}</style>
+          </>
+        );
+      })()}
 
       {/* ── TRUST STRIP ── */}
       <div className="trust-strip">
