@@ -807,9 +807,9 @@ export default function Home() {
         const NAV = [
           { label: 'The Problem',  href: '#problem' },
           { label: 'The Solution', href: '#solution' },
-          { label: 'Benefits',     href: '#benefits',          mobileHide: true, desktopHide: true },
+          { label: 'Benefits',     href: '#benefits',          desktopHide: true },
           { label: 'How It Works', href: '#how-it-works' },
-          { label: 'Videos',       href: '#video-testimonial', mobileHide: true, desktopHide: true },
+          { label: 'Videos',       href: '#video-testimonial', desktopHide: true },
           { label: 'Lab Certified',href: '#lab-certified' },
           { label: 'Specs',        href: '#product-details',   mobileHide: true },
           { label: 'Pricing',      href: '#pricing' },
