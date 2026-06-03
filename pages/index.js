@@ -842,13 +842,13 @@ export default function Home() {
                 <div style={{ display:'flex', gap:0, alignItems:'center', flexWrap:'nowrap' }} className="nav-desktop">
                   {NAV.filter(n => !n.desktopHide).map(({ label, href }) => (
                     <a key={href} href={href} onClick={e => navClick(e, href)}
-                      style={{ fontSize:'.73rem', fontWeight:600, color:'#5C3D1E', textDecoration:'none', padding:'5px 8px', borderRadius:6, whiteSpace:'nowrap', transition:'background .15s' }}
+                      style={{ fontSize:'.85rem', fontWeight:600, color:'#5C3D1E', textDecoration:'none', padding:'5px 10px', borderRadius:6, whiteSpace:'nowrap', transition:'background .15s' }}
                       onMouseEnter={e => e.currentTarget.style.background='#fdf6ec'}
                       onMouseLeave={e => e.currentTarget.style.background='transparent'}
                     >{label}</a>
                   ))}
                   <a href="#checkout" onClick={e => navClick(e, '#checkout')}
-                    style={{ fontSize:'.73rem', fontWeight:800, color:'#fff', background:'#5C3D1E', padding:'5px 13px', borderRadius:20, textDecoration:'none', whiteSpace:'nowrap', marginLeft:8, flexShrink:0 }}>
+                    style={{ fontSize:'.85rem', fontWeight:800, color:'#fff', background:'#5C3D1E', padding:'6px 16px', borderRadius:20, textDecoration:'none', whiteSpace:'nowrap', marginLeft:8, flexShrink:0 }}>
                     Order Now
                   </a>
                 </div>
