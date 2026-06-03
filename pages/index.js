@@ -805,16 +805,16 @@ export default function Home() {
       {/* ── NAVBAR ── */}
       {(() => {
         const NAV = [
-          { label: 'The Problem',    href: '#problem' },
-          { label: 'The Solution',   href: '#solution' },
-          { label: 'Benefits',       href: '#benefits',       mobileHide: true },
-          { label: 'How It Works',   href: '#how-it-works' },
-          { label: 'Videos',         href: '#video-testimonial', mobileHide: true },
-          { label: 'Certifications', href: '#lab-certified' },
-          { label: 'Specifications', href: '#product-details', mobileHide: true },
-          { label: 'Packs & Price',  href: '#pricing' },
-          { label: 'Reviews',        href: '#reviews' },
-          { label: 'FAQs',           href: '#faq' },
+          { label: 'The Problem',  href: '#problem' },
+          { label: 'The Solution', href: '#solution' },
+          { label: 'Benefits',     href: '#benefits',          mobileHide: true, desktopHide: true },
+          { label: 'How It Works', href: '#how-it-works' },
+          { label: 'Videos',       href: '#video-testimonial', mobileHide: true, desktopHide: true },
+          { label: 'Lab Certified',href: '#lab-certified' },
+          { label: 'Specs',        href: '#product-details',   mobileHide: true },
+          { label: 'Pricing',      href: '#pricing' },
+          { label: 'Reviews',      href: '#reviews' },
+          { label: 'FAQs',         href: '#faq' },
         ];
         const navClick = (e, href) => {
           e.preventDefault();
@@ -825,21 +825,30 @@ export default function Home() {
         };
         return (
           <>
-            <nav style={{ position:'sticky', top:0, zIndex:200, background:'#fff', borderBottom:'1px solid #e8d5b0', boxShadow:'0 2px 8px rgba(92,61,30,.07)' }}>
-              <div style={{ maxWidth:1100, margin:'0 auto', padding:'0 16px', display:'flex', alignItems:'center', justifyContent:'space-between', height:48 }}>
+            <nav style={{ position:'sticky', top:0, zIndex:200, background:'#fff', boxShadow:'0 2px 8px rgba(92,61,30,.07)' }}>
+              {/* Top micro trust bar — desktop only */}
+              <div className="nav-trust-bar">
+                <div style={{ maxWidth:1280, margin:'0 auto', padding:'0 20px', display:'flex', alignItems:'center', justifyContent:'center', gap:24, flexWrap:'nowrap' }}>
+                  {['🚚 Free Delivery All Over India','↩️ 7-Day Replacement','💳 Razorpay Secure | COD','🌿 100% Natural Wood','🇮🇳 Indian Brand'].map(t => (
+                    <span key={t} style={{ fontSize:'.7rem', fontWeight:600, color:'rgba(255,255,255,.9)', whiteSpace:'nowrap' }}>{t}</span>
+                  ))}
+                </div>
+              </div>
+              {/* Main nav row */}
+              <div style={{ maxWidth:1280, margin:'0 auto', padding:'0 20px', display:'flex', alignItems:'center', justifyContent:'space-between', height:46, borderTop:'1px solid #e8d5b0' }}>
                 {/* Logo / brand */}
-                <a href="#hero" onClick={e => navClick(e, '#hero')} style={{ fontWeight:800, fontSize:'1.05rem', color:'#5C3D1E', textDecoration:'none', letterSpacing:-.3, flexShrink:0 }}>🌿 Vedayu</a>
+                <a href="#hero" onClick={e => navClick(e, '#hero')} style={{ fontWeight:800, fontSize:'1rem', color:'#5C3D1E', textDecoration:'none', letterSpacing:-.3, flexShrink:0 }}>🌿 Vedayu</a>
                 {/* Desktop links */}
-                <div style={{ display:'flex', gap:4, alignItems:'center', flexWrap:'nowrap', overflow:'hidden' }} className="nav-desktop">
-                  {NAV.map(({ label, href }) => (
+                <div style={{ display:'flex', gap:0, alignItems:'center', flexWrap:'nowrap' }} className="nav-desktop">
+                  {NAV.filter(n => !n.desktopHide).map(({ label, href }) => (
                     <a key={href} href={href} onClick={e => navClick(e, href)}
-                      style={{ fontSize:'.78rem', fontWeight:600, color:'#5C3D1E', textDecoration:'none', padding:'6px 10px', borderRadius:6, whiteSpace:'nowrap', transition:'background .15s' }}
+                      style={{ fontSize:'.73rem', fontWeight:600, color:'#5C3D1E', textDecoration:'none', padding:'5px 8px', borderRadius:6, whiteSpace:'nowrap', transition:'background .15s' }}
                       onMouseEnter={e => e.currentTarget.style.background='#fdf6ec'}
                       onMouseLeave={e => e.currentTarget.style.background='transparent'}
                     >{label}</a>
                   ))}
                   <a href="#checkout" onClick={e => navClick(e, '#checkout')}
-                    style={{ fontSize:'.78rem', fontWeight:800, color:'#fff', background:'#5C3D1E', padding:'6px 14px', borderRadius:20, textDecoration:'none', whiteSpace:'nowrap', marginLeft:6 }}>
+                    style={{ fontSize:'.73rem', fontWeight:800, color:'#fff', background:'#5C3D1E', padding:'5px 13px', borderRadius:20, textDecoration:'none', whiteSpace:'nowrap', marginLeft:8, flexShrink:0 }}>
                     Order Now
                   </a>
                 </div>
@@ -887,7 +896,12 @@ export default function Home() {
               </a>
             </div>
             <style>{`
+              .nav-trust-bar {
+                background: #5C3D1E;
+                padding: 5px 0;
+              }
               @media (max-width: 768px) {
+                .nav-trust-bar { display: none; }
                 .nav-desktop { display: none !important; }
                 .nav-hamburger { display: block !important; }
               }
@@ -895,17 +909,6 @@ export default function Home() {
           </>
         );
       })()}
-
-      {/* ── TRUST STRIP ── */}
-      <div className="trust-strip">
-        <div className="trust-list">
-          <span>🚚 Free Delivery All Over India</span>
-          <span>↩️ 7-Day Replacement</span>
-          <span>💳 Razorpay Secure | COD Available</span>
-          <span>🌿 100% Natural Vijaysar Wood</span>
-          <span>🇮🇳 Indian Wellness Brand</span>
-        </div>
-      </div>
 
       {/* ── MARQUEE ── */}
       <div className="marquee" aria-hidden="true">
