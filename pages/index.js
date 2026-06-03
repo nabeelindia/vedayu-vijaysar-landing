@@ -34,11 +34,11 @@ function getDeliveryEst(pincode) {
 
 /* ─── Ships-by helper ──────────────────────────────────────────
  * Computes the expected dispatch date based on IST time.
- * Cut-off: 1:00 PM IST every day except Sunday (off day).
+ * Cut-off: 6:00 PM IST every day except Sunday (off day).
  *
  * Returns one of:
  *   { label: 'Today',        note: '2 hrs 30 min left to order' }
- *   { label: 'Today',        note: 'Order by 1:00 PM IST'       }  ← < 60 min left
+ *   { label: 'Today',        note: 'Order by 6:00 PM IST'       }  ← < 60 min left
  *   { label: 'Mon, 26 May',  note: null                          }  ← after cutoff / Sunday
  * ─────────────────────────────────────────────────────────────── */
 /* ─── Bold-keyword renderer ─────────────────────────────────────
@@ -63,15 +63,15 @@ function getShipsBy() {
   const hour         = ist.getUTCHours();
   const minute       = ist.getUTCMinutes();
   const isSunday     = dayOfWeek === 0;
-  const beforeCutoff = hour < 13;         // before 1:00 PM IST
+  const beforeCutoff = hour < 18;         // before 6:00 PM IST
 
   if (!isSunday && beforeCutoff) {
-    const totalMinsLeft = (13 * 60) - (hour * 60 + minute);
+    const totalMinsLeft = (18 * 60) - (hour * 60 + minute);
     const h = Math.floor(totalMinsLeft / 60);
     const m = totalMinsLeft % 60;
     const note = h > 0
-      ? `${h} hr${h > 1 ? 's' : ''} ${m} min left to order`
-      : `${totalMinsLeft} min left to order`;
+      ? `order within ${h} hr${h > 1 ? 's' : ''} ${m} min`
+      : `order within ${totalMinsLeft} min`;
     return { label: 'Today', note };
   }
 
@@ -169,7 +169,7 @@ export default function Home() {
   const router = useRouter();
 
   /* form state */
-  const [pack,       setPack]       = useState(2);
+  const [pack,       setPack]       = useState(1);
   const [payment,    setPayment]    = useState('prepaid');
   const [form,       setForm]       = useState({ name:'', mobile:'', email:'', address:'', pincode:'', city:'', state:'' });
   const [loading,    setLoading]    = useState(false);
@@ -186,6 +186,7 @@ export default function Home() {
   const [galleryIdx,  setGalleryIdx]  = useState(0);
   const [referralDiscount, setReferralDiscount] = useState(0);
   const [referrerId,       setReferrerId]       = useState('');
+  const [lightbox,         setLightbox]         = useState(null); // { imgs: [...], idx: 0 }
   const orderPlaced  = useRef(false);
   const pincodeAbort = useRef(null);
   const swipeX       = useRef(null);
@@ -815,7 +816,7 @@ export default function Home() {
       <div className="marquee" aria-hidden="true">
         <div className="marquee-track">
           {(() => {
-            const items = ['🌿 Natural Vijaysar Wood','🚚 Free Delivery All Over India','🏺 Inspired by Traditional Ayurveda','💳 COD Available','↩️ 7-Day Replacement Guarantee','✋ Premium Handcrafted Finish','☀️ Sugar-Conscious Wellness Ritual','🎁 Gift for Parents & Family'];
+            const items = ['🌿 Natural Vijaysar Wood','🚚 Free Delivery All Over India','🏺 Inspired by Traditional Ayurveda','💳 COD Available','↩️ 7-Day Replacement Guarantee','✋ Premium Handcrafted Finish','☀️ Sugar-Conscious Wellness Ritual','🎁 Gift for Parents & Family','✅ No Side Effects'];
             return [...items, ...items].map((t, i) => (
               <span key={i} className="marquee-item">{t}</span>
             ));
@@ -837,15 +838,48 @@ export default function Home() {
                 <span className="badge">💳 COD Available</span>
               </div>
               <p className="eyebrow">Vedayu — Indian Wellness</p>
-              <h1>Vijaysar Wooden Glass — Start Your Daily Ayurvedic Wellness Ritual</h1>
-              <p className="hero-sub" style={{ marginTop: 14 }}>The traditional Vijaysar wooden tumbler — fill with water overnight, drink first thing each morning. A simple, natural hydration ritual inspired by thousands of years of Ayurvedic wisdom.</p>
+              <h1 onClick={() => scrollToCheckout()} style={{ cursor:'pointer' }} title="Tap to order">
+                {utm.source === 'facebook' || utm.source === 'instagram' || utm.medium === 'paid'
+                  ? 'Yes, This Is the Vijaysar Glass From the Ad — Here\'s Why 500+ Families Use It Daily'
+                  : 'Vijaysar Wooden Glass — Start Your Daily Ayurvedic Wellness Ritual'}
+              </h1>
+              <p className="hero-sub" style={{ marginTop: 14 }}>
+                {utm.source === 'facebook' || utm.source === 'instagram' || utm.medium === 'paid'
+                  ? 'Fill with water overnight, drink first thing each morning. Natural Vijaysar wood — no chemicals, no pills. Just an ancient Indian wellness ritual, delivered to your door.'
+                  : 'The traditional Vijaysar wooden tumbler — fill with water overnight, drink first thing each morning. A simple, natural hydration ritual inspired by thousands of years of Ayurvedic wisdom.'}
+              </p>
               <div className="hero-price">
-                <span className="price-main">₹499</span>
-                <span className="price-original">₹699</span>
-                <span className="price-save">Save ₹200</span>
+                <span className="price-main">₹{PACKS[pack].price.toLocaleString('en-IN')}</span>
+                <span className="price-original">₹{PACKS[pack].original.toLocaleString('en-IN')}</span>
+                <span className="price-save">{PACKS[pack].saving.split('—')[0].trim()}</span>
               </div>
+
+              {/* Quick pack picker */}
+              <div style={{ display:'flex', gap:8, margin:'12px 0', flexWrap:'wrap' }}>
+                {Object.entries(PACKS).map(([k, p]) => (
+                  <button
+                    key={k}
+                    onClick={() => setPack(+k)}
+                    style={{
+                      flex:1, minWidth:80, padding:'8px 6px', borderRadius:10, position:'relative',
+                      border: pack === +k ? '2px solid #5C3D1E' : +k === 2 ? '2px solid #4A7C59' : '1.5px solid #ddd',
+                      background: pack === +k ? '#fdf6ee' : '#fff',
+                      cursor:'pointer', textAlign:'center',
+                      fontFamily:'inherit',
+                    }}
+                  >
+                    {+k === 2 && (
+                      <span style={{ position:'absolute', top:-10, left:'50%', transform:'translateX(-50%)', background:'#4A7C59', color:'#fff', fontSize:'.58rem', fontWeight:800, padding:'2px 8px', borderRadius:20, whiteSpace:'nowrap' }}>⭐ Most Popular</span>
+                    )}
+                    <div style={{ fontSize:'.72rem', fontWeight:700, color:'#5C3D1E', marginTop: +k === 2 ? 4 : 0 }}>{p.tag}</div>
+                    <div style={{ fontSize:'.85rem', fontWeight:800, color:'#1a1a1a', marginTop:2 }}>₹{p.price.toLocaleString('en-IN')}</div>
+                    <div style={{ fontSize:'.65rem', color: +k === 2 ? '#4A7C59' : '#888', fontWeight: +k === 2 ? 700 : 400 }}>× {p.qty} glass{p.qty > 1 ? 'es' : ''}</div>
+                  </button>
+                ))}
+              </div>
+
               <div className="hero-cta">
-                <button className="btn btn-brown btn-lg" onClick={() => scrollToCheckout()}>🛒 Buy Now — Free Delivery</button>
+                <button className="btn btn-brown btn-lg" onClick={() => scrollToCheckout()}>🛒 Order Now — Free Delivery</button>
                 <a href="#how-it-works" className="btn btn-outline">How It Works ↓</a>
               </div>
               <div className="hero-micro">
@@ -882,8 +916,10 @@ export default function Home() {
                   width={520}
                   height={520}
                   priority
-                  style={{ transition:'opacity .25s', display:'block', width:'100%', height:'100%', objectFit:'contain' }}
+                  onClick={() => setLightbox({ imgs: GALLERY.map(g => g.src), idx: galleryIdx })}
+                  style={{ transition:'opacity .25s', display:'block', width:'100%', height:'100%', objectFit:'contain', cursor:'zoom-in' }}
                 />
+                <span onClick={() => setLightbox({ imgs: GALLERY.map(g => g.src), idx: galleryIdx })} style={{ position:'absolute', bottom:10, right:10, background:'rgba(0,0,0,.45)', color:'#fff', fontSize:'.65rem', padding:'3px 8px', borderRadius:20, cursor:'zoom-in', zIndex:2 }}>🔍 Tap to zoom</span>
                 {/* Prev / Next arrows */}
                 {galleryIdx > 0 && (
                   <button onClick={() => setGalleryIdx(i => i-1)} style={{ position:'absolute', left:8, top:'50%', transform:'translateY(-50%)', background:'rgba(255,255,255,.85)', border:'none', borderRadius:'50%', width:36, height:36, fontSize:'1.1rem', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 2px 8px rgba(0,0,0,.15)' }} aria-label="Previous image">‹</button>
@@ -951,7 +987,7 @@ export default function Home() {
         <div className="container">
           <div className="solution-grid">
             <div className="solution-img-wrap">
-              <div className="solution-circle">
+              <div className="solution-circle" onClick={() => setLightbox({ imgs:['/images/lifestyle.jpg'], idx:0 })} style={{ cursor:'zoom-in', position:'relative' }}>
                 <Image
                   src="/images/lifestyle.jpg"
                   alt="Vedayu Vijaysar Wooden Glass — Premium Natural Wood"
@@ -959,6 +995,7 @@ export default function Home() {
                   height={400}
                   style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
                 />
+                <span style={{ position:'absolute', bottom:16, left:'50%', transform:'translateX(-50%)', background:'rgba(0,0,0,.45)', color:'#fff', fontSize:'.65rem', padding:'3px 8px', borderRadius:20, whiteSpace:'nowrap' }}>🔍 Tap to zoom</span>
               </div>
             </div>
             <div>
@@ -1123,13 +1160,16 @@ export default function Home() {
 
             {/* Left — infographic image */}
             <div className="how-to-img-col">
-              <Image
-                src="/images/how-to-use.jpg"
-                alt="How to use Vijaysar Wooden Glass — 4 steps infographic"
-                width={480}
-                height={480}
-                style={{ width: '100%', maxWidth: 480, height: 'auto', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,.12)', display: 'block', margin: '0 auto' }}
-              />
+              <button onClick={() => setLightbox({ imgs:['/images/how-to-use.jpg'], idx:0 })} style={{ background:'none', border:'none', padding:0, cursor:'zoom-in', width:'100%', position:'relative', display:'block' }}>
+                <Image
+                  src="/images/how-to-use.jpg"
+                  alt="How to use Vijaysar Wooden Glass — 4 steps infographic"
+                  width={480}
+                  height={480}
+                  style={{ width: '100%', maxWidth: 480, height: 'auto', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,.12)', display: 'block', margin: '0 auto' }}
+                />
+                <span style={{ position:'absolute', bottom:10, right:10, background:'rgba(0,0,0,.45)', color:'#fff', fontSize:'.65rem', padding:'3px 8px', borderRadius:20 }}>🔍 Tap to zoom</span>
+              </button>
             </div>
 
             {/* Right — steps + tips + CTA */}
@@ -1198,6 +1238,56 @@ export default function Home() {
       </section>
 
       {/* ══════════════════════════════════════════
+          LAB CERTIFICATE
+          ══════════════════════════════════════════ */}
+      <section className="section" id="lab-certified">
+        <div className="container">
+          <p className="eyebrow" style={{ textAlign:'center' }}>Third-Party Verified</p>
+          <h2 className="section-title">Lab Tested. Scientifically Certified.</h2>
+          <p className="section-sub">Every Vedayu Vijaysar glass is tested by an ISO-certified independent laboratory — not just our word, but proof.</p>
+          <div className="divider" />
+          <div style={{ display:'flex', flexWrap:'wrap', gap:32, alignItems:'center', justifyContent:'center', marginTop:32 }}>
+            {/* Certificate thumbnail */}
+            <div style={{ flex:'0 0 auto' }}>
+              <button
+                onClick={() => setLightbox({ imgs:['/lab-cert-1.jpg'], idx:0 })}
+                style={{ background:'none', border:'2px solid #e8d5b0', borderRadius:12, padding:0, cursor:'zoom-in', display:'block', boxShadow:'0 4px 24px rgba(92,61,30,.12)', overflow:'hidden', maxWidth:260 }}
+                aria-label="View lab certificate"
+              >
+                <img src="/lab-cert-1.jpg" alt="Hydel Laboratories test report for Vijaysar Herbal Wood Tumbler" style={{ width:'100%', display:'block' }} />
+                <div style={{ background:'#5C3D1E', color:'#fff', fontSize:'.78rem', fontWeight:700, padding:'8px 12px', textAlign:'center', letterSpacing:.5 }}>🔍 Tap to View Full Certificate</div>
+              </button>
+              <a href="/lab-certificate.pdf" download style={{ display:'block', textAlign:'center', marginTop:10, fontSize:'.78rem', color:'#5C3D1E', fontWeight:600, textDecoration:'underline' }}>⬇ Download PDF</a>
+            </div>
+            {/* Key findings */}
+            <div style={{ flex:'1 1 280px', maxWidth:480 }}>
+              <p style={{ fontSize:'.8rem', fontWeight:700, color:'#888', letterSpacing:1, textTransform:'uppercase', marginBottom:16 }}>Hydel Laboratories (P) Ltd. — Report No. HLPL20-260420-01</p>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+                {[
+                  { icon:'✅', label:'Toxicity', value:'Non-Toxic' },
+                  { icon:'♻️', label:'Biodegradable', value:'Yes' },
+                  { icon:'🌿', label:'Cellulose Content', value:'44%' },
+                  { icon:'🔬', label:'pH Level', value:'5.79 (Safe)' },
+                  { icon:'🪵', label:'Organic Matter', value:'Natural — Original Value' },
+                  { icon:'💧', label:'Colour Change', value:'Confirmed in 6–8 hrs' },
+                ].map(({ icon, label, value }) => (
+                  <div key={label} style={{ background:'#fdf6ec', border:'1px solid #e8d5b0', borderRadius:10, padding:'12px 14px' }}>
+                    <div style={{ fontSize:'1.3rem', marginBottom:4 }}>{icon}</div>
+                    <div style={{ fontSize:'.7rem', color:'#888', fontWeight:600, textTransform:'uppercase', letterSpacing:.5 }}>{label}</div>
+                    <div style={{ fontSize:'.92rem', fontWeight:800, color:'#5C3D1E', marginTop:2 }}>{value}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop:18, background:'#eaf4ee', border:'1px solid #b2d8be', borderRadius:10, padding:'12px 16px', fontSize:'.82rem', color:'#2d6a4f', lineHeight:1.6 }}>
+                <strong>Lab Note:</strong> When filled with water, genuine Vijaysar wood turns the water a light reddish-brown colour after 6–8 hours — a natural marker of authenticity confirmed by this report.
+              </div>
+              <p style={{ fontSize:'.72rem', color:'#aaa', marginTop:10 }}>Tested by Hydel Laboratories (P) Ltd. · ISO:9001:2015 · ISO:14001:2015 · ISO:45001:2018 Certified</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════
           PRODUCT SPECS
           ══════════════════════════════════════════ */}
       <section className="section section-alt" id="product-details">
@@ -1208,21 +1298,130 @@ export default function Home() {
 
           {/* Product infographics */}
           <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 36 }}>
-            <Image
-              src="/images/specs.jpg"
-              alt="Vijaysar Wood Tumbler dimensions — 6.1 inch height, 80ml capacity"
-              width={380}
-              height={380}
-              style={{ width: '100%', maxWidth: 380, height: 'auto', borderRadius: 12, boxShadow: '0 4px 20px rgba(0,0,0,.10)' }}
-            />
-            <Image
-              src="/images/authentic.jpg"
-              alt="100% Authentic Vijaysar Wood vs Jamun Wood — how to identify"
-              width={380}
-              height={380}
-              style={{ width: '100%', maxWidth: 380, height: 'auto', borderRadius: 12, boxShadow: '0 4px 20px rgba(0,0,0,.10)' }}
-            />
+            {[
+              { src:'/images/specs.jpg',     alt:'Vijaysar Wood Tumbler dimensions — 6.1 inch height, 80ml capacity' },
+              { src:'/images/authentic.jpg', alt:'100% Authentic Vijaysar Wood vs Jamun Wood — how to identify' },
+            ].map(({ src, alt }, i, arr) => (
+              <button key={src} onClick={() => setLightbox({ imgs: arr.map(a => a.src), idx: i })} aria-label={`Zoom: ${alt}`}
+                style={{ background:'none', border:'none', padding:0, cursor:'zoom-in', width:'100%', maxWidth:380, position:'relative' }}>
+                <Image src={src} alt={alt} width={380} height={380}
+                  style={{ width:'100%', height:'auto', borderRadius:12, boxShadow:'0 4px 20px rgba(0,0,0,.10)', display:'block' }} />
+                <span style={{ position:'absolute', bottom:10, right:10, background:'rgba(0,0,0,.45)', color:'#fff', fontSize:'.65rem', padding:'3px 8px', borderRadius:20 }}>🔍 Tap to zoom</span>
+              </button>
+            ))}
           </div>
+
+          {/* Lightbox */}
+          {lightbox && (() => {
+            const { imgs, idx } = lightbox;
+            const prev = () => setLightbox(l => ({ ...l, idx: Math.max(l.idx - 1, 0) }));
+            const next = () => setLightbox(l => ({ ...l, idx: Math.min(l.idx + 1, imgs.length - 1) }));
+
+            // Mutable state stored outside render cycle via closure object
+            const t = lightbox._t || (lightbox._t = {
+              scale: 1, tx: 0, ty: 0,
+              pinchDist: null, pinchScale: 1,
+              dragStartX: null, dragStartY: null, dragTx: 0, dragTy: 0,
+              swipeStartX: null,
+              el: null,
+            });
+
+            const applyTransform = () => {
+              if (t.el) t.el.style.transform = `translate(${t.tx}px,${t.ty}px) scale(${t.scale})`;
+            };
+
+            const resetTransform = () => { t.scale=1; t.tx=0; t.ty=0; applyTransform(); };
+
+            const onTouchStart = e => {
+              e.stopPropagation();
+              if (e.touches.length === 1) {
+                t.dragStartX = e.touches[0].clientX;
+                t.dragStartY = e.touches[0].clientY;
+                t.dragTx = t.tx; t.dragTy = t.ty;
+                t.swipeStartX = t.scale === 1 ? e.touches[0].clientX : null;
+                t.pinchDist = null;
+              } else if (e.touches.length === 2) {
+                t.swipeStartX = null;
+                t.dragStartX = null;
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                t.pinchDist = Math.hypot(dx, dy);
+                t.pinchScale = t.scale;
+              }
+            };
+            const onTouchMove = e => {
+              e.preventDefault(); e.stopPropagation();
+              if (e.touches.length === 2 && t.pinchDist) {
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                t.scale = Math.min(Math.max(t.pinchScale * (Math.hypot(dx,dy) / t.pinchDist), 1), 4);
+                applyTransform();
+              } else if (e.touches.length === 1 && t.dragStartX !== null && t.scale > 1) {
+                t.tx = t.dragTx + (e.touches[0].clientX - t.dragStartX);
+                t.ty = t.dragTy + (e.touches[0].clientY - t.dragStartY);
+                applyTransform();
+              }
+            };
+            const onTouchEnd = e => {
+              e.stopPropagation();
+              if (e.touches.length === 0) {
+                // swipe navigation only when not zoomed
+                if (t.swipeStartX !== null && t.scale === 1) {
+                  const dx = e.changedTouches[0].clientX - t.swipeStartX;
+                  if (Math.abs(dx) > 50) { dx < 0 ? next() : prev(); }
+                }
+                t.pinchDist = null; t.dragStartX = null; t.swipeStartX = null;
+                // snap back if panned too far when zoomed
+                if (t.el && t.scale > 1) {
+                  const maxTx = (t.el.naturalWidth * t.scale - window.innerWidth) / 2;
+                  const maxTy = (t.el.naturalHeight * t.scale - window.innerHeight) / 2;
+                  t.tx = Math.min(Math.max(t.tx, -maxTx), maxTx);
+                  t.ty = Math.min(Math.max(t.ty, -maxTy), maxTy);
+                  applyTransform();
+                }
+              }
+              if (e.touches.length < 2) t.pinchDist = null;
+            };
+
+            return (
+              <div
+                style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.92)', zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}
+                onClick={() => setLightbox(null)}
+                onKeyDown={e => { if (e.key==='ArrowLeft') { e.stopPropagation(); resetTransform(); prev(); } if (e.key==='ArrowRight') { e.stopPropagation(); resetTransform(); next(); } if (e.key==='Escape') setLightbox(null); }}
+                tabIndex={0}
+              >
+                <img
+                  key={imgs[idx]}
+                  ref={el => { t.el = el; }}
+                  src={imgs[idx]}
+                  alt="Zoomed view"
+                  onClick={e => e.stopPropagation()}
+                  onTouchStart={onTouchStart}
+                  onTouchMove={onTouchMove}
+                  onTouchEnd={onTouchEnd}
+                  style={{ maxWidth:'100%', maxHeight:'90vh', borderRadius:8, boxShadow:'0 8px 40px rgba(0,0,0,.5)', userSelect:'none', touchAction:'none', transformOrigin:'center' }}
+                />
+                {/* Close */}
+                <button onClick={() => setLightbox(null)} style={{ position:'absolute', top:16, right:20, background:'none', border:'none', color:'#fff', fontSize:'2rem', cursor:'pointer', lineHeight:1 }}>✕</button>
+                {/* Prev arrow */}
+                {idx > 0 && (
+                  <button onClick={e => { e.stopPropagation(); prev(); }} style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', background:'rgba(255,255,255,.15)', border:'none', color:'#fff', fontSize:'1.6rem', width:44, height:44, borderRadius:'50%', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>‹</button>
+                )}
+                {/* Next arrow */}
+                {idx < imgs.length - 1 && (
+                  <button onClick={e => { e.stopPropagation(); next(); }} style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', background:'rgba(255,255,255,.15)', border:'none', color:'#fff', fontSize:'1.6rem', width:44, height:44, borderRadius:'50%', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>›</button>
+                )}
+                {/* Dot indicators */}
+                {imgs.length > 1 && (
+                  <div style={{ position:'absolute', bottom:20, left:'50%', transform:'translateX(-50%)', display:'flex', gap:6 }}>
+                    {imgs.map((_, i) => (
+                      <span key={i} onClick={e => { e.stopPropagation(); setLightbox(l => ({ ...l, idx: i })); }} style={{ width:8, height:8, borderRadius:'50%', background: i===idx ? '#fff' : 'rgba(255,255,255,.35)', cursor:'pointer', display:'block' }} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           <div className="specs-table">
             {[
@@ -1452,9 +1651,20 @@ export default function Home() {
               <div className="payment-grid">
                 <div className={`payment-option${payment === 'prepaid' ? ' active' : ''}`} onClick={() => setPayment('prepaid')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setPayment('prepaid')}>
                   <span className="payment-icon">💳</span>
-                  <span className="payment-label">Pay Online</span>
-                  <span className="payment-sub">Razorpay · UPI · Cards · Wallets</span>
-                  <span style={{ display:'inline-block', marginTop:4, background:'#4A7C59', color:'#fff', fontSize:'.68rem', fontWeight:700, padding:'2px 8px', borderRadius:20 }}>🎉 10% OFF</span>
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8, marginTop:2 }}>
+                    <span className="payment-label" style={{ margin:0 }}>Pay Online</span>
+                    <span style={{ background:'#4A7C59', color:'#fff', fontSize:'.68rem', fontWeight:700, padding:'2px 8px', borderRadius:20 }}>🎉 10% OFF</span>
+                  </div>
+                  <div style={{ display:'flex', flexWrap:'wrap', justifyContent:'center', alignItems:'center', gap:6, marginTop:8 }}>
+                    {/* UPI — inline badge */}
+                    <span title="UPI" style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', height:28, padding:'0 7px', border:'1.5px solid #097939', borderRadius:4, fontSize:'.75rem', fontWeight:800, color:'#097939', letterSpacing:'.5px', lineHeight:1 }}>UPI</span>
+                    <img src="/payment-icons/paytm.svg"      alt="Paytm"      title="Paytm"      style={{ height:28, width:'auto' }} />
+                    <img src="/payment-icons/phonepe.svg"    alt="PhonePe"    title="PhonePe"    style={{ height:28, width:'auto' }} />
+                    {/* RuPay — inline badge */}
+                    <span title="RuPay" style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', height:28, padding:'0 7px', background:'#E31837', borderRadius:4, fontSize:'.72rem', fontWeight:800, color:'#fff', letterSpacing:'.3px', lineHeight:1 }}>RuPay</span>
+                    <img src="/payment-icons/mastercard.svg" alt="Mastercard" title="Mastercard" style={{ height:28, width:'auto' }} />
+                    <img src="/payment-icons/visa.svg"       alt="Visa"       title="Visa"       style={{ height:28, width:'auto' }} />
+                  </div>
                 </div>
                 <div className={`payment-option${payment === 'cod' ? ' active' : ''}`} onClick={() => setPayment('cod')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setPayment('cod')}>
                   <span className="payment-icon">💵</span>
@@ -1607,8 +1817,8 @@ export default function Home() {
             <div className="sticky-cta-inner">
               <div className="sticky-text">
                 {formReady
-                  ? <><strong>Ready to order!</strong> {fmt(PACKS[pack].price)} · Free Delivery</>
-                  : <><strong>Vijaysar Wooden Glass</strong> From ₹499 · Free Delivery</>
+                  ? <><strong>Ready to order!</strong> {fmt(PACKS[pack].price)} · {PACKS[pack].tag}</>
+                  : <><strong>{PACKS[pack].tag}</strong> {fmt(PACKS[pack].price)} · Free Delivery</>
                 }
               </div>
               <button
