@@ -830,7 +830,7 @@ export default function Home() {
               <div className="nav-trust-bar">
                 <div style={{ maxWidth:1280, margin:'0 auto', padding:'0 20px', display:'flex', alignItems:'center', justifyContent:'center', gap:24, flexWrap:'nowrap' }}>
                   {['🚚 Free Delivery All Over India','↩️ 7-Day Replacement','💳 Razorpay Secure | COD','🌿 100% Natural Wood','🇮🇳 Indian Brand'].map(t => (
-                    <span key={t} style={{ fontSize:'.85rem', fontWeight:600, color:'rgba(255,255,255,.9)', whiteSpace:'nowrap' }}>{t}</span>
+                    <span key={t} style={{ fontSize:'.80rem', fontWeight:600, color:'rgba(255,255,255,.9)', whiteSpace:'nowrap' }}>{t}</span>
                   ))}
                 </div>
               </div>
