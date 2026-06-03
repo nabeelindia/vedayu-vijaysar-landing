@@ -7,6 +7,7 @@ export default function Contact() {
     <>
       <Head>
         <title>Contact Us — Vedayu</title>
+        <meta name="robots" content="noindex,follow" />
         <meta name="description" content="Get in touch with Vedayu for order queries, support, or feedback." />
       </Head>
 

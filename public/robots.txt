@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Do not index transactional / utility pages
+Disallow: /order-confirmed
+Disallow: /api/
+
+Sitemap: https://vedayulife.com/sitemap.xml

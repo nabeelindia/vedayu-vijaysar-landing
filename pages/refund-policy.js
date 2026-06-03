@@ -7,6 +7,7 @@ export default function RefundPolicy() {
     <>
       <Head>
         <title>Refund &amp; Return Policy — Vedayu</title>
+        <meta name="robots" content="noindex,follow" />
         <meta name="description" content="Vedayu's 7-day refund and replacement policy for the Vijaysar Wooden Glass." />
       </Head>
 

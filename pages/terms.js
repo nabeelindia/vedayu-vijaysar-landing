@@ -7,6 +7,7 @@ export default function Terms() {
     <>
       <Head>
         <title>Terms &amp; Conditions — Vedayu</title>
+        <meta name="robots" content="noindex,follow" />
         <meta name="description" content="Terms and Conditions for purchasing from Vedayu — vedayulife.com" />
       </Head>
 

@@ -7,6 +7,7 @@ export default function ShippingPolicy() {
     <>
       <Head>
         <title>Shipping Policy — Vedayu</title>
+        <meta name="robots" content="noindex,follow" />
         <meta name="description" content="Vedayu's shipping policy — free delivery across India, dispatch timelines, and tracking." />
       </Head>
 

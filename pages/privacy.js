@@ -7,6 +7,7 @@ export default function Privacy() {
     <>
       <Head>
         <title>Privacy Policy — Vedayu</title>
+        <meta name="robots" content="noindex,follow" />
         <meta name="description" content="Privacy Policy for Vedayu — how we collect, use, and protect your data." />
       </Head>
 

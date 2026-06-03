@@ -11,6 +11,7 @@ import crypto   from 'crypto';
 import { Resend } from 'resend';
 import { sendCapiPurchase } from '../../lib/meta-capi';
 import { enqueueFollowup } from '../../lib/followup-queue';
+import { waOrderConfirmed } from '../../lib/whatsapp';
 import { saveCustomer } from '../../lib/customer-cache';
 import { createOrder, storeAwbMapping } from '../../lib/velocity';
 import { kv } from '@vercel/kv';
@@ -200,8 +201,11 @@ export default async function handler(req, res) {
   await sendCapiPurchase({ orderId, price, pack, qty, email, mobile, name, city, pincode }).catch(() => {});
 
   // ── 5. Post-purchase follow-up email queue ──────────────────────────────────
-  await enqueueFollowup({ orderId, email, name, pack, price, method: 'prepaid' }).catch(() => {});
+  await enqueueFollowup({ orderId, email, name, pack, price, method: 'prepaid', mobile }).catch(() => {});
   await saveCustomer({ mobile, email, name, address, city, state, pincode }).catch(() => {});
+
+  // ── WhatsApp — instant order confirmation ────────────────────────────────────
+  await waOrderConfirmed({ mobile, name, pack, orderId, price }).catch(() => {});
 
   // ── 6. Velocity Shipping — push order to dashboard for auto-dispatch ─────────
   // Must be awaited before res.json() — Vercel kills the function once the response

@@ -8,6 +8,7 @@
  * doesn't handle that, so we disable it and read the raw stream.
  */
 import { Resend } from 'resend';
+import { waCartAbandon } from '../../lib/whatsapp';
 
 export const config = {
   api: { bodyParser: false },
@@ -77,6 +78,12 @@ export default async function handler(req, res) {
     } catch (err) {
       console.error('Abandon email failed:', err);
     }
+  }
+
+  // ── WhatsApp cart abandon (fires ~immediately, within seconds of leaving) ──
+  if (mobile) {
+    const packLabel = pack === 5 ? 'Pack of 5' : pack === 2 ? 'Pack of 2' : 'Pack of 1';
+    await waCartAbandon({ mobile, name: name || 'there', pack: packLabel }).catch(() => {});
   }
 
   return res.status(200).end();
