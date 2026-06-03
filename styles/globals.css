@@ -70,9 +70,9 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
 
 .btn-gold {
   background: linear-gradient(135deg, var(--vd-gold), #A8842E);
-  color: var(--vd-dark-brown); box-shadow: 0 4px 18px rgba(201,168,76,.4);
+  color: #fff; box-shadow: 0 4px 18px rgba(201,168,76,.4);
 }
-.btn-gold:hover { box-shadow: 0 6px 28px rgba(201,168,76,.5); color: var(--vd-dark-brown); }
+.btn-gold:hover { box-shadow: 0 6px 28px rgba(201,168,76,.5); color: #fff; }
 
 .btn-outline {
   background: transparent; color: var(--vd-brown);
@@ -384,9 +384,10 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
 .pack-option.active  { border-color: var(--vd-green); background: #f0f9f3; }
 
 .pack-popular-tag {
-  position: absolute; top: -9px; left: 50%; transform: translateX(-50%);
+  display: block; margin: 0 auto 4px;
   background: var(--vd-green); color: #fff;
-  font-size: .6rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; white-space: nowrap;
+  font-size: .58rem; font-weight: 700; padding: 2px 8px; border-radius: 10px;
+  white-space: nowrap; width: fit-content;
 }
 .pack-name  { display: block; font-size: .74rem; font-weight: 700; color: var(--vd-dark-brown); margin-bottom: 3px; }
 .pack-price { display: block; font-size: 1.12rem; font-weight: 800; color: var(--vd-brown); font-family: var(--font-serif); }
@@ -1178,9 +1179,8 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
   /* Sticky CTA button — force dark text so it reads on gold */
   .sticky-cta button { color: #1a0800 !important; }
 
-  /* Gold buttons — dark text in dark mode */
-  .btn-gold { color: #1a0800 !important; }
-  .pricing-badge-gold { color: #1a0800 !important; }
+  /* Pricing badge gold — keep text readable */
+  .pricing-badge-gold { color: #fff !important; }
 
   /* Pack selector — dark mode */
   .pack-option { background: #1A1208; }

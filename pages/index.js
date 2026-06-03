@@ -953,26 +953,21 @@ export default function Home() {
               </div>
 
               {/* Quick pack picker */}
-              <div style={{ display:'flex', gap:8, margin:'12px 0', flexWrap:'wrap' }}>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, margin:'12px 0' }}>
                 {Object.entries(PACKS).map(([k, p]) => (
-                  <button
+                  <div
                     key={k}
                     onClick={() => setPack(+k)}
-                    style={{
-                      flex:1, minWidth:80, padding:'8px 6px', borderRadius:10, position:'relative',
-                      border: pack === +k ? '2px solid #5C3D1E' : +k === 2 ? '2px solid #4A7C59' : '1.5px solid #ddd',
-                      background: pack === +k ? '#fdf6ee' : '#fff',
-                      cursor:'pointer', textAlign:'center',
-                      fontFamily:'inherit',
-                    }}
+                    className={`pack-option${pack === +k ? ' active' : ''}`}
+                    role="button" tabIndex={0}
+                    onKeyDown={e => e.key === 'Enter' && setPack(+k)}
                   >
-                    {+k === 2 && (
-                      <span style={{ position:'absolute', top:-10, left:'50%', transform:'translateX(-50%)', background:'#4A7C59', color:'#fff', fontSize:'.58rem', fontWeight:800, padding:'2px 8px', borderRadius:20, whiteSpace:'nowrap' }}>⭐ Most Popular</span>
-                    )}
-                    <div style={{ fontSize:'.72rem', fontWeight:700, color:'#5C3D1E', marginTop: +k === 2 ? 4 : 0 }}>{p.tag}</div>
-                    <div style={{ fontSize:'.85rem', fontWeight:800, color:'#1a1a1a', marginTop:2 }}>₹{p.price.toLocaleString('en-IN')}</div>
-                    <div style={{ fontSize:'.65rem', color: +k === 2 ? '#4A7C59' : '#888', fontWeight: +k === 2 ? 700 : 400 }}>× {p.qty} glass{p.qty > 1 ? 'es' : ''}</div>
-                  </button>
+                    {+k === 2 && <span className="pack-popular-tag">⭐ Most Popular</span>}
+                    {+k === 5 && <span className="pack-popular-tag" style={{ background:'var(--vd-gold)' }}>🏆 Best Value</span>}
+                    <span className="pack-name">{p.tag}</span>
+                    <span className="pack-price">₹{p.price.toLocaleString('en-IN')}</span>
+                    <span style={{ fontSize:'.65rem', color:'var(--vd-text-light)', display:'block' }}>× {p.qty} glass{p.qty > 1 ? 'es' : ''}</span>
+                  </div>
                 ))}
               </div>
 
@@ -1650,13 +1645,14 @@ export default function Home() {
                 {[1, 2, 5].map(p => (
                   <div key={p} className={`pack-option${pack === p ? ' active' : ''}`} onClick={() => setPack(p)} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setPack(p)}>
                     {p === 2 && <span className="pack-popular-tag">⭐ Most Popular</span>}
-                    {p === 5 && <span className="pack-popular-tag" style={{background:'#C9A84C',color:'#3D2610'}}>🏆 Best Value</span>}
+                    {p === 5 && <span className="pack-popular-tag" style={{background:'var(--vd-gold)'}}>🏆 Best Value</span>}
+                    {p === 1 && <span style={{ display:'block', height:18, marginBottom:2 }} />}
                     <span className="pack-name">{PACKS[p].name}</span>
                     <span className="pack-price">{fmt(PACKS[p].price)}</span>
-                    <span style={{ fontSize:'.72rem', color:'#2d6b40', fontWeight:600, marginTop:2 }}>
-                      {p === 1 ? '₹499/glass' : p === 2 ? '₹449.50/glass' : '₹399.80/glass'}
+                    <span style={{ fontSize:'.68rem', color:'var(--vd-text-light)', fontWeight:600, display:'block', marginTop:2 }}>
+                      {p === 1 ? '₹499/glass' : p === 2 ? '₹449/glass' : '₹400/glass'}
                     </span>
-                    {p > 1 && <span style={{ fontSize:'.68rem', background:'var(--vd-off-white)', color:'var(--vd-green)', padding:'2px 6px', borderRadius:10, marginTop:3, display:'inline-block', fontWeight:600 }}>
+                    {p > 1 && <span style={{ fontSize:'.62rem', background:'var(--vd-off-white)', color:'var(--vd-green)', padding:'1px 5px', borderRadius:8, marginTop:3, display:'inline-block', fontWeight:700 }}>
                       Save {fmt(PACKS[p].original - PACKS[p].price)}
                     </span>}
                   </div>
@@ -1841,7 +1837,7 @@ export default function Home() {
           </div>
           <div className="reviews-grid">
             {[
-              { avatar:'https://i.pravatar.cc/80?img=33',     name:'Rama Devi',    loc:'Varanasi, Uttar Pradesh', ago:'2 weeks ago',  stars:'★★★★★', text:'बहुत अच्छा उत्पाद है। मेरे पति पिछले 3 महीनों से रोज़ सुबह इस गिलास का पानी पी रहे हैं। लकड़ी की गुणवत्ता बहुत अच्छी है, असली विजयसर की लकड़ी है। पानी रात भर रखने के बाद हल्का गुलाबी रंग हो जाता है — यह देख कर मन को संतोष होता है। पैकिंग भी बहुत सुरक्षित थी।' },
+              { avatar:'https://i.pravatar.cc/80?img=64',     name:'Rama Devi',    loc:'Varanasi, Uttar Pradesh', ago:'2 weeks ago',  stars:'★★★★★', text:'बहुत अच्छा उत्पाद है। मेरे पति पिछले 3 महीनों से रोज़ सुबह इस गिलास का पानी पी रहे हैं। लकड़ी की गुणवत्ता बहुत अच्छी है, असली विजयसर की लकड़ी है। पानी रात भर रखने के बाद हल्का गुलाबी रंग हो जाता है — यह देख कर मन को संतोष होता है। पैकिंग भी बहुत सुरक्षित थी।' },
               { avatar:'https://i.pravatar.cc/80?img=13',  name:'Kumar Raghav', loc:'Patna, Bihar',            ago:'3 weeks ago',  stars:'★★★★★', text:'Bhai, 2 mahine ho gaye use karte hue. Subah uthke seedha yahi paani peeta hoon. Pehle koi routine nahi tha, ab yeh glass yaad dilata hai. Delivery bhi 4 din mein aa gayi — COD mein koi problem nahi hui. Quality ekdum solid hai, koi plastic smell nahi, pure wood.' },
               { avatar:'https://i.pravatar.cc/80?img=44', name:'Priya Sharma',  loc:'Pune, Maharashtra',       ago:'1 month ago',  stars:'★★★★★', text:'Bought this for my father after my aunt recommended it. The wood quality is really premium — you can tell it\'s handcrafted. He uses it every morning now and genuinely enjoys the ritual. Packaging was very safe, no damage at all. Fast delivery to Pune within 3 days!' },
               { avatar:'https://i.pravatar.cc/80?img=32',   name:'Kavita Jha',   loc:'Jaipur, Rajasthan',       ago:'5 weeks ago',  stars:'★★★★★', text:'पहले पानी पीने का कोई नियम नहीं था, बस जब मन करे पी लिया। अब रोज़ रात को गिलास भर देती हूँ और सुबह सबसे पहले यही पानी पीती हूँ। 90 दिन का ritual complete किया — अब दूसरा गिलास मँगवाया है। बहुत सुंदर तोहफ़ा भी है बुज़ुर्गों के लिए।' },
