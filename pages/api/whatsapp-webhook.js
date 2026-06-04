@@ -4,6 +4,9 @@ import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+// In-memory dedup: prevents replying twice if Meta sends the same webhook twice
+const recentIds = new Set();
+
 webpush.setVapidDetails(
   process.env.VAPID_EMAIL,
   process.env.VAPID_PUBLIC_KEY,
@@ -29,15 +32,23 @@ export default async function handler(req, res) {
     const entry  = req.body?.entry?.[0];
     const change = entry?.changes?.[0]?.value;
     const msgArr = change?.messages;
-    if (!msgArr?.length) {
-      console.log('[WA] no messages in payload — likely a status update, skipping');
-      return;
-    }
+    if (!msgArr?.length) return; // status updates — skip silently
 
     for (const msg of msgArr) {
       if (msg.type !== 'text') {
-        console.log(`[WA] skipping non-text message type: ${msg.type}`);
+        console.log(`[WA] skipping ${msg.type} message`);
         continue;
+      }
+
+      // Dedup — Meta sometimes delivers the same webhook twice
+      if (recentIds.has(msg.id)) {
+        console.log(`[WA] duplicate message ${msg.id} — skipping`);
+        continue;
+      }
+      recentIds.add(msg.id);
+      if (recentIds.size > 200) {
+        const first = recentIds.values().next().value;
+        recentIds.delete(first);
       }
 
       const phone   = msg.from;
@@ -47,23 +58,26 @@ export default async function handler(req, res) {
       const botReply   = getBotReply(text) ?? FALLBACK_REPLY;
       const isFallback = botReply === FALLBACK_REPLY;
 
-      // Send WhatsApp reply
-      await sendWAMessage(phone, botReply);
-
       console.log(`[WA] ${contact} (${phone}): "${text}" → ${isFallback ? 'FALLBACK' : 'BOT'}`);
 
-      // Notify admin
-      await notifyAdmin({ phone, contact, text, botReply, isFallback });
+      // Send reply + notify admin in parallel
+      await Promise.allSettled([
+        sendWAMessage(phone, botReply),
+        notifyAdmin({ phone, contact, text, isFallback }),
+      ]);
     }
   } catch (err) {
     console.error('WA webhook error:', err);
   }
 }
 
-async function sendWAMessage(to, body, retries = 3) {
+async function sendWAMessage(to, body, retries = 5) {
   const phoneId = process.env.WA_PHONE_NUMBER_ID;
   const token   = process.env.WA_TOKEN;
-  if (!phoneId || !token) return;
+  if (!phoneId || !token) {
+    console.error('[WA] WA_PHONE_NUMBER_ID or WA_TOKEN not set');
+    return;
+  }
 
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
@@ -78,20 +92,22 @@ async function sendWAMessage(to, body, retries = 3) {
         }),
       });
       const json = await res.json();
-      if (!res.ok) console.error(`WA send error (attempt ${attempt}):`, JSON.stringify(json));
-      else return json; // success
+      if (!res.ok) {
+        console.error(`[WA] send error (attempt ${attempt}):`, JSON.stringify(json));
+      } else {
+        console.log(`[WA] reply sent to ${to} (attempt ${attempt})`);
+        return json;
+      }
     } catch (err) {
-      const isLast = attempt === retries;
-      console.error(`WA send failed (attempt ${attempt}/${retries}): ${err.message}`);
-      if (isLast) throw err;
-      // Wait before retrying: 500ms, 1500ms, 3500ms
-      await new Promise(r => setTimeout(r, 500 * (2 ** (attempt - 1))));
+      console.error(`[WA] send failed (attempt ${attempt}/${retries}): ${err.message}`);
+      if (attempt === retries) return;
     }
+    // Exponential backoff: 500ms, 1s, 2s, 4s
+    await new Promise(r => setTimeout(r, 500 * (2 ** (attempt - 1))));
   }
 }
 
 async function notifyAdmin({ phone, contact, text, isFallback }) {
-  // ── Email (always on fallback, so admin knows a human reply is needed) ──
   if (isFallback && process.env.RESEND_API_KEY) {
     await resend.emails.send({
       from:    'Vedayu Bot <bot@vedayulife.com>',
@@ -110,17 +126,12 @@ async function notifyAdmin({ phone, contact, text, isFallback }) {
     }).catch(err => console.error('Email error:', err));
   }
 
-  // ── Browser push (requires VAPID keys + active subscriptions) ───────────
-  if (!process.env.VAPID_PUBLIC_KEY) return;
-
-  const pushEndpointsRaw = process.env.PUSH_SUBSCRIPTIONS;
-  if (!pushEndpointsRaw) return;
-
+  if (!process.env.VAPID_PUBLIC_KEY || !process.env.PUSH_SUBSCRIPTIONS) return;
   let subs = [];
-  try { subs = JSON.parse(pushEndpointsRaw); } catch { return; }
+  try { subs = JSON.parse(process.env.PUSH_SUBSCRIPTIONS); } catch { return; }
 
   const payload = JSON.stringify({
-    title: isFallback ? `⚠️ Needs reply — ${contact}` : `💬 WA message — ${contact}`,
+    title: isFallback ? `⚠️ Needs reply — ${contact}` : `💬 WA — ${contact}`,
     body:  text.slice(0, 120),
   });
 
