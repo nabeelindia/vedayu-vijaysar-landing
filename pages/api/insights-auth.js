@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from 'crypto';
 
+// Signs a token using the same HMAC-SHA256 + hex approach as the middleware
 function makeToken() {
   const secret = process.env.SESSION_SECRET || 'dev-secret';
   const payload = JSON.stringify({ exp: Date.now() + 7 * 24 * 60 * 60 * 1000 });
@@ -22,13 +23,9 @@ export default function handler(req, res) {
 
   if (!expected) return res.status(500).json({ error: 'INSIGHTS_PASSWORD not set' });
 
-  // Constant-time comparison to prevent timing attacks
   let match = false;
   try {
-    match = timingSafeEqual(
-      Buffer.from(password || ''),
-      Buffer.from(expected)
-    );
+    match = timingSafeEqual(Buffer.from(password || ''), Buffer.from(expected));
   } catch {
     match = false;
   }
