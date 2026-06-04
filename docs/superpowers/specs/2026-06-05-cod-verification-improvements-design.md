@@ -11,30 +11,30 @@
 
 Four improvements to the COD verification WhatsApp flow:
 
-1. Dynamic shipping time in messages (before/after 6 PM IST)
-2. Dispatch-activation message framing (better conversion)
+1. Dynamic sending time in messages (before/after 6 PM IST)
+2. Simple, friendly message framing for elderly Indian customers (no jargon)
 3. 6-hour nudge for non-responders
 4. 24-hour auto-confirm for persistent non-responders
 
 ---
 
-## 1. Dynamic Shipping Time
+## 1. Dynamic Sending Time
 
 At the moment of order placement, check current IST time:
 
 ```js
-function getShippingLine() {
+function getSendingLine() {
   const now = new Date();
   const ist = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
   const hour = ist.getHours();
   // before 6 PM (18:00)
   return hour < 18
-    ? 'we will ship it today'
-    : 'we will ship it tomorrow morning';
+    ? 'we will send it to you today itself'
+    : 'we will send it to you tomorrow morning';
 }
 ```
 
-This string becomes the 6th body variable `{{6}}` in the `vedayu_cod_verify` template, or is appended inline to the address variable to keep the template variable count at 5 (Meta allows up to 10 body variables).
+This string becomes the 6th body variable `{{6}}` in the `vedayu_cod_verify` template. Meta allows up to 10 body variables.
 
 **Decision:** Use as `{{6}}` — keeps message text clean and lets Meta validate each variable separately.
 
@@ -42,16 +42,18 @@ This string becomes the 6th body variable `{{6}}` in the `vedayu_cod_verify` tem
 
 ## 2. Updated Template: `vedayu_cod_verify`
 
+**Language note:** All messages use simple, warm Hindi-influenced Indian English. No English jargon ("dispatch", "activate", "confirm order"). The goal is clarity for elderly customers who may not be very comfortable with formal English.
+
 **Previous body (from base spec):**
 > Hi {{1}}, we received your COD order {{2}} for {{3}} ({{4}}). Your delivery address on file: {{5}}. Please confirm this is correct — once confirmed, your order will be shipped within 24 business hours.
 
 **New body:**
-> Hi {{1}}, your order {{2}} for {{3}} ({{4}}) is ready! 🎉 Delivery address: {{5}}. Tap *Confirm* to activate dispatch — {{6}}. If the address is wrong, tap *Cancel* and place a new order with the correct address.
+> Namaste {{1}} ji 🙏 We have received your order {{2}} for {{3}} ({{4}}). We will send it to this address: {{5}}. Is this address correct? If yes, please press *Yes, Send My Order*. If not correct, press *Cancel Order* and place a new order with the right address. {{6}}.
 
-Variables: `{{1}}` name · `{{2}}` orderId · `{{3}}` pack · `{{4}}` price · `{{5}}` address · `{{6}}` shipping line
+Variables: `{{1}}` name · `{{2}}` orderId · `{{3}}` pack · `{{4}}` price · `{{5}}` address · `{{6}}` sending time line
 
 Buttons (QUICK_REPLY):
-- "✅ Confirm Order" — payload `CONFIRM_COD`
+- "✅ Yes, Send My Order" — payload `CONFIRM_COD`
 - "❌ Cancel Order" — payload `CANCEL_COD`
 
 **Re-submit this updated template to Meta Business Manager.** Category: UTILITY.
@@ -87,7 +89,7 @@ Also insert a row in `cod_verifications` (Supabase) immediately with `status = '
 2. For each: send WhatsApp nudge, update `nudged_at = now()` in DB.
 
 **Nudge message** — use a new template `vedayu_cod_nudge`:
-> Hi {{1}}, your order {{2}} is still waiting for your confirmation. Tap Confirm and we'll ship it right away — {{3}}. If you'd like to cancel, tap Cancel.
+> Namaste {{1}} ji 🙏 Your Vedayu order {{2}} is ready to be sent to you! We are waiting for your reply. Please press *Yes, Send My Order* so we can send it — {{3}}. If you do not want it, press *Cancel Order*.
 
 Variables: `{{1}}` name · `{{2}}` orderId · `{{3}}` shipping line (dynamic, same helper)
 
@@ -108,8 +110,8 @@ Buttons: same QUICK_REPLY buttons as verify template.
 2. For each:
    - Update `cod_verifications.status = 'auto_confirmed'`, `verified_at = now()`
    - Update `orders.status = 'confirmed'` in Supabase
-   - Send owner email: "Order {orderId} auto-confirmed — customer did not respond. Please call before dispatch."
-   - Send customer WA text (session message): "Your order {orderId} has been confirmed and will be dispatched shortly. Keep ₹{price} ready for the delivery person."
+   - Send owner email: "Order {orderId} auto-confirmed — customer did not reply. Please call customer before sending the parcel."
+   - Send customer WA text (session message): "Namaste ji 🙏 Your Vedayu order {orderId} is being sent to you. Please keep ₹{price} ready to give the delivery person when they arrive."
 
 ---
 
@@ -154,7 +156,7 @@ msg.type === 'interactive' && msg.interactive?.type === 'button_reply'
     → kv.set status = 'confirmed'
     → supabase update cod_verifications: status='confirmed', verified_at=now()
     → supabase update orders: status='confirmed'
-    → send WA session message: "Your order {orderId} is confirmed! We'll ship it today/tomorrow. Keep ₹{price} ready for the delivery person."
+    → send WA session message: "Namaste ji 🙏 Thank you! Your order {orderId} is confirmed. We will send your parcel to you — please keep ₹{price} ready to give the delivery person."
     → notifyOwner (email)
 
   CANCEL_COD:

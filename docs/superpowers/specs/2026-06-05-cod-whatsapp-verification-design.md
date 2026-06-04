@@ -18,7 +18,7 @@ When a COD order is placed, send the customer a WhatsApp message showing their d
 3. The verification message shows: customer name, order ID, pack, price, and delivery address, with two quick reply buttons.
 4. Customer taps **✅ Confirm Order**:
    - KV status updated to `confirmed`
-   - WhatsApp text sent: "Great! Your order is confirmed. We'll dispatch in 1–2 business days."
+   - WhatsApp text sent: "Namaste ji 🙏 Thank you! Your order is confirmed. We will send your parcel to you — please keep the payment ready for the delivery person."
    - Owner notified via existing email mechanism
 5. Customer taps **❌ Cancel Order**:
    - KV status updated to `cancelled`
@@ -36,7 +36,7 @@ When a COD order is placed, send the customer a WhatsApp message showing their d
 - Language: en
 - Body variables: `{{1}}` name, `{{2}}` orderId, `{{3}}` pack, `{{4}}` price, `{{5}}` address
 - Body text:
-  > Hi {{1}}, we received your COD order {{2}} for {{3}} ({{4}}). Your delivery address on file: {{5}}. Please confirm this is correct so we can dispatch your order.
+  > Hi {{1}}, we received your COD order {{2}} for {{3}} ({{4}}). Your delivery address on file: {{5}}. Please confirm this is correct — once confirmed, your order will be shipped within 24 business hours.
 - Buttons (QUICK_REPLY):
   - Button 1: "✅ Confirm Order" — payload `CONFIRM_COD`
   - Button 2: "❌ Cancel Order" — payload `CANCEL_COD`

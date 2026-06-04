@@ -191,10 +191,10 @@ Full order info card (all fields).
 ```
 
 Manual actions (buttons):
-- Mark as Dispatched (prompts for AWB number)
-- Mark as Delivered
-- Cancel Order (confirmation dialog)
-- Resend verification (if pending)
+- **Parcel Sent** — prompts for AWB number, updates status to `sent`
+- **Parcel Delivered** — marks delivered
+- **Cancel Order** — confirmation dialog
+- **Resend confirmation message** — (if status is pending, resends the WA verification)
 
 ---
 
@@ -245,7 +245,42 @@ Absorbs all existing `/insights` chart functionality:
 Adds new panels:
 - **COD vs Prepaid split** — pie or bar, this week
 - **Verification rate** — % of COD orders confirmed by customer (vs auto-confirmed vs cancelled)
-- **Estimated RTO risk** — count of COD orders dispatched without customer confirmation
+- **Estimated RTO risk** — count of COD orders sent without customer confirmation
+
+---
+
+## Scalability Architecture
+
+The admin is designed so it can grow without requiring a rewrite. Three principles:
+
+### 1. API-first: frontend is a thin client
+
+Every piece of data the admin UI shows comes from a `/api/admin/*` endpoint — never from direct Supabase calls in page components. This means:
+- The frontend can be replaced (e.g. extract to a separate React app, a mobile app, or a Retool dashboard) without changing the backend
+- API endpoints can be versioned (`/api/admin/v2/...`) when breaking changes are needed
+- New sections (e.g. returns, blog, products) are added by adding new API routes, not touching existing ones
+
+### 2. Shared auth middleware — not per-page checks
+
+Auth is enforced at the edge (`middleware.js`), not in each page. Adding a new page under `/admin/` is automatically protected — no auth code to copy or forget.
+
+Future upgrade path: swap the single `ADMIN_PASSWORD` for Supabase Auth (email+password) by changing only `middleware.js` and `/admin/login.js`. No page or API route changes needed.
+
+### 3. Component library in `components/admin/`
+
+All UI elements (cards, badges, tables, timelines, bottom nav) live in `components/admin/`. Pages assemble components; they don't define UI inline. This means:
+- Consistent look across all sections
+- New sections reuse existing components
+- If the panel is later extracted to a separate app, the component folder moves with it cleanly
+
+### Future scaling path (when needed)
+
+| Trigger | Action |
+|---------|--------|
+| Need team logins | Swap ADMIN_PASSWORD for Supabase Auth in middleware + login only |
+| Need role-based access | Add `role` field to Supabase users table; check in middleware |
+| Admin panel becomes too large | Extract `pages/admin/` + `components/admin/` + `pages/api/admin/` into a separate Vercel project pointing to the same Supabase |
+| Need real-time updates | Add Supabase Realtime subscription in Layout.js — no page changes needed |
 
 ---
 
@@ -254,48 +289,74 @@ Adds new panels:
 ```
 pages/
   admin/
-    index.js          Dashboard
+    index.js            Dashboard
     orders/
-      index.js        Orders list
-      [id].js         Order detail
+      index.js          Orders list
+      [id].js           Order detail
     customers/
-      index.js        Customer list
-      [phone].js      Customer profile
-    whatsapp.js       WA inbox + verifications
-    analytics.js      Analytics
-    login.js          Login page
+      index.js          Customer list
+      [phone].js        Customer profile
+    whatsapp.js         WA inbox + COD verifications
+    analytics.js        Analytics
+    login.js            Login page
+
   api/
     admin/
-      auth.js         Cookie check helper (shared by all admin API routes)
-      orders.js       GET list + pagination
+      _auth.js          Shared auth guard (called at top of every admin API route)
       orders/
-        [id].js       GET detail, PATCH status
-      customers.js    GET list
+        index.js        GET list (paginated, filterable)
+        [id].js         GET detail · PATCH status
       customers/
-        [phone].js    GET profile
-      analytics.js    GET stats
+        index.js        GET list (paginated, searchable)
+        [phone].js      GET profile + order history + WA thread
+      analytics.js      GET revenue/verification/RTO stats
 
 components/
   admin/
-    Layout.js         Shell with sidebar/bottom-nav, auth check
-    OrderCard.js      Reusable order card (list + detail)
-    StatusBadge.js    Colour-coded status pill
-    VerifyTimeline.js COD verification event timeline
+    Layout.js           Shell: sidebar (desktop) + bottom nav (mobile) + auth check
+    OrderCard.js        Order summary card — used in list and customer profile
+    StatusBadge.js      Colour-coded pill: pending / confirmed / sent / delivered / cancelled
+    VerifyTimeline.js   COD verification event timeline
+    StatCard.js         Dashboard metric card
+    PageHeader.js       Page title + optional action button
 
 supabase/
   migrations/
-    004_orders.sql    orders table
+    004_orders.sql      orders table (both COD and prepaid)
 ```
+
+**`_auth.js` pattern** — every admin API route starts with:
+```js
+import { checkAdminAuth } from './_auth';
+export default async function handler(req, res) {
+  if (!checkAdminAuth(req)) return res.status(401).json({ error: 'Unauthorized' });
+  // ... route logic
+}
+```
+
+This keeps auth logic in one place and makes future upgrades (e.g. JWT, Supabase Auth) a single-file change.
+
+---
+
+## Language / Copy Conventions
+
+All admin UI copy follows plain Indian English — no jargon:
+
+| Old term | Admin panel shows |
+|----------|-------------------|
+| Dispatch | Send parcel / Parcel sent |
+| Dispatched | Sent |
+| Awaiting dispatch | Ready to send |
+| COD verification | Order confirmation (WhatsApp) |
+| RTO | Returned orders |
 
 ---
 
 ## Middleware Update (`middleware.js`)
 
-Add `/admin` to protected routes (same pattern as existing `/insights` protection):
-
 ```js
 // Existing: protects /insights/*
-// Add: protects /admin/* (except /admin/login)
+// New addition: protects /admin/* (except /admin/login)
 if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
   const token = req.cookies.get('admin_token')?.value;
   if (!token || !verifyAdminToken(token)) {
@@ -304,14 +365,14 @@ if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
 }
 ```
 
-`verifyAdminToken` uses `ADMIN_PASSWORD` (same HMAC approach as existing insights auth).
+`verifyAdminToken` uses `ADMIN_PASSWORD` (same HMAC approach as existing insights auth, different secret).
 
 ---
 
 ## Non-Goals
 
-- Role-based access control (one admin user is sufficient)
+- Role-based access control (single admin user for now — upgrade path documented above)
 - Product/inventory management
-- Blog post editing via admin (Next.js content files work fine as-is)
+- Blog post editing via admin
 - Push notification configuration UI
-- Real-time websocket updates (polling is sufficient for this volume)
+- Real-time websocket updates (polling is sufficient at current order volume)
