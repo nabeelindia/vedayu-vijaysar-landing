@@ -110,7 +110,7 @@ Buttons: same QUICK_REPLY buttons as verify template.
 2. For each:
    - Update `cod_verifications.status = 'auto_confirmed'`, `verified_at = now()`
    - Update `orders.status = 'confirmed'` in Supabase
-   - Send owner email: "Order {orderId} auto-confirmed — customer did not reply. Please call customer before sending the parcel."
+   - Send owner email: "Order {orderId} auto-confirmed — customer did not reply. Please call customer before sending the order."
    - Send customer WA text (session message): "Namaste ji 🙏 Your Vedayu order {orderId} is being sent to you. Please keep ₹{price} ready to give the delivery person when they arrive."
 
 ---
@@ -156,7 +156,7 @@ msg.type === 'interactive' && msg.interactive?.type === 'button_reply'
     → kv.set status = 'confirmed'
     → supabase update cod_verifications: status='confirmed', verified_at=now()
     → supabase update orders: status='confirmed'
-    → send WA session message: "Namaste ji 🙏 Thank you! Your order {orderId} is confirmed. We will send your parcel to you — please keep ₹{price} ready to give the delivery person."
+    → send WA session message: "Namaste ji 🙏 Thank you! Your order {orderId} is confirmed. We will send your order to you — please keep ₹{price} ready to give the delivery person."
     → notifyOwner (email)
 
   CANCEL_COD:

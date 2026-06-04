@@ -12,21 +12,22 @@ Current order IDs use `VED-COD-${Date.now()}` — 20+ characters, timestamp-base
 
 ## Solution
 
-Sequential order numbers with three components:
+Order numbers are built from three components — no separator, compact and readable:
 
 ```
-VED - C - 10001 - 250605
- │    │     │       └─ short date (YYMMDD in IST)
- │    │     └─ sequential number starting at 10001
+VED - C - 250605 - 01
+ │    │      │      └─ daily sequence: 01, 02 … 09, 10, 11 … (resets each IST day)
+ │    │      └─ date in IST (YYMMDD)
  │    └─ payment type: C (COD) or P (Prepaid)
  └─ brand prefix
 ```
 
-Examples:
-- `VED-C10001-250605` — COD order #10001 placed on 5 Jun 2025
-- `VED-P10002-250605` — Prepaid order #10002 placed on 5 Jun 2025
+Examples (June 5, 2025):
+- `VED-C25060501` — 1st COD order of the day
+- `VED-P25060502` — 2nd order of the day, prepaid
+- `VED-C25060510` — 10th COD order of the day
 
-The date component lets you instantly know when the order was placed without opening it. The C/P prefix makes payment type visible at a glance in any list, email, or SMS.
+The counter resets every IST midnight. Each day starts fresh from 01. Date is embedded so you always know when an order was placed just from its ID.
 
 ---
 
@@ -34,30 +35,46 @@ The date component lets you instantly know when the order was placed without ope
 
 ### Counter mechanism
 
-`kv.incr('order_seq')` — Vercel KV's atomic increment. No race conditions under concurrent orders.
+A per-day KV key `order_seq:YYMMDD` incremented atomically. 48-hour TTL ensures yesterday's key expires cleanly.
 
 ```js
 // lib/orders.js
 import { kv } from '@vercel/kv';
 
-export async function generateOrderId(method) {
-  const seq    = await kv.incr('order_seq');
-  const prefix = method === 'prepaid' ? 'P' : 'C';
-
-  // Short date in IST (YYMMDD)
+function getISTDate() {
   const now = new Date();
   const ist = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
-  const yy  = String(ist.getFullYear()).slice(2);
-  const mm  = String(ist.getMonth() + 1).padStart(2, '0');
-  const dd  = String(ist.getDate()).padStart(2, '0');
-  const date = `${yy}${mm}${dd}`;
+  const yy = String(ist.getFullYear()).slice(2);
+  const mm = String(ist.getMonth() + 1).padStart(2, '0');
+  const dd = String(ist.getDate()).padStart(2, '0');
+  return `${yy}${mm}${dd}`;
+}
 
-  return `VED-${prefix}${10000 + seq}-${date}`;
+export async function generateOrderId(method) {
+  const prefix = method === 'prepaid' ? 'P' : 'C';
+  const date   = getISTDate();
+  const kvKey  = `order_seq:${date}`;
+
+  try {
+    const seq = await kv.incr(kvKey);
+    await kv.expire(kvKey, 172800); // 48h TTL
+    const seqStr = String(seq).padStart(2, '0'); // 01, 02 … 10, 11
+    return `VED-${prefix}${date}${seqStr}`;
+  } catch {
+    // Fallback: VED-CF250605A3B2 (F = fallback, base36 microseconds)
+    const short = Date.now().toString(36).slice(-4).toUpperCase();
+    return `VED-${prefix}F${date}${short}`;
+  }
 }
 ```
 
-First COD call:     seq=1 → `VED-C10001-250605`  
-First prepaid call: seq=2 → `VED-P10002-250605`
+Flow:
+- 1st order of the day (COD): seq=1 → `VED-C25060501`
+- 2nd order of the day (Prepaid): seq=2 → `VED-P25060502`
+- 10th order of the day (COD): seq=10 → `VED-C25060510`
+- Next day resets: seq=1 → `VED-C25060601`
+
+Fallback IDs contain `F` after the type letter — easy to spot in the admin panel.
 
 ### Files to update
 
@@ -73,41 +90,11 @@ First prepaid call: seq=2 → `VED-P10002-250605`
 
 ### Migration note
 
-Existing orders (placed before this change) retain their long timestamp IDs in KV, emails, and Velocity. No migration needed — the new sequence starts fresh from VED-C10001.
-
----
-
-## Error handling
-
-If `kv.incr` fails (KV unavailable), fall back to a short base36 timestamp so the order is never lost:
-
-```js
-export async function generateOrderId(method) {
-  const prefix = method === 'prepaid' ? 'P' : 'C';
-  const now = new Date();
-  const ist = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
-  const yy  = String(ist.getFullYear()).slice(2);
-  const mm  = String(ist.getMonth() + 1).padStart(2, '0');
-  const dd  = String(ist.getDate()).padStart(2, '0');
-  const date = `${yy}${mm}${dd}`;
-
-  try {
-    const seq = await kv.incr('order_seq');
-    return `VED-${prefix}${10000 + seq}-${date}`;
-  } catch {
-    // Fallback: VED-CF-A3B2-250605 (F = fallback, base36 suffix)
-    const short = Date.now().toString(36).slice(-4).toUpperCase();
-    return `VED-${prefix}F-${short}-${date}`;
-  }
-}
-```
-
-Fallback IDs contain `F` after the type prefix — distinguishable in the admin panel.
+Existing orders retain their long timestamp IDs. No migration needed — the new per-day sequence starts fresh.
 
 ---
 
 ## Out of scope
 
-- Resetting the sequence counter
-- Daily-reset sequences (e.g. order #1 every new day)
-- Displaying order progress via the number (gap detection)
+- Global sequence (non-resetting) — intentionally excluded; daily reset keeps IDs short
+- Skipping numbers or reserving ranges

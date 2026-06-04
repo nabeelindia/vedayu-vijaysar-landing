@@ -49,38 +49,50 @@ Created in `supabase/migrations/004_orders.sql`:
 
 ```sql
 create table if not exists orders (
-  id           bigserial primary key,
-  order_id     text not null unique,      -- VED-10001
-  method       text not null,             -- 'cod' | 'prepaid'
-  status       text not null default 'pending',
-    -- pending | confirmed | dispatched | delivered | cancelled | auto_confirmed
-  name         text not null,
-  mobile       text not null,
-  email        text,
-  address      text not null,
-  city         text not null,
-  state        text not null,
-  pincode      text not null,
-  pack         text not null,
-  qty          int  not null default 1,
-  price        int  not null,
-  utm          jsonb,
-  referrer_id  text,
-  awb          text,
-  courier      text,
-  created_at   timestamptz default now(),
-  updated_at   timestamptz default now()
+  id                  bigserial primary key,
+  order_id            text not null unique,   -- VED-C25060501, VED-P25060502
+  method              text not null,           -- 'cod' | 'prepaid'
+  status              text not null default 'pending',
+    -- pending | confirmed | auto_confirmed | sent | delivered | cancelled | returned
+  name                text not null,
+  mobile              text not null,
+  email               text,
+  address             text not null,
+  city                text not null,
+  state               text not null,
+  pincode             text not null,
+  pack                text not null,
+  qty                 int  not null default 1,
+  price               int  not null,
+  utm                 jsonb,
+  referrer_id         text,
+  -- NimbusPost fields (populated when order is sent to NimbusPost)
+  awb                 text,                   -- assigned AWB number
+  courier             text,                   -- courier name
+  nimbuspost_order_id text,                   -- NimbusPost internal order ID
+  label_url           text,                   -- shipping label PDF URL
+  -- Tracking lifecycle timestamps
+  sent_at             timestamptz,            -- when marked as sent / AWB assigned
+  delivered_at        timestamptz,
+  returned_at         timestamptz,
+  created_at          timestamptz default now(),
+  updated_at          timestamptz default now()
 );
 
-create index if not exists orders_mobile_idx    on orders(mobile);
-create index if not exists orders_status_idx    on orders(status);
-create index if not exists orders_method_idx    on orders(method);
-create index if not exists orders_created_idx   on orders(created_at desc);
+create index if not exists orders_mobile_idx   on orders(mobile);
+create index if not exists orders_status_idx   on orders(status);
+create index if not exists orders_method_idx   on orders(method);
+create index if not exists orders_created_idx  on orders(created_at desc);
+create index if not exists orders_awb_idx      on orders(awb);
 ```
 
 **Written by:** `submit-cod.js` (method='cod') and `verify-payment.js` (method='prepaid') immediately on successful order placement.
 
-**Updated by:** `whatsapp-webhook.js` (COD verify/cancel), `cod-auto-confirm.js` cron, and future dispatch/delivery webhook from Velocity/NimbusPost.
+**Updated by:**
+- `whatsapp-webhook.js` — COD confirm/cancel button taps
+- `cod-auto-confirm.js` cron — 24h auto-confirm
+- `nimbuspost/webhook.js` — shipment status events (currently updates KV only; will also update this table)
+- Admin panel PATCH `/api/admin/orders/[id]` — manual status updates (AWB entry, mark delivered, etc.)
 
 ---
 
@@ -160,7 +172,7 @@ Quick actions:
 
 ### List view
 
-Filter bar (chips): All · COD · Prepaid · Pending · Confirmed · Dispatched · Cancelled  
+Filter bar (chips): All · COD · Prepaid · Pending · Confirmed · Sent · Delivered · Cancelled  
 Search bar: by order ID, name, mobile, pincode
 
 Mobile: card per order  
@@ -191,8 +203,8 @@ Full order info card (all fields).
 ```
 
 Manual actions (buttons):
-- **Parcel Sent** — prompts for AWB number, updates status to `sent`
-- **Parcel Delivered** — marks delivered
+- **Order Sent** — prompts for tracking number (AWB), updates status to `sent`, stores AWB in orders table
+- **Order Delivered** — marks delivered, records `delivered_at`
 - **Cancel Order** — confirmation dialog
 - **Resend confirmation message** — (if status is pending, resends the WA verification)
 
@@ -342,13 +354,17 @@ This keeps auth logic in one place and makes future upgrades (e.g. JWT, Supabase
 
 All admin UI copy follows plain Indian English — no jargon:
 
-| Old term | Admin panel shows |
-|----------|-------------------|
-| Dispatch | Send parcel / Parcel sent |
-| Dispatched | Sent |
-| Awaiting dispatch | Ready to send |
-| COD verification | Order confirmation (WhatsApp) |
-| RTO | Returned orders |
+| Technical term | Admin panel shows |
+|----------------|-------------------|
+| dispatch / dispatched | Send order / Order sent |
+| pending (pre-confirm) | Waiting for customer reply |
+| confirmed / auto_confirmed | Confirmed |
+| sent | Order sent |
+| delivered | Delivered |
+| cancelled | Cancelled |
+| returned (RTO) | Returned |
+| COD verification | WhatsApp Confirmation |
+| AWB | Tracking number |
 
 ---
 
@@ -366,6 +382,34 @@ if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
 ```
 
 `verifyAdminToken` uses `ADMIN_PASSWORD` (same HMAC approach as existing insights auth, different secret).
+
+---
+
+## NimbusPost Integration Readiness
+
+NimbusPost is already partially integrated (`lib/nimbuspost.js`, `/api/nimbuspost/webhook.js`). This admin panel is designed so the full integration can be wired in later without schema changes.
+
+### What exists today
+
+| Component | State |
+|-----------|-------|
+| `lib/nimbuspost.js` — `createOrder()`, `createShipment()`, `getTracking()` | ✅ Built |
+| `/api/nimbuspost/webhook.js` — receives shipment status updates | ✅ Built (updates KV only) |
+| `storeAwbMapping()` — saves orderId ↔ AWB in KV | ✅ Built |
+
+### What this spec adds (NimbusPost-ready)
+
+- `orders` table has `awb`, `courier`, `nimbuspost_order_id`, `label_url`, `sent_at`, `delivered_at`, `returned_at` columns — pre-wired for NimbusPost data
+- NimbusPost webhook will be updated to also write `orders.status`, `orders.awb`, `orders.delivered_at`, etc. to Supabase (so admin panel shows live tracking status)
+
+### Future NimbusPost wiring (not in this spec)
+
+When you're ready to integrate fully:
+1. `submit-cod.js` and `verify-payment.js` call `nimbuspost.createOrder()` after placing the order — it appears in NimbusPost dashboard for processing
+2. Admin panel "Send Order" button calls `nimbuspost.createShipment()` with selected courier, stores AWB in `orders` table
+3. NimbusPost webhook updates `orders.status` in Supabase as the shipment moves through delivery stages
+
+The `orders` table schema and the webhook handler are already built to accept this data — no schema migration needed when you integrate.
 
 ---
 

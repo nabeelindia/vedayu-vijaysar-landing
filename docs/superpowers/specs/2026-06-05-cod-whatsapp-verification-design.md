@@ -18,7 +18,7 @@ When a COD order is placed, send the customer a WhatsApp message showing their d
 3. The verification message shows: customer name, order ID, pack, price, and delivery address, with two quick reply buttons.
 4. Customer taps **✅ Confirm Order**:
    - KV status updated to `confirmed`
-   - WhatsApp text sent: "Namaste ji 🙏 Thank you! Your order is confirmed. We will send your parcel to you — please keep the payment ready for the delivery person."
+   - WhatsApp text sent: "Namaste ji 🙏 Thank you! Your order is confirmed. We will send your order to you — please keep the payment ready for the delivery person."
    - Owner notified via existing email mechanism
 5. Customer taps **❌ Cancel Order**:
    - KV status updated to `cancelled`
