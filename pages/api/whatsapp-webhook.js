@@ -79,31 +79,42 @@ async function sendWAMessage(to, body, retries = 5) {
     return;
   }
 
+  const payload = JSON.stringify({
+    messaging_product: 'whatsapp',
+    to,
+    type: 'text',
+    text: { body },
+  });
+
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000); // 8s timeout per attempt
+
       const res = await fetch(`https://graph.facebook.com/v21.0/${phoneId}/messages`, {
         method:  'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messaging_product: 'whatsapp',
-          to,
-          type: 'text',
-          text: { body },
-        }),
+        body:    payload,
+        signal:  controller.signal,
       });
+      clearTimeout(timeout);
+
       const json = await res.json();
       if (!res.ok) {
-        console.error(`[WA] send error (attempt ${attempt}):`, JSON.stringify(json));
+        console.error(`[WA] send error (attempt ${attempt}/${retries}):`, JSON.stringify(json));
       } else {
         console.log(`[WA] reply sent to ${to} (attempt ${attempt})`);
         return json;
       }
     } catch (err) {
       console.error(`[WA] send failed (attempt ${attempt}/${retries}): ${err.message}`);
-      if (attempt === retries) return;
+      if (attempt === retries) {
+        console.error(`[WA] all ${retries} attempts failed for ${to} — giving up`);
+        return;
+      }
     }
-    // Exponential backoff: 500ms, 1s, 2s, 4s
-    await new Promise(r => setTimeout(r, 500 * (2 ** (attempt - 1))));
+    // Backoff: 1s, 2s, 4s, 8s
+    await new Promise(r => setTimeout(r, 1000 * (2 ** (attempt - 1))));
   }
 }
 
