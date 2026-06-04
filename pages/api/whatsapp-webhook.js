@@ -28,49 +28,42 @@ export default async function handler(req, res) {
   }
 
   if (req.method !== 'POST') return res.status(405).end();
-  res.status(200).json({ status: 'ok' }); // ACK Meta — must be within 10s (Vercel hobby limit)
 
+  // Process FIRST, then ACK — this ensures Vercel doesn't kill the function
+  // before the reply is sent. Meta allows up to 20s; Vercel hobby allows 10s.
   try {
     const entry  = req.body?.entry?.[0];
     const change = entry?.changes?.[0]?.value;
     const msgArr = change?.messages;
-    if (!msgArr?.length) return; // status updates — skip silently
 
-    for (const msg of msgArr) {
-      if (msg.type !== 'text') {
-        console.log(`[WA] skipping ${msg.type} message`);
-        continue;
+    if (msgArr?.length) {
+      for (const msg of msgArr) {
+        if (msg.type !== 'text') continue;
+
+        // Dedup
+        if (recentIds.has(msg.id)) continue;
+        recentIds.add(msg.id);
+        if (recentIds.size > 200) recentIds.delete(recentIds.values().next().value);
+
+        const phone   = msg.from;
+        const text    = msg.text?.body || '';
+        const contact = change?.contacts?.[0]?.profile?.name || phone;
+
+        const botReply   = getBotReply(text) ?? FALLBACK_REPLY;
+        const isFallback = botReply === FALLBACK_REPLY;
+
+        console.log(`[WA] ${contact} (${phone}): "${text}" → ${isFallback ? 'FALLBACK' : 'BOT'}`);
+
+        await sendWAMessage(phone, botReply);
+        notifyAdmin({ phone, contact, text, isFallback }).catch(console.error);
       }
-
-      // Dedup — Meta sometimes delivers the same webhook twice
-      if (recentIds.has(msg.id)) {
-        console.log(`[WA] duplicate message ${msg.id} — skipping`);
-        continue;
-      }
-      recentIds.add(msg.id);
-      if (recentIds.size > 200) {
-        const first = recentIds.values().next().value;
-        recentIds.delete(first);
-      }
-
-      const phone   = msg.from;
-      const text    = msg.text?.body || '';
-      const contact = change?.contacts?.[0]?.profile?.name || phone;
-
-      const botReply   = getBotReply(text) ?? FALLBACK_REPLY;
-      const isFallback = botReply === FALLBACK_REPLY;
-
-      console.log(`[WA] ${contact} (${phone}): "${text}" → ${isFallback ? 'FALLBACK' : 'BOT'}`);
-
-      // Send reply + notify admin in parallel
-      await Promise.allSettled([
-        sendWAMessage(phone, botReply),
-        notifyAdmin({ phone, contact, text, isFallback }),
-      ]);
     }
   } catch (err) {
     console.error('WA webhook error:', err);
   }
+
+  // ACK Meta after processing is done
+  return res.status(200).json({ status: 'ok' });
 }
 
 async function sendWAMessage(to, body, retries = 3) {
