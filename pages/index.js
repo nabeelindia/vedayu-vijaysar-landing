@@ -1955,6 +1955,7 @@ export default function Home() {
             <div className="exit-badge">Limited Offer 🎁</div>
             <h2 className="exit-title">Wait! Before You Go…</h2>
             <p className="exit-sub">Pay online &amp; get <strong>10% OFF</strong> your order instantly — no coupon needed!</p>
+            <p className="exit-perks">🎁 Free gift on every order &nbsp;·&nbsp; 🚚 Fast delivery across India</p>
             <div className="exit-discount-box">
               <div className="exit-pack-row">
                 {[1,2,5].map(p => (
@@ -1973,6 +1974,7 @@ export default function Home() {
             >
               🎉 Claim 10% Off — Pay Online
             </button>
+            <p className="exit-referral">👥 Refer a friend &amp; they get <strong>₹50 off</strong> their first order!</p>
             <button
               className="exit-skip"
               onClick={() => setExitIntent(false)}
