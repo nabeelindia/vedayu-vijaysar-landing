@@ -14,6 +14,7 @@ import { saveCustomer } from '../../lib/customer-cache';
 import { createOrder, storeAwbMapping } from '../../lib/velocity';
 import { kv } from '@vercel/kv';
 import { isNewCustomer } from './referral-validate';
+import { generateOrderId } from '../../lib/orders';
 
 const formatUtm = (utm = {}) => {
   if (!Object.keys(utm).length) return 'Direct / Unknown';
@@ -59,7 +60,7 @@ export default async function handler(req, res) {
     }
   }
 
-  const orderId   = `VED-COD-${Date.now()}`;
+  const orderId   = await generateOrderId('cod');
   const fullAddr  = `${address}, ${city}, ${state} - ${pincode}`;
   const priceStr  = '₹' + safePrice.toLocaleString('en-IN');
   const orderDate = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });

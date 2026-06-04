@@ -15,6 +15,7 @@ import { waOrderConfirmed } from '../../lib/whatsapp';
 import { saveCustomer } from '../../lib/customer-cache';
 import { createOrder, storeAwbMapping } from '../../lib/velocity';
 import { kv } from '@vercel/kv';
+import { generateOrderId } from '../../lib/orders';
 
 const formatUtm = (utm = {}) => {
   if (!Object.keys(utm).length) return 'Direct / Unknown';
@@ -59,7 +60,7 @@ export default async function handler(req, res) {
   }
 
   // ── 2. Build order details ─────────────────────────────────────────────────
-  const orderId   = `VED-PRE-${razorpay_payment_id}`;
+  const orderId   = await generateOrderId('prepaid');
   const price     = Math.round((amount || 0) / 100); // paise → rupees
   const priceStr  = '₹' + Number(price).toLocaleString('en-IN');
   const fullAddr  = [address, city, state, pincode].filter(Boolean).join(', ');
