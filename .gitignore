@@ -7,3 +7,5 @@ out/
 *.log
 .DS_Store
 public/videos/*.mp4
+.env.prod
+.env.test
