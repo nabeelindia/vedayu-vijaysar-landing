@@ -29,10 +29,16 @@ export default async function handler(req, res) {
     const entry  = req.body?.entry?.[0];
     const change = entry?.changes?.[0]?.value;
     const msgArr = change?.messages;
-    if (!msgArr?.length) return;
+    if (!msgArr?.length) {
+      console.log('[WA] no messages in payload — likely a status update, skipping');
+      return;
+    }
 
     for (const msg of msgArr) {
-      if (msg.type !== 'text') continue;
+      if (msg.type !== 'text') {
+        console.log(`[WA] skipping non-text message type: ${msg.type}`);
+        continue;
+      }
 
       const phone   = msg.from;
       const text    = msg.text?.body || '';
