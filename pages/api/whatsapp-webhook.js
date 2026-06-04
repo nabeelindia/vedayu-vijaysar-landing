@@ -1,6 +1,7 @@
 export const config = { maxDuration: 10 }; // Vercel hobby plan max
 
 import { getBotReply, FALLBACK_REPLY } from '../../lib/wa-knowledge';
+import { supabase } from '../../lib/supabase';
 import webpush from 'web-push';
 import { Resend } from 'resend';
 
@@ -55,6 +56,21 @@ export default async function handler(req, res) {
         console.log(`[WA] ${contact} (${phone}): "${text}" → ${isFallback ? 'FALLBACK' : 'BOT'}`);
 
         await sendWAMessage(phone, botReply);
+
+        // Persist to DB — awaited so Vercel doesn't kill the function before the write completes
+        if (supabase) {
+          const { error: dbErr } = await supabase.from('wa_messages').upsert({
+            wa_id: msg.id,
+            from_phone: phone,
+            from_name: contact !== phone ? contact : null,
+            message: text,
+            bot_replied: botReply,
+          }, { onConflict: 'wa_id' });
+          if (dbErr) console.error('[WA] DB save error:', dbErr.message);
+          else console.log('[WA] message saved to DB');
+        } else {
+          console.warn('[WA] Supabase not configured — message not persisted');
+        }
         notifyAdmin({ phone, contact, text, isFallback }).catch(console.error);
       }
     }

@@ -47,13 +47,158 @@ function SectionLabel({ children }) {
   );
 }
 
+function WaInbox() {
+  const [conversations, setConversations] = useState([]);
+  const [selected, setSelected] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const load = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/wa-inbox');
+      if (!res.ok) { const j = await res.json(); throw new Error(j.error || res.statusText); }
+      const { conversations } = await res.json();
+      setConversations(conversations || []);
+      if (conversations?.length && !selected) setSelected(conversations[0].phone);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const markRead = async (phone) => {
+    await fetch('/api/wa-inbox', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone }),
+    });
+    setConversations(prev => prev.map(c =>
+      c.phone === phone ? { ...c, unread: 0, messages: c.messages.map(m => ({ ...m, read_at: m.read_at || new Date().toISOString() })) } : c
+    ));
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const activeConv = conversations.find(c => c.phone === selected);
+
+  const fmtTime = (iso) => {
+    const d = new Date(iso);
+    const now = new Date();
+    const diffDays = Math.floor((now - d) / 86400000);
+    if (diffDays === 0) return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    if (diffDays === 1) return 'Yesterday';
+    return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+  };
+
+  if (loading) return <div style={{ textAlign:'center', padding:60, color:'#888' }}>Loading conversations...</div>;
+  if (error) return (
+    <div style={{ background:'#fff8e1', border:'1px solid #ffe082', borderRadius:10, padding:'20px 24px' }}>
+      <p style={{ margin:0, fontWeight:700, color:'#5a3e2b' }}>WhatsApp Inbox unavailable</p>
+      <p style={{ margin:'6px 0 0', color:'#888', fontSize:'.82rem' }}>{error}</p>
+      <p style={{ margin:'10px 0 0', color:'#888', fontSize:'.78rem' }}>
+        Set <code>SUPABASE_URL</code> and <code>SUPABASE_SERVICE_KEY</code> in your environment variables and run the migration in <code>supabase/migrations/001_wa_inbox.sql</code>.
+      </p>
+    </div>
+  );
+  if (!conversations.length) return (
+    <div style={{ textAlign:'center', padding:60, color:'#aaa' }}>
+      <div style={{ fontSize:'2.5rem', marginBottom:10 }}>💬</div>
+      <p style={{ margin:0, fontWeight:600 }}>No messages yet</p>
+      <p style={{ margin:'6px 0 0', fontSize:'.8rem' }}>Messages from customers will appear here once they message your WhatsApp number.</p>
+    </div>
+  );
+
+  return (
+    <div style={{ display:'flex', height:600, border:'1px solid #e8e8e8', borderRadius:12, overflow:'hidden', background:'#fff' }}>
+
+      {/* Sidebar */}
+      <div style={{ width:280, flexShrink:0, borderRight:'1px solid #f0f0f0', overflowY:'auto', background:'#fafafa' }}>
+        <div style={{ padding:'14px 16px', borderBottom:'1px solid #f0f0f0', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+          <span style={{ fontWeight:800, fontSize:'.85rem', color:'#1a1a1a' }}>Conversations</span>
+          <button onClick={load} style={{ background:'none', border:'none', cursor:'pointer', color:'#4A7C59', fontWeight:700, fontSize:'.8rem', padding:'2px 6px' }}>↻</button>
+        </div>
+        {conversations.map(c => (
+          <div
+            key={c.phone}
+            onClick={() => { setSelected(c.phone); if (c.unread) markRead(c.phone); }}
+            style={{
+              padding:'12px 16px', cursor:'pointer', borderBottom:'1px solid #f0f0f0',
+              background: selected === c.phone ? '#e8f5e9' : 'transparent',
+              transition:'background .15s',
+            }}
+          >
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+              <span style={{ fontWeight: c.unread ? 800 : 600, fontSize:'.85rem', color:'#1a1a1a', maxWidth:160, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                {c.name}
+              </span>
+              <span style={{ fontSize:'.68rem', color:'#aaa', flexShrink:0 }}>{fmtTime(c.lastAt)}</span>
+            </div>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:3 }}>
+              <span style={{ fontSize:'.75rem', color:'#888', maxWidth:180, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                {c.messages[0]?.message}
+              </span>
+              {c.unread > 0 && (
+                <span style={{ background:'#25d366', color:'#fff', fontSize:'.65rem', fontWeight:800, padding:'1px 6px', borderRadius:10, flexShrink:0 }}>
+                  {c.unread}
+                </span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Chat pane */}
+      <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden' }}>
+        {activeConv ? (
+          <>
+            <div style={{ padding:'14px 20px', borderBottom:'1px solid #f0f0f0', background:'#fff' }}>
+              <div style={{ fontWeight:800, fontSize:'.9rem', color:'#1a1a1a' }}>{activeConv.name}</div>
+              <div style={{ fontSize:'.75rem', color:'#888' }}>{activeConv.phone}</div>
+            </div>
+            <div style={{ flex:1, overflowY:'auto', padding:'16px 20px', background:'#f0f0f0', display:'flex', flexDirection:'column', gap:10 }}>
+              {[...activeConv.messages].reverse().map(msg => (
+                <div key={msg.id}>
+                  {/* Customer message */}
+                  <div style={{ display:'flex', justifyContent:'flex-start', marginBottom:4 }}>
+                    <div style={{ maxWidth:'72%', background:'#fff', borderRadius:'12px 12px 12px 2px', padding:'8px 12px', boxShadow:'0 1px 2px rgba(0,0,0,.08)' }}>
+                      <div style={{ fontSize:'.85rem', color:'#1a1a1a', lineHeight:1.5 }}>{msg.message}</div>
+                      <div style={{ fontSize:'.65rem', color:'#aaa', marginTop:3, textAlign:'right' }}>{fmtTime(msg.created_at)}</div>
+                    </div>
+                  </div>
+                  {/* Bot reply */}
+                  {msg.bot_replied && (
+                    <div style={{ display:'flex', justifyContent:'flex-end' }}>
+                      <div style={{ maxWidth:'72%', background:'#dcf8c6', borderRadius:'12px 12px 2px 12px', padding:'8px 12px', boxShadow:'0 1px 2px rgba(0,0,0,.08)' }}>
+                        <div style={{ fontSize:'.85rem', color:'#1a1a1a', lineHeight:1.5 }}>{msg.bot_replied}</div>
+                        <div style={{ fontSize:'.65rem', color:'#888', marginTop:3, textAlign:'right' }}>Bot ✓✓</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', color:'#bbb' }}>
+            Select a conversation
+          </div>
+        )}
+      </div>
+
+    </div>
+  );
+}
+
 export default function Insights() {
   const [clarity,    setClarity]    = useState(null);
   const [ga,         setGa]         = useState(null);
   const [loading,    setLoading]    = useState(true);
   const [error,      setError]      = useState(null);
   const [lastUpdated,setLastUpdated]= useState(null);
-  const [tab,        setTab]        = useState('ga'); // 'ga' | 'clarity'
+  const [tab,        setTab]        = useState('ga'); // 'ga' | 'clarity' | 'wa'
 
   const load = async () => {
     setLoading(true);
@@ -131,14 +276,15 @@ export default function Insights() {
             <div style={{ display:'flex', gap:8, alignItems:'center' }}>
               <button style={btnStyle(tab==='ga')}      onClick={() => setTab('ga')}>Google Analytics</button>
               <button style={btnStyle(tab==='clarity')} onClick={() => setTab('clarity')}>Clarity</button>
+              <button style={btnStyle(tab==='wa')}      onClick={() => setTab('wa')}>💬 WhatsApp</button>
               <button onClick={load} disabled={loading} style={{ background:'#4A7C59', color:'#fff', border:'none', borderRadius:8, padding:'8px 14px', fontSize:'.82rem', fontWeight:700, cursor:loading?'not-allowed':'pointer', opacity:loading?.6:1 }}>
                 {loading ? '⟳' : '⟳ Refresh'}
               </button>
             </div>
           </div>
 
-          {error && <div style={{ background:'#fee', border:'1px solid #fcc', borderRadius:8, padding:'12px 16px', color:'#c00', marginBottom:20 }}>Error: {error}</div>}
-          {loading && !ga && !clarity && <div style={{ textAlign:'center', padding:80, color:'#888' }}>Loading insights...</div>}
+          {error && tab !== 'wa' && <div style={{ background:'#fee', border:'1px solid #fcc', borderRadius:8, padding:'12px 16px', color:'#c00', marginBottom:20 }}>Error: {error}</div>}
+          {loading && !ga && !clarity && tab !== 'wa' && <div style={{ textAlign:'center', padding:80, color:'#888' }}>Loading insights...</div>}
 
           {/* ── GOOGLE ANALYTICS TAB ── */}
           {tab === 'ga' && ga && (
@@ -182,6 +328,9 @@ export default function Insights() {
 
             </div>
           )}
+
+          {/* ── WHATSAPP INBOX TAB ── */}
+          {tab === 'wa' && <WaInbox />}
 
           {/* ── CLARITY TAB ── */}
           {tab === 'clarity' && clarity && (
