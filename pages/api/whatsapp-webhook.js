@@ -1,3 +1,5 @@
+export const config = { maxDuration: 10 }; // Vercel hobby plan max
+
 import { getBotReply, FALLBACK_REPLY } from '../../lib/wa-knowledge';
 import webpush from 'web-push';
 import { Resend } from 'resend';
@@ -26,7 +28,7 @@ export default async function handler(req, res) {
   }
 
   if (req.method !== 'POST') return res.status(405).end();
-  res.status(200).json({ status: 'ok' }); // ACK Meta immediately
+  res.status(200).json({ status: 'ok' }); // ACK Meta — must be within 10s (Vercel hobby limit)
 
   try {
     const entry  = req.body?.entry?.[0];
@@ -71,7 +73,7 @@ export default async function handler(req, res) {
   }
 }
 
-async function sendWAMessage(to, body, retries = 5) {
+async function sendWAMessage(to, body, retries = 3) {
   const phoneId = process.env.WA_PHONE_NUMBER_ID;
   const token   = process.env.WA_TOKEN;
   if (!phoneId || !token) {
@@ -88,8 +90,9 @@ async function sendWAMessage(to, body, retries = 5) {
 
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
+      // 3s timeout per attempt — fits within Vercel's 10s function limit
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 8000); // 8s timeout per attempt
+      const timeout = setTimeout(() => controller.abort(), 3000);
 
       const res = await fetch(`https://graph.facebook.com/v21.0/${phoneId}/messages`, {
         method:  'POST',
@@ -109,12 +112,12 @@ async function sendWAMessage(to, body, retries = 5) {
     } catch (err) {
       console.error(`[WA] send failed (attempt ${attempt}/${retries}): ${err.message}`);
       if (attempt === retries) {
-        console.error(`[WA] all ${retries} attempts failed for ${to} — giving up`);
+        console.error(`[WA] all ${retries} attempts exhausted for ${to}`);
         return;
       }
     }
-    // Backoff: 1s, 2s, 4s, 8s
-    await new Promise(r => setTimeout(r, 1000 * (2 ** (attempt - 1))));
+    // Short backoff: 500ms between attempts
+    await new Promise(r => setTimeout(r, 500));
   }
 }
 
