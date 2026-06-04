@@ -119,7 +119,34 @@ function WaInbox() {
     finally { setSending(false); }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    // Poll every 10 s for new inbound messages without a full reload
+    const interval = setInterval(() => {
+      fetch('/api/wa-inbox')
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (!data?.conversations) return;
+          setConversations(prev => {
+            const prevMap = Object.fromEntries(prev.map(c => [c.phone, c]));
+            return data.conversations.map(c => {
+              const prevConv = prevMap[c.phone];
+              if (!prevConv) return c;
+              // Keep optimistic outbound msgs (large numeric id) not yet returned by DB
+              const dbIds = new Set(c.messages.map(m => String(m.wa_id || m.id)));
+              const optimistic = prevConv.messages.filter(
+                m => m.direction === 'out' && typeof m.id === 'number' && m.id > 1e12 && !dbIds.has(String(m.id))
+              );
+              const merged = [...c.messages, ...optimistic]
+                .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+              return { ...c, messages: merged };
+            });
+          });
+        })
+        .catch(() => {});
+    }, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   const fmtTime = (iso) => {
     const d = new Date(iso);
