@@ -1,5 +1,5 @@
 // pages/api/admin/push-test.js
-import { checkAdminAuth } from '../_auth';
+import { checkAdminAuth } from './_auth';
 import { sendPush } from '../../../lib/push';
 
 export default async function handler(req, res) {

@@ -296,6 +296,8 @@ export default function OrderDetail() {
               </div>
             ))
         }
+      </div>
+
       {/* WhatsApp */}
       <div style={{ background:'#fff', borderRadius:12, padding:'18px 20px',
         boxShadow:'0 1px 3px rgba(0,0,0,.07)', marginTop:16 }}>
