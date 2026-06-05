@@ -6,8 +6,8 @@ import SiteFooter from '../components/SiteFooter';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
 import { getHolidayDates } from '../lib/holidays';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import { useTranslation } from 'next-i18next';
+import { serverSideTranslations } from 'next-i18next/pages/serverSideTranslations';
+import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 
 /* ─── Meta Pixel helper ──────────────────────────────────── */
