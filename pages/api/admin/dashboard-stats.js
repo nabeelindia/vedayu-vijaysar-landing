@@ -37,6 +37,7 @@ export default async function handler(req, res) {
     .filter(o => !['cancelled', 'returned'].includes(o.status))
     .reduce((s, o) => s + (o.price || 0), 0);
 
+  res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120');
   return res.json({
     todayOrders:      todayOrders.length,
     todayRevenue,

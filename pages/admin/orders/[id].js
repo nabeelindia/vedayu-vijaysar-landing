@@ -259,11 +259,11 @@ export default function OrderDetail() {
         boxShadow:'0 1px 3px rgba(0,0,0,.07)', marginTop:16 }}>
         <h2 style={{ margin:'0 0 12px', fontSize:'.85rem', fontWeight:700,
           textTransform:'uppercase', letterSpacing:'.7px', color:'#888' }}>Refunds</h2>
-        <div style={{ display:'grid', gridTemplateColumns:'80px 1fr 1fr auto', gap:8,
+        <div style={{ display:'flex', flexWrap:'wrap', gap:8,
           marginBottom:12, alignItems:'center' }}>
           <input value={refAmount} onChange={e => setRefAmount(e.target.value)}
-            placeholder="₹ amt" type="number"
-            style={{ padding:'8px 10px', borderRadius:8, border:'1.5px solid #d0c8bc', fontSize:'.82rem' }} />
+            placeholder="₹ amount" type="number"
+            style={{ width:90, padding:'8px 10px', borderRadius:8, border:'1.5px solid #d0c8bc', fontSize:'.82rem' }} />
           <select value={refMethod} onChange={e => setRefMethod(e.target.value)}
             style={{ padding:'8px 10px', borderRadius:8, border:'1.5px solid #d0c8bc', fontSize:'.82rem' }}>
             <option value="upi">UPI</option>
@@ -273,10 +273,10 @@ export default function OrderDetail() {
           </select>
           <input value={refNote} onChange={e => setRefNote(e.target.value)}
             placeholder="Note (optional)"
-            style={{ padding:'8px 10px', borderRadius:8, border:'1.5px solid #d0c8bc', fontSize:'.82rem' }} />
+            style={{ flex:'1 1 120px', padding:'8px 10px', borderRadius:8, border:'1.5px solid #d0c8bc', fontSize:'.82rem' }} />
           <button onClick={addRefund} disabled={saving2}
             style={{ padding:'8px 14px', background:'#5C3D1E', color:'#fff',
-              border:'none', borderRadius:8, fontSize:'.82rem', fontWeight:700, cursor:'pointer' }}>
+              border:'none', borderRadius:8, fontSize:'.82rem', fontWeight:700, cursor:'pointer', whiteSpace:'nowrap' }}>
             {saving2 ? '…' : 'Log'}
           </button>
         </div>

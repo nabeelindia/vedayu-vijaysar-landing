@@ -27,5 +27,6 @@ export default async function handler(req, res) {
   const { data, count, error } = await query;
   if (error) return res.status(500).json({ error: error.message });
 
+  res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
   return res.json({ data, total: count, page: parseInt(page), pageSize });
 }
