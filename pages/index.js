@@ -6,6 +6,9 @@ import SiteFooter from '../components/SiteFooter';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
 import { getHolidayDates } from '../lib/holidays';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { useTranslation } from 'next-i18next';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 
 /* ─── Meta Pixel helper ──────────────────────────────────── */
 const fbq = (event, params = {}) => {
@@ -106,16 +109,12 @@ const GALLERY = [
 ];
 
 /* ─── FAQ data ──────────────────────────────────────────── */
-const FAQS = [
-  { q: 'What is a Vijaysar wooden glass?', a: 'A Vijaysar wooden glass is a traditional Indian tumbler handcrafted from Vijaysar wood (Pterocarpus marsupium), also known as the Indian Kino tree. Vijaysar wood has been used in Ayurvedic wellness traditions for centuries. Water stored overnight takes on a slight natural tinge from the wood — this is completely normal and safe. It is used as part of a daily wellness and hydration ritual.' },
-  { q: 'How do I use the Vijaysar tumbler?', a: '(1) Fill the tumbler with room temperature drinking water. (2) Cover and keep overnight for 6–8 hours. (3) Drink the Vijaysar wood infused water first thing in the morning on an empty stomach. (4) Rinse gently with plain water, dry thoroughly, and refill for the next day. Repeat daily.' },
-  { q: 'Can Vijaysar glass cure diabetes?', a: 'No. The Vijaysar wooden glass is NOT a medicine and does NOT cure diabetes or any disease. It is a traditional Indian wellness product used as part of a healthy hydration routine. People with diabetes or any medical condition must consult their doctor before making changes to their routine.' },
+// Extra SEO FAQs (English-only, not translated in v1)
+const EXTRA_FAQS = [
+  { q: 'Is online / Razorpay payment available?', a: 'Yes. We accept all major payment methods via Razorpay — UPI (GPay, PhonePe, Paytm), debit cards, credit cards, net banking, and wallets.' },
   { q: 'How long should water be kept in the Vijaysar glass?', a: 'Ideally 6–8 hours. An overnight soak is the most convenient option — fill it before bed and your infused water is ready each morning. Do not soak for more than 10 hours.' },
   { q: 'Can I use hot water?', a: 'No. Use only room temperature or cold drinking water. Hot water can damage the natural wood. Never pour boiling or warm water into the tumbler.' },
-  { q: 'How do I clean the Vijaysar glass?', a: 'Rinse gently with plain water only. No soap, detergent, or harsh chemicals — these damage the natural wood. Do not use a dishwasher. Dry completely after rinsing and store in a dry, ventilated place.' },
-  { q: 'Is Cash on Delivery (COD) available?', a: 'Yes! Cash on Delivery is available all across India. You pay in cash when the product is delivered. No advance payment required for COD orders.' },
-  { q: 'Is online / Razorpay payment available?', a: 'Yes. We accept all major payment methods via Razorpay — UPI (GPay, PhonePe, Paytm), debit cards, credit cards, net banking, and wallets.' },
-  { q: 'Is delivery free?', a: 'Yes! Free delivery on all orders across India — Pack of 1, 2, or 5. No minimum order value.' },
+  { q: 'Is Vijaysar glass safe for people with diabetes?', a: 'The Vijaysar wooden glass is a traditional Ayurvedic wellness product — it is NOT a medicine and does NOT treat, cure, or prevent diabetes or any other medical condition. Many people with diabetes use it as part of a healthy daily hydration habit, but it should not replace prescribed medication or medical advice. Always consult your doctor before making changes to your health routine.' },
   { q: 'What is the return and replacement policy?', a: '7-day replacement/return policy from the date of delivery. If your product arrives damaged or defective, contact us within 7 days and we will arrange a replacement.' },
   { q: 'How many days does delivery take?', a: 'Orders dispatched within 1–2 business days. Metro cities: 2–4 days. Other cities: 3–6 days. Remote areas: 5–8 days.' },
   { q: 'Can I gift this product?', a: 'Absolutely! It makes a beautiful, meaningful gift — especially for parents, in-laws, and elders. The Family Pack of 5 is our most popular gifting option. We can deliver directly to your recipient\'s address.' },
@@ -170,6 +169,20 @@ function loadRazorpay() {
    ═══════════════════════════════════════════════════════════ */
 export default function Home() {
   const router = useRouter();
+  const { t } = useTranslation('common');
+
+  // Translated FAQs — first 8 use locale JSON; rest are English-only SEO additions
+  const FAQS = [
+    { q: t('faq.q1'), a: t('faq.a1') },
+    { q: t('faq.q2'), a: t('faq.a2') },
+    { q: t('faq.q3'), a: t('faq.a3') },
+    { q: t('faq.q4'), a: t('faq.a4') },
+    { q: t('faq.q5'), a: t('faq.a5') },
+    { q: t('faq.q6'), a: t('faq.a6') },
+    { q: t('faq.q7'), a: t('faq.a7') },
+    { q: t('faq.q8'), a: t('faq.a8') },
+    ...EXTRA_FAQS,
+  ];
 
   /* form state */
   const [pack,       setPack]       = useState(1);
@@ -877,8 +890,14 @@ export default function Home() {
               {/* Top micro trust bar — desktop only */}
               <div className="nav-trust-bar">
                 <div style={{ maxWidth:1280, margin:'0 auto', padding:'0 20px', display:'flex', alignItems:'center', justifyContent:'center', gap:24, flexWrap:'nowrap' }}>
-                  {['🚚 Free Delivery All Over India','↩️ 7-Day Replacement','💳 Razorpay Secure | COD','🌿 100% Natural Wood','🇮🇳 Indian Brand'].map(t => (
-                    <span key={t} style={{ fontSize:'.80rem', fontWeight:600, color:'rgba(255,255,255,.9)', whiteSpace:'nowrap' }}>{t}</span>
+                  {[
+                    t('nav.trust.delivery'),
+                    t('nav.trust.replacement'),
+                    t('nav.trust.payment'),
+                    t('nav.trust.natural'),
+                    t('nav.trust.brand'),
+                  ].map(label => (
+                    <span key={label} style={{ fontSize:'.80rem', fontWeight:600, color:'rgba(255,255,255,.9)', whiteSpace:'nowrap' }}>{label}</span>
                   ))}
                 </div>
               </div>
@@ -895,9 +914,10 @@ export default function Home() {
                       onMouseLeave={e => e.currentTarget.style.background='transparent'}
                     >{label}</a>
                   ))}
+                  <LanguageSwitcher />
                   <a href="#checkout" onClick={e => navClick(e, '#checkout')}
                     style={{ fontSize:'.90rem', fontWeight:800, color:'#fff', background:'#5C3D1E', padding:'6px 16px', borderRadius:20, textDecoration:'none', whiteSpace:'nowrap', marginLeft:8, flexShrink:0 }}>
-                    Order Now
+                    {t('nav.order_now')}
                   </a>
                 </div>
                 {/* Hamburger (mobile) */}
@@ -1737,44 +1757,44 @@ export default function Home() {
               <label className="field-label" style={{ marginBottom: 8 }}>Your Delivery Details:</label>
               <div className="field-row">
                 <div className="field-group">
-                  <label className="field-label" htmlFor="name">Full Name *{vIcon('name')}</label>
+                  <label className="field-label" htmlFor="name">{t('checkout.name_label')}{vIcon('name')}</label>
                   <input id="name" type="text" placeholder="Your full name" autoComplete="name" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} onBlur={() => touch('name')} style={vStyle('name')} />
                 </div>
                 <div className="field-group">
-                  <label className="field-label" htmlFor="mobile">Mobile Number *{vIcon('mobile')}</label>
+                  <label className="field-label" htmlFor="mobile">{t('checkout.mobile_label')}{vIcon('mobile')}</label>
                   <input id="mobile" type="tel" placeholder="10-digit number" maxLength={10} inputMode="numeric" value={form.mobile} onChange={e => { const v = e.target.value.replace(/\D/g,''); setForm(f => ({ ...f, mobile: v })); tryLookup(v, form.email); }} onBlur={async () => { touch('mobile'); if (referrerId && /^[6-9]\d{9}$/.test(form.mobile)) { try { const r = await fetch(`/api/referral-validate?mobile=${form.mobile}`); const d = await r.json(); if (!d.valid) { setReferralDiscount(0); setReferrerId(''); showToast('Referral discount is for new customers only.', 'info'); } } catch {} } }} style={vStyle('mobile')} />
                 </div>
               </div>
 
               <div className="field-group">
                 <label className="field-label" htmlFor="email">
-                  Email Address{vIcon('email')}
+                  {t('checkout.email_label')}{vIcon('email')}
                 </label>
                 <input id="email" type="email" placeholder="yourname@gmail.com" autoComplete="email" required value={form.email} onChange={e => { const v = e.target.value; setForm(f => ({ ...f, email: v })); tryLookup(form.mobile, v); }} onBlur={() => touch('email')} style={vStyle('email')} />
               </div>
 
               <div className="field-group">
-                <label className="field-label" htmlFor="address">Full Delivery Address *{vIcon('address')}</label>
+                <label className="field-label" htmlFor="address">{t('checkout.address_label')}{vIcon('address')}</label>
                 <textarea id="address" rows={2} placeholder="House no., Street, Area, Landmark" value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} onBlur={() => touch('address')} style={{ resize: 'vertical', ...vStyle('address') }} />
               </div>
 
               <div className="field-row">
                 <div className="field-group">
                   <label className="field-label" htmlFor="pincode">
-                    Pincode *{vIcon('pincode')}{pincodeLoading && <span style={{ fontWeight:400, color:'#4A7C59', fontSize:'.76rem', marginLeft:6 }}>🔍 detecting…</span>}
+                    {t('checkout.pincode_label')}{vIcon('pincode')}{pincodeLoading && <span style={{ fontWeight:400, color:'#4A7C59', fontSize:'.76rem', marginLeft:6 }}>🔍 detecting…</span>}
                   </label>
                   <input id="pincode" type="text" placeholder="6-digit pincode" maxLength={6} inputMode="numeric" value={form.pincode} onChange={e => handlePincode(e.target.value.replace(/\D/g,''))} onBlur={() => touch('pincode')} style={vStyle('pincode')} />
                 </div>
                 <div className="field-group">
-                  <label className="field-label" htmlFor="city">City *{vIcon('city')}</label>
+                  <label className="field-label" htmlFor="city">{t('checkout.city_label')}{vIcon('city')}</label>
                   <input id="city" type="text" placeholder={pincodeLoading ? 'Detecting city…' : 'City / Town'} value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} onBlur={() => touch('city')} style={vStyle('city')} />
                 </div>
               </div>
 
               <div className="field-group">
-                <label className="field-label" htmlFor="state">State *{vIcon('state')}</label>
+                <label className="field-label" htmlFor="state">{t('checkout.state_label')}{vIcon('state')}</label>
                 <select id="state" value={form.state} onChange={e => setForm(f => ({ ...f, state: e.target.value }))} onBlur={() => touch('state')} style={vStyle('state')}>
-                  <option value="">{pincodeLoading ? 'Detecting state…' : 'Select State'}</option>
+                  <option value="">{pincodeLoading ? 'Detecting state…' : t('checkout.state_placeholder')}</option>
                   {STATES.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
@@ -1783,12 +1803,12 @@ export default function Home() {
                 <div style={{ background:'#F0F9F3', border:'1px solid #4A7C59', borderRadius:8, padding:'10px 14px', marginBottom:6, fontSize:'.88rem', color:'#2d6b40' }}>
                   {shipsBy && (
                     <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom: deliveryEst ? 5 : 0 }}>
-                      📦 <span>Ships: <strong>{scheduledDate ? scheduledDateFormatted + ' (scheduled)' : shipsBy.label}</strong>{!scheduledDate && shipsBy.note && <span style={{ fontWeight:400, color:'#4A7C59', marginLeft:6 }}>· {shipsBy.note}</span>}</span>
+                      📦 <span>{t('delivery.ships_label')} <strong>{scheduledDate ? t('delivery.ships_scheduled', { date: scheduledDateFormatted }) : shipsBy.label}</strong>{!scheduledDate && shipsBy.note && <span style={{ fontWeight:400, color:'#4A7C59', marginLeft:6 }}>· {shipsBy.note}</span>}</span>
                     </div>
                   )}
                   {deliveryEst && (
                     <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                      🚚 <span>Expected delivery: <strong>{deliveryEst}</strong></span>
+                      🚚 <span>{t('delivery.eta_label')} <strong>{deliveryEst}</strong></span>
                     </div>
                   )}
                 </div>
@@ -1828,7 +1848,7 @@ export default function Home() {
                         gap: 5,
                       }}
                     >
-                      🗓 {scheduledDate ? scheduledDateFormatted : 'Schedule delivery for a later date →'}
+                      🗓 {scheduledDate ? scheduledDateFormatted : t('delivery.schedule_later')}
                       {scheduledDate && (
                         <span
                           onClick={e => { e.stopPropagation(); setScheduleOpen(false); handleScheduledDate(null); }}
@@ -1854,7 +1874,7 @@ export default function Home() {
                           maxWidth: 'calc(100vw - 32px)',
                         }}
                       >
-                        <div style={{ fontSize:'.78rem', fontWeight:600, color:'#2d6b40', marginBottom:6 }}>Choose a ship date:</div>
+                        <div style={{ fontSize:'.78rem', fontWeight:600, color:'#2d6b40', marginBottom:6 }}>{t('delivery.schedule_choose')}</div>
                         <DayPicker
                           mode="single"
                           selected={scheduledDate}
@@ -1876,7 +1896,7 @@ export default function Home() {
                             onClick={() => { setScheduleOpen(false); handleScheduledDate(null); }}
                             style={{ background:'none', border:'none', color:'#888', fontSize:'.75rem', cursor:'pointer', textDecoration:'underline', padding:'4px 0 2px' }}
                           >
-                            × Ship as soon as possible
+                            {t('delivery.schedule_asap')}
                           </button>
                         )}
                       </div>
@@ -1886,12 +1906,12 @@ export default function Home() {
               })()}
 
               {/* Payment */}
-              <label className="field-label" style={{ marginBottom: 8 }}>Payment Method:</label>
+              <label className="field-label" style={{ marginBottom: 8 }}>{t('checkout.payment_label')}</label>
               <div className="payment-grid">
                 <div className={`payment-option${payment === 'prepaid' ? ' active' : ''}`} onClick={() => setPayment('prepaid')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setPayment('prepaid')}>
                   <span className="payment-icon">💳</span>
                   <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8, marginTop:2 }}>
-                    <span className="payment-label" style={{ margin:0 }}>Pay Online</span>
+                    <span className="payment-label" style={{ margin:0 }}>{t('checkout.prepaid_label')}</span>
                     <span style={{ background:'#4A7C59', color:'#fff', fontSize:'.68rem', fontWeight:700, padding:'2px 8px', borderRadius:20 }}>🎉 10% OFF</span>
                   </div>
                   <div style={{ display:'flex', flexWrap:'wrap', justifyContent:'center', alignItems:'center', gap:6, marginTop:8 }}>
@@ -1916,13 +1936,13 @@ export default function Home() {
                 </div>
                 <div className={`payment-option${payment === 'cod' ? ' active' : ''}`} onClick={() => setPayment('cod')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setPayment('cod')}>
                   <span className="payment-icon">💵</span>
-                  <span className="payment-label">Cash on Delivery</span>
-                  <span className="payment-sub">Pay when delivered</span>
+                  <span className="payment-label">{t('checkout.cod_label')}</span>
+                  <span className="payment-sub">{t('checkout.cod_sublabel')}</span>
                 </div>
               </div>
 
               <button className="btn btn-brown btn-full" style={{ padding: '17px', fontSize: '1.05rem' }} onClick={placeOrder} disabled={loading}>
-                {loading ? <><span className="spinner" />Processing...</> : 'Place Order — Free Delivery →'}
+                {loading ? <><span className="spinner" />{t('checkout.processing')}</> : t('checkout.place_order_cod')}
               </button>
               <p className="form-footer">🔒 100% Secure &nbsp;·&nbsp; Your details are safe &nbsp;·&nbsp; No spam</p>
             </div>
@@ -2016,7 +2036,7 @@ export default function Home() {
           ══════════════════════════════════════════ */}
       <section className="section section-alt" id="faq">
         <div className="container">
-          <h2 className="section-title">Frequently Asked Questions</h2>
+          <h2 className="section-title">{t('faq.title')}</h2>
           <p className="section-sub">Everything you need to know before ordering</p>
           <div className="divider" />
           <div className="faq-wrap">
@@ -2125,4 +2145,12 @@ export default function Home() {
       )}
     </>
   );
+}
+
+export async function getServerSideProps({ locale }) {
+  return {
+    props: {
+      ...(await serverSideTranslations(locale, ['common'])),
+    },
+  };
 }
