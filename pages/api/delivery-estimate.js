@@ -100,10 +100,11 @@ export default function handler(req, res) {
       return res.status(400).json({ serviceable: false, reason: 'invalid_fromDate' });
     }
     const parsed = new Date(fromDate + 'T00:00:00+05:30');
-    const now = new Date();
-    const maxDate = new Date(now);
+    const nowMidnight = new Date();
+    nowMidnight.setHours(0, 0, 0, 0);
+    const maxDate = new Date(nowMidnight);
     maxDate.setDate(maxDate.getDate() + 14);
-    if (isNaN(parsed.getTime()) || parsed < now.setHours(0,0,0,0) || parsed > maxDate) {
+    if (isNaN(parsed.getTime()) || parsed < nowMidnight || parsed > maxDate) {
       return res.status(400).json({ serviceable: false, reason: 'invalid_fromDate' });
     }
     baseDate = parsed;
