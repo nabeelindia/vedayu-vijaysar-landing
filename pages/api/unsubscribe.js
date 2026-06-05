@@ -1,6 +1,4 @@
-import { kv } from '@vercel/kv';
-
-const ACTIVE_SET = 'followup:active';
+import { supabase } from '../../lib/supabase.js';
 
 export default async function handler(req, res) {
   const { orderId } = req.query;
@@ -10,10 +8,10 @@ export default async function handler(req, res) {
   }
 
   try {
-    await kv.srem(ACTIVE_SET, orderId);
-    await kv.del(`followup:${orderId}`);
+    const { error } = await supabase.from('followup_queue').update({ unsubscribed: true }).eq('order_id', orderId);
+    if (error) throw new Error(error.message);
   } catch (err) {
-    console.error('Unsubscribe KV error:', err);
+    console.error('Unsubscribe error:', err);
     return res.status(500).send(page('Something went wrong', 'Please try again or contact us on WhatsApp.'));
   }
 
