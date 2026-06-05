@@ -16,6 +16,7 @@ import { isNewCustomer } from './referral-validate';
 import { generateOrderId } from '../../lib/orders';
 import { supabase } from '../../lib/supabase';
 import { sendPush } from '../../lib/push';
+import { isBlockedDay } from '../../lib/holidays';
 
 const formatUtm = (utm = {}) => {
   if (!Object.keys(utm).length) return 'Direct / Unknown';
@@ -34,7 +35,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { name, mobile, email, address, city, state, pincode, pack, price, qty, utm = {}, referrerId } = req.body;
+  const { name, mobile, email, address, city, state, pincode, pack, price, qty, utm = {}, referrerId, scheduledShipDate } = req.body;
 
   // Basic server-side validation
   if (!name?.trim() || !mobile?.trim() || !address?.trim() || !pincode?.trim() || !city?.trim() || !state) {
@@ -48,6 +49,20 @@ export default async function handler(req, res) {
   }
   if (email?.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
     return res.status(400).json({ error: 'Invalid email address' });
+  }
+
+  let safeScheduledDate = null;
+  if (scheduledShipDate) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(scheduledShipDate)) {
+      return res.status(400).json({ error: 'Invalid scheduled ship date format' });
+    }
+    const d = new Date(scheduledShipDate + 'T00:00:00+05:30');
+    const now = new Date(); now.setHours(0,0,0,0);
+    const max = new Date(now); max.setDate(max.getDate() + 14);
+    if (isNaN(d.getTime()) || d <= now || d > max || isBlockedDay(d)) {
+      return res.status(400).json({ error: 'Invalid scheduled ship date' });
+    }
+    safeScheduledDate = scheduledShipDate;
   }
 
   // ── New-customer guard: referral discount only applies to first-time customers.
@@ -93,6 +108,7 @@ export default async function handler(req, res) {
                 <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:10px 0;font-weight:600;color:#3D2610;">Qty</td><td style="padding:10px 0;">${qty} glass(es)</td></tr>
                 <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:10px 0;font-weight:600;color:#3D2610;">Amount</td><td style="padding:10px 0;font-size:1.1rem;font-weight:700;color:#5C3D1E;">${priceStr} (COD)</td></tr>
                 <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:10px 0;font-weight:600;color:#3D2610;">Delivery</td><td style="padding:10px 0;color:#4A7C59;font-weight:600;">FREE</td></tr>
+                ${safeScheduledDate ? `<tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:10px 0;font-weight:600;color:#3D2610;">🗓 Scheduled Ship Date</td><td style="padding:10px 0;font-weight:700;color:#5C3D1E;">${safeScheduledDate}</td></tr>` : ''}
                 <tr><td style="padding:10px 0;font-weight:600;color:#3D2610;">📍 Source</td><td style="padding:10px 0;font-size:.85rem;color:#555;">${formatUtm(utm)}</td></tr>
               </table>
               <div style="background:#FFF8E1;border-left:4px solid #C9A84C;padding:12px 16px;margin-top:20px;font-size:.82rem;color:#6D4C00;border-radius:0 6px 6px 0;">
@@ -145,7 +161,8 @@ export default async function handler(req, res) {
                   <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:9px 0;font-weight:600;color:#3D2610;">Amount to Pay</td><td style="padding:9px 0;font-weight:700;color:#5C3D1E;">${priceStr} (Cash on Delivery)</td></tr>
                   <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:9px 0;font-weight:600;color:#3D2610;">Delivery</td><td style="padding:9px 0;color:#4A7C59;font-weight:600;">FREE</td></tr>
                   <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:9px 0;font-weight:600;color:#3D2610;">Deliver To</td><td style="padding:9px 0;">${fullAddr}</td></tr>
-                  <tr><td style="padding:9px 0;font-weight:600;color:#3D2610;">Order Date</td><td style="padding:9px 0;">${orderDate} IST</td></tr>
+                  <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:9px 0;font-weight:600;color:#3D2610;">Order Date</td><td style="padding:9px 0;">${orderDate} IST</td></tr>
+                  ${safeScheduledDate ? `<tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:9px 0;font-weight:600;color:#3D2610;">🗓 Scheduled Ship Date</td><td style="padding:9px 0;font-weight:700;color:#5C3D1E;">${safeScheduledDate}</td></tr>` : ''}
                 </table>
 
                 <!-- How to use -->
@@ -202,7 +219,7 @@ export default async function handler(req, res) {
   await saveCustomer({ mobile, email, name, address, city, state, pincode }).catch(() => {});
 
   // ── WhatsApp — instant order confirmation ────────────────────────────────────
-  await waOrderConfirmed({ mobile: mobile.trim(), name, pack, orderId, price: safePrice }).catch(() => {});
+  await waOrderConfirmed({ mobile: mobile.trim(), name, pack, orderId, price: safePrice, scheduledShipDate: safeScheduledDate }).catch(() => {});
   sendPush({ title: `🛒 New COD order — ${name}`, body: `${pack} · ₹${safePrice} · ${mobile.trim()}` }).catch(() => {});
 
   // ── Referral tracking ────────────────────────────────────────────────────
@@ -233,6 +250,7 @@ export default async function handler(req, res) {
       price:       safePrice,
       utm:         Object.keys(utm).length ? utm : null,
       referrer_id: referrerId || null,
+      scheduled_ship_date: safeScheduledDate,
     });
     if (ordErr) console.error('orders insert failed:', ordErr.message);
   }
