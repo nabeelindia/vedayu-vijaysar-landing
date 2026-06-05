@@ -8,17 +8,24 @@ export default async function handler(req, res) {
   const { id } = req.query;
 
   if (req.method === 'GET') {
-    const [orderRes, verifRes] = await Promise.all([
+    const [orderRes, verifRes, notesRes, refundsRes] = await Promise.all([
       supabase.from('orders').select('*').eq('order_id', id).single(),
       supabase.from('cod_verifications').select('*').eq('order_id', id).maybeSingle(),
+      supabase.from('order_notes').select('*').eq('order_id', id).order('created_at', { ascending: false }),
+      supabase.from('refunds').select('*').eq('order_id', id).order('created_at', { ascending: false }),
     ]);
     if (orderRes.error) return res.status(404).json({ error: 'Order not found' });
-    return res.json({ order: orderRes.data, verification: verifRes.data });
+    return res.json({
+      order:        orderRes.data,
+      verification: verifRes.data,
+      notes:        notesRes.data   || [],
+      refunds:      refundsRes.data || [],
+    });
   }
 
   if (req.method === 'PATCH') {
     const allowed = ['status', 'awb', 'courier', 'nimbuspost_order_id', 'label_url',
-                     'sent_at', 'delivered_at', 'returned_at'];
+                     'sent_at', 'delivered_at', 'returned_at', 'return_reason', 'confirmed_at'];
     const updates = {};
     for (const key of allowed) {
       if (req.body[key] !== undefined) updates[key] = req.body[key];
@@ -29,6 +36,32 @@ export default async function handler(req, res) {
       .from('orders').update(updates).eq('order_id', id).select().single();
     if (error) return res.status(500).json({ error: error.message });
     return res.json({ order: data });
+  }
+
+  if (req.method === 'POST') {
+    const { action } = req.query;
+
+    if (action === 'note') {
+      const { note } = req.body;
+      if (!note?.trim()) return res.status(400).json({ error: 'Note required' });
+      const { data, error } = await supabase.from('order_notes')
+        .insert({ order_id: id, note: note.trim() })
+        .select().single();
+      if (error) return res.status(500).json({ error: error.message });
+      return res.json({ note: data });
+    }
+
+    if (action === 'refund') {
+      const { amount, method, note } = req.body;
+      if (!amount || !method) return res.status(400).json({ error: 'Amount and method required' });
+      const { data, error } = await supabase.from('refunds')
+        .insert({ order_id: id, amount: parseInt(amount), method, note: note?.trim() || null })
+        .select().single();
+      if (error) return res.status(500).json({ error: error.message });
+      return res.json({ refund: data });
+    }
+
+    return res.status(400).json({ error: 'Unknown action' });
   }
 
   return res.status(405).end();
