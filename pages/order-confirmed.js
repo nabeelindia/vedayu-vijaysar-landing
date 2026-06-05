@@ -2,6 +2,8 @@ import Head from 'next/head';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { useTranslation } from 'next-i18next';
 
 /* Load Razorpay checkout script on demand */
 const loadRazorpay = () =>
@@ -16,6 +18,7 @@ const loadRazorpay = () =>
 
 export default function OrderConfirmed() {
   const router  = useRouter();
+  const { t } = useTranslation('common');
   const { method, pack, price, name, orderId } = router.query;
 
   const [visible,      setVisible]      = useState(false);
@@ -27,8 +30,8 @@ export default function OrderConfirmed() {
 
   /* Fade in */
   useEffect(() => {
-    const t = setTimeout(() => setVisible(true), 80);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setVisible(true), 80);
+    return () => clearTimeout(timer);
   }, []);
 
   /* Read customer context (mobile/email) from sessionStorage */
@@ -148,7 +151,7 @@ export default function OrderConfirmed() {
   return (
     <>
       <Head>
-        <title>Order Confirmed — Vedayu</title>
+        <title>{t('order_confirmed.page_title')}</title>
         <meta name="robots" content="noindex,nofollow" />
       </Head>
 
@@ -159,10 +162,11 @@ export default function OrderConfirmed() {
           <h1>{isCOD ? 'Order Placed!' : 'Payment Successful!'}</h1>
 
           <p>
-            {name ? `Thank you, ${name}! ` : 'Thank you! '}
+            {t('order_confirmed.thank_you', { name: name || '' })}
+            {' '}
             {isCOD
-              ? 'Your Cash on Delivery order has been confirmed. Please keep the payment ready when your order arrives.'
-              : 'Your payment was successful. Your Vijaysar Wooden Glass is being prepared for dispatch.'}
+              ? t('order_confirmed.cod_note', { price })
+              : t('order_confirmed.prepaid_note', { price })}
           </p>
 
           {/* ── MISWAK GIFT TEASER (above the fold) ── */}
@@ -223,7 +227,7 @@ export default function OrderConfirmed() {
               textAlign: 'center',
             }}>
               <p style={{ margin: '0 0 6px', fontSize: '.78rem', fontWeight: 700, color: '#6D4C00', textTransform: 'uppercase', letterSpacing: 1 }}>
-                📋 Your Order ID
+                📋 {t('order_confirmed.order_id_label')}
               </p>
               <p style={{ margin: '0 0 10px', fontSize: '1.15rem', fontWeight: 800, color: '#5C3D1E', fontFamily: 'monospace', letterSpacing: 1.5, wordBreak: 'break-all' }}>
                 {orderId}
@@ -453,4 +457,12 @@ export default function OrderConfirmed() {
       </div>
     </>
   );
+}
+
+export async function getServerSideProps({ locale }) {
+  return {
+    props: {
+      ...(await serverSideTranslations(locale, ['common'])),
+    },
+  };
 }
