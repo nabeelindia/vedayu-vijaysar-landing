@@ -16,6 +16,7 @@ import { saveCustomer } from '../../lib/customer-cache';
 import { generateOrderId } from '../../lib/orders';
 import { supabase } from '../../lib/supabase';
 import { sendPush } from '../../lib/push';
+import { isBlockedDay } from '../../lib/holidays';
 
 const formatUtm = (utm = {}) => {
   if (!Object.keys(utm).length) return 'Direct / Unknown';
@@ -41,6 +42,7 @@ export default async function handler(req, res) {
     name, mobile, email, address, city, state, pincode,
     utm = {},
     referrerId,
+    scheduledShipDate,
   } = req.body;
 
   if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
@@ -57,6 +59,21 @@ export default async function handler(req, res) {
   if (expectedSignature !== razorpay_signature) {
     console.error('Razorpay signature mismatch — possible tampered request');
     return res.status(400).json({ error: 'Payment verification failed' });
+  }
+
+  // ── 1b. Validate scheduledShipDate ────────────────────────────────────────
+  let safeScheduledDate = null;
+  if (scheduledShipDate) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(scheduledShipDate)) {
+      return res.status(400).json({ error: 'Invalid scheduled ship date format' });
+    }
+    const d = new Date(scheduledShipDate + 'T00:00:00+05:30');
+    const nowMidnight = new Date(); nowMidnight.setHours(0, 0, 0, 0);
+    const max = new Date(nowMidnight); max.setDate(max.getDate() + 14);
+    if (isNaN(d.getTime()) || d <= nowMidnight || d > max || isBlockedDay(d)) {
+      return res.status(400).json({ error: 'Invalid scheduled ship date' });
+    }
+    safeScheduledDate = scheduledShipDate;
   }
 
   // ── 2. Build order details ─────────────────────────────────────────────────
@@ -98,6 +115,7 @@ export default async function handler(req, res) {
                 <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:10px 0;font-weight:600;color:#3D2610;">Qty</td><td style="padding:10px 0;">${qty} glass(es)</td></tr>
                 <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:10px 0;font-weight:600;color:#3D2610;">Amount</td><td style="padding:10px 0;font-size:1.1rem;font-weight:700;color:#4A7C59;">${priceStr} ✅ PAID</td></tr>
                 <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:10px 0;font-weight:600;color:#3D2610;">Delivery</td><td style="padding:10px 0;color:#4A7C59;font-weight:600;">FREE</td></tr>
+                ${safeScheduledDate ? `<tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:10px 0;font-weight:600;color:#3D2610;">🗓 Scheduled Ship Date</td><td style="padding:10px 0;font-weight:700;color:#5C3D1E;">${safeScheduledDate}</td></tr>` : ''}
                 <tr><td style="padding:10px 0;font-weight:600;color:#3D2610;">📍 Source</td><td style="padding:10px 0;font-size:.85rem;color:#555;">${formatUtm(utm)}</td></tr>
               </table>
               <div style="background:#F0F9F3;border-left:4px solid #4A7C59;padding:12px 16px;margin-top:20px;font-size:.82rem;color:#2d6b40;border-radius:0 6px 6px 0;">
@@ -150,7 +168,8 @@ export default async function handler(req, res) {
                   <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:9px 0;font-weight:600;color:#3D2610;">Amount Paid</td><td style="padding:9px 0;font-weight:700;color:#4A7C59;">${priceStr} ✅ Paid Online</td></tr>
                   <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:9px 0;font-weight:600;color:#3D2610;">Delivery</td><td style="padding:9px 0;color:#4A7C59;font-weight:600;">FREE</td></tr>
                   ${fullAddr ? `<tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:9px 0;font-weight:600;color:#3D2610;">Deliver To</td><td style="padding:9px 0;">${fullAddr}</td></tr>` : ''}
-                  <tr><td style="padding:9px 0;font-weight:600;color:#3D2610;">Order Date</td><td style="padding:9px 0;">${orderDate} IST</td></tr>
+                  <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:9px 0;font-weight:600;color:#3D2610;">Order Date</td><td style="padding:9px 0;">${orderDate} IST</td></tr>
+                  ${safeScheduledDate ? `<tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:9px 0;font-weight:600;color:#3D2610;">🗓 Scheduled Ship Date</td><td style="padding:9px 0;font-weight:700;color:#5C3D1E;">${safeScheduledDate}</td></tr>` : ''}
                 </table>
 
                 <!-- How to use -->
@@ -206,7 +225,7 @@ export default async function handler(req, res) {
   await saveCustomer({ mobile, email, name, address, city, state, pincode }).catch(() => {});
 
   // ── WhatsApp — instant order confirmation ────────────────────────────────────
-  await waOrderConfirmed({ mobile, name, pack, orderId, price }).catch(() => {});
+  await waOrderConfirmed({ mobile, name, pack, orderId, price, scheduledShipDate: safeScheduledDate }).catch(() => {});
   sendPush({ title: `💳 New prepaid order — ${name}`, body: `${pack} · ₹${price} · ${mobile?.trim()}` }).catch(() => {});
 
   // ── Referral tracking ────────────────────────────────────────────────────
@@ -236,7 +255,8 @@ export default async function handler(req, res) {
       qty:         Number(qty),
       price:       Number(amount) / 100,
       utm:         Object.keys(utm || {}).length ? utm : null,
-      referrer_id: referrerId || null,
+      referrer_id:         referrerId || null,
+      scheduled_ship_date: safeScheduledDate,
     });
     if (ordErr) console.error('orders insert (prepaid) failed:', ordErr.message);
   }
