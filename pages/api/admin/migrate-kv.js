@@ -1,14 +1,14 @@
 // pages/api/admin/migrate-kv.js
 // ONE-SHOT migration route — DELETE after use
-// Protected by CRON_SECRET header
+// Protected by ADMIN_PASSWORD header
 import { createClient } from '@supabase/supabase-js';
 import { kv } from '@vercel/kv';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end('Method Not Allowed');
 
-  const secret = req.headers['x-cron-secret'];
-  if (!secret || secret !== process.env.CRON_SECRET) {
+  const secret = req.headers['x-admin-password'];
+  if (!secret || secret !== process.env.ADMIN_PASSWORD) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
