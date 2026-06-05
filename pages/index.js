@@ -193,9 +193,10 @@ export default function Home() {
   const [referrerId,       setReferrerId]       = useState('');
   const [lightbox,         setLightbox]         = useState(null); // { imgs: [...], idx: 0 }
   const [drawerOpen,       setDrawerOpen]       = useState(false);
-  const orderPlaced  = useRef(false);
-  const pincodeAbort = useRef(null);
-  const swipeX       = useRef(null);
+  const orderPlaced       = useRef(false);
+  const pincodeAbort      = useRef(null);
+  const swipeX            = useRef(null);
+  const schedulePopupRef  = useRef(null);
 
   /* sticky CTA on scroll */
   useEffect(() => {
@@ -342,6 +343,17 @@ export default function Home() {
     if (!didMount.current) { didMount.current = true; return; }
     fbq('AddToCart', { content_name: PACKS[pack].label, content_ids: [`vijaysar-${pack}`], content_type: 'product', currency: 'INR', value: PACKS[pack].price, num_items: PACKS[pack].qty });
   }, [pack]);
+
+  useEffect(() => {
+    if (!scheduleOpen) return;
+    const handleClickOutside = (e) => {
+      if (schedulePopupRef.current && !schedulePopupRef.current.contains(e.target)) {
+        setScheduleOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [scheduleOpen]);
 
   /* show toast */
   const showToast = useCallback((msg, type = 'error') => {
@@ -1778,48 +1790,84 @@ export default function Home() {
               )}
 
               {/* Schedule for later toggle */}
-              {(deliveryEst || shipsBy) && !scheduleOpen && (
-                <button
-                  type="button"
-                  onClick={() => setScheduleOpen(true)}
-                  style={{ background:'none', border:'none', color:'#4A7C59', fontSize:'.82rem', fontWeight:600, cursor:'pointer', padding:'2px 0', marginBottom:10, textDecoration:'underline' }}
-                >
-                  🗓 Schedule delivery for a later date →
-                </button>
-              )}
-
-              {scheduleOpen && (() => {
+              {(deliveryEst || shipsBy) && (() => {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
                 const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
                 const maxDate  = new Date(today); maxDate.setDate(maxDate.getDate() + 14);
                 const holidayDates = getHolidayDates();
                 return (
-                  <div style={{ background:'#fff', border:'1px solid #4A7C59', borderRadius:8, padding:'12px 14px', marginBottom:10 }}>
-                    <div style={{ fontSize:'.82rem', fontWeight:600, color:'#2d6b40', marginBottom:8 }}>Choose a ship date:</div>
-                    <DayPicker
-                      mode="single"
-                      selected={scheduledDate}
-                      onSelect={handleScheduledDate}
-                      fromDate={tomorrow}
-                      toDate={maxDate}
-                      disabled={[
-                        { dayOfWeek: [0] },
-                        ...holidayDates,
-                      ]}
-                      styles={{
-                        root: { fontSize: '.82rem' },
-                        caption: { color: '#2d6b40', fontWeight: 700 },
-                        day_selected: { backgroundColor: '#4A7C59', color: '#fff' },
-                      }}
-                    />
+                  <div style={{ position:'relative', marginBottom:10 }}>
                     <button
                       type="button"
-                      onClick={() => { setScheduleOpen(false); handleScheduledDate(null); }}
-                      style={{ background:'none', border:'none', color:'#888', fontSize:'.78rem', cursor:'pointer', textDecoration:'underline', marginTop:4 }}
+                      onClick={() => setScheduleOpen(o => !o)}
+                      style={{
+                        background: scheduledDate ? '#F0F9F3' : 'none',
+                        border: scheduledDate ? '1px solid #4A7C59' : 'none',
+                        borderRadius: 6,
+                        color: scheduledDate ? '#2d6b40' : '#4A7C59',
+                        fontSize: '.82rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        padding: scheduledDate ? '5px 10px' : '2px 0',
+                        textDecoration: scheduledDate ? 'none' : 'underline',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 5,
+                      }}
                     >
-                      × Ship as soon as possible
+                      🗓 {scheduledDate ? scheduledDateFormatted : 'Schedule delivery for a later date →'}
+                      {scheduledDate && (
+                        <span
+                          onClick={e => { e.stopPropagation(); setScheduleOpen(false); handleScheduledDate(null); }}
+                          style={{ marginLeft:4, color:'#888', fontWeight:400, fontSize:'.78rem' }}
+                        >✕</span>
+                      )}
                     </button>
+
+                    {scheduleOpen && (
+                      <div
+                        ref={schedulePopupRef}
+                        style={{
+                          position:'absolute',
+                          zIndex:1000,
+                          top:'100%',
+                          left:0,
+                          background:'#fff',
+                          border:'1px solid #4A7C59',
+                          borderRadius:10,
+                          boxShadow:'0 4px 20px rgba(0,0,0,.13)',
+                          padding:'12px 14px 10px',
+                          marginTop:4,
+                          minWidth:280,
+                        }}
+                      >
+                        <div style={{ fontSize:'.78rem', fontWeight:600, color:'#2d6b40', marginBottom:6 }}>Choose a ship date:</div>
+                        <DayPicker
+                          mode="single"
+                          selected={scheduledDate}
+                          onSelect={(date) => { handleScheduledDate(date); if (date) setScheduleOpen(false); }}
+                          fromDate={tomorrow}
+                          toDate={maxDate}
+                          startMonth={tomorrow}
+                          endMonth={maxDate}
+                          disabled={[
+                            { dayOfWeek: [0] },
+                            ...holidayDates,
+                          ]}
+                          style={{ margin: 0 }}
+                        />
+                        {scheduledDate && (
+                          <button
+                            type="button"
+                            onClick={() => { setScheduleOpen(false); handleScheduledDate(null); }}
+                            style={{ background:'none', border:'none', color:'#888', fontSize:'.75rem', cursor:'pointer', textDecoration:'underline', padding:'4px 0 2px' }}
+                          >
+                            × Ship as soon as possible
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 );
               })()}

@@ -1213,3 +1213,14 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
   .footer-bottom a:hover { color: var(--vd-gold) !important; }
   .footer-disclaimer { color: #6a5040 !important; }
 }
+
+/* =====================================================
+   Scheduled Shipping — DayPicker (react-day-picker v10)
+   ===================================================== */
+.rdp-root {
+  --rdp-accent-color: #4A7C59;
+  --rdp-accent-background-color: #F0F9F3;
+  --rdp-today-color: #4A7C59;
+  margin: 0;
+  font-size: .85rem;
+}
