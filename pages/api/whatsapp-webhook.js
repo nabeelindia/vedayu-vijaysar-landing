@@ -3,7 +3,7 @@ export const config = { maxDuration: 10 }; // Vercel hobby plan max
 import crypto from 'crypto';
 import { getBotReply, FALLBACK_REPLY } from '../../lib/wa-knowledge';
 import { supabase } from '../../lib/supabase';
-import webpush from 'web-push';
+import { sendPush } from '../../lib/push';
 import { Resend } from 'resend';
 import { kv } from '@vercel/kv';
 import { waCodPrepaidOffer } from '../../lib/whatsapp';
@@ -13,11 +13,6 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 // In-memory dedup: prevents replying twice if Meta sends the same webhook twice
 const recentIds = new Set();
 
-webpush.setVapidDetails(
-  process.env.VAPID_EMAIL,
-  process.env.VAPID_PUBLIC_KEY,
-  process.env.VAPID_PRIVATE_KEY
-);
 
 export default async function handler(req, res) {
   // ── Webhook verification (GET) ───────────────────────────────────────────
@@ -206,23 +201,10 @@ async function notifyAdmin({ phone, contact, text, isFallback }) {
     }).catch(err => console.error('Email error:', err));
   }
 
-  if (!process.env.VAPID_PUBLIC_KEY || !process.env.PUSH_SUBSCRIPTIONS) return;
-  let subs = [];
-  try { subs = JSON.parse(process.env.PUSH_SUBSCRIPTIONS); } catch { return; }
-
-  const payload = JSON.stringify({
+  await sendPush({
     title: isFallback ? `⚠️ Needs reply — ${contact}` : `💬 WA — ${contact}`,
-    body:  text.slice(0, 120),
+    body:  text,
   });
-
-  await Promise.allSettled(
-    subs.map(sub =>
-      webpush.sendNotification(
-        { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-        payload
-      ).catch(err => console.error('Push error:', err.message))
-    )
-  );
 }
 
 async function notifyOwnerCodAction({ orderId, name, action }) {
