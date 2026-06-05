@@ -1,5 +1,6 @@
 export const config = { maxDuration: 10 }; // Vercel hobby plan max
 
+import crypto from 'crypto';
 import { getBotReply, FALLBACK_REPLY } from '../../lib/wa-knowledge';
 import { supabase } from '../../lib/supabase';
 import webpush from 'web-push';
@@ -31,6 +32,17 @@ export default async function handler(req, res) {
   }
 
   if (req.method !== 'POST') return res.status(405).end();
+
+  // ── Signature validation ─────────────────────────────────────────────────
+  // Meta signs every POST with X-Hub-Signature-256 using the app secret.
+  if (process.env.WA_APP_SECRET) {
+    const sig      = req.headers['x-hub-signature-256'] || '';
+    const expected = 'sha256=' + crypto
+      .createHmac('sha256', process.env.WA_APP_SECRET)
+      .update(JSON.stringify(req.body))
+      .digest('hex');
+    if (sig !== expected) return res.status(403).json({ error: 'Invalid signature' });
+  }
 
   // Process FIRST, then ACK — this ensures Vercel doesn't kill the function
   // before the reply is sent. Meta allows up to 20s; Vercel hobby allows 10s.
