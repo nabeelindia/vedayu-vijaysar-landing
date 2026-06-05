@@ -6,6 +6,7 @@ const STATUS_CONFIG = {
   delivered:      { label: 'Delivered',          bg: '#E8F5E9', color: '#1B5E20' },
   cancelled:      { label: 'Cancelled',          bg: '#FFEBEE', color: '#C62828' },
   returned:       { label: 'Returned',           bg: '#FCE4EC', color: '#880E4F' },
+  scheduled:      { label: 'Scheduled',          bg: '#EDE7F6', color: '#4527A0' },
 };
 
 export default function StatusBadge({ status, small }) {
