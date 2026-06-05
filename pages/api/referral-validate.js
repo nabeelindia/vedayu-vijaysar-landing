@@ -7,7 +7,7 @@
  *
  * Identification: mobile number looked up against orders table in Supabase.
  */
-import { supabase } from '../../lib/supabase.js';
+import { supabase } from '../../lib/supabase';
 
 export async function isNewCustomer(mobile) {
   const cleanMobile = String(mobile || '').replace(/\D/g, '');
