@@ -229,10 +229,13 @@ export default async function handler(req, res) {
 
   // ── Referral tracking ────────────────────────────────────────────────────
   // Store this order's mobile as the referral owner so future self-referral checks work
-  kv.set(`referral:owner:${orderId}`, mobile.trim(), { ex: 15552000 }).catch(() => {});
-  if (referrerId) {
-    kv.set(`referral:used:${orderId}`, { referrerId, discount: 50, method: 'cod', at: Date.now() }, { ex: 15552000 }).catch(() => {});
-  }
+  supabase.from('referrals').insert({
+    order_id:     orderId,
+    owner_mobile: mobile.trim(),
+    referrer_id:  referrerId || null,
+    discount:     referrerId ? 50 : null,
+    method:       'cod',
+  }).then(() => {}).catch(() => {});
 
   // ── Persist order to Supabase ────────────────────────────────────────────
   if (supabase) {
