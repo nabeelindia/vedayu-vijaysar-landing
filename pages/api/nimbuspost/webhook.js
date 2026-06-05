@@ -16,6 +16,7 @@
 
 import { kv } from '@vercel/kv';
 import { Resend } from 'resend';
+import { supabase } from '../../../lib/supabase';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
@@ -40,6 +41,8 @@ export default async function handler(req, res) {
 
   console.log(`NimbusPost webhook: AWB=${awb} STATUS=${status}`);
 
+  const s = status.toLowerCase();
+
   // Update shipment status in KV (for tracking page)
   try {
     const existing = await kv.get(`nimbuspost:awb:${awb}`);
@@ -50,12 +53,28 @@ export default async function handler(req, res) {
       lastUpdated: new Date().toISOString(),
       rawEvent: body,
     }, { ex: 15552000 });
+
+    // Write status back to orders table so admin panel shows live tracking
+    if (supabase) {
+      const updates = { updated_at: new Date().toISOString() };
+      if (s.includes('delivered'))                         { updates.status = 'delivered'; updates.delivered_at = new Date().toISOString(); }
+      else if (s.includes('rto'))                          { updates.status = 'returned';  updates.returned_at  = new Date().toISOString(); }
+      else if (s.includes('sent') || s.includes('picked')) { updates.status = 'sent';      updates.sent_at      = new Date().toISOString(); }
+
+      if (Object.keys(updates).length > 1) {
+        const orderRecord = await kv.get(`nimbuspost:awb_to_order:${awb}`).catch(() => null);
+        if (orderRecord?.orderId) {
+          await supabase.from('orders').update(updates).eq('order_id', orderRecord.orderId).catch(() => {});
+        } else if (awb) {
+          await supabase.from('orders').update(updates).eq('awb', awb).catch(() => {});
+        }
+      }
+    }
   } catch (err) {
     console.error('Webhook KV update error:', err);
   }
 
   // ── Handle specific events ────────────────────────────────────────────────
-  const s = status.toLowerCase();
 
   // RTO — notify store owner
   if (s.includes('rto') && process.env.RESEND_API_KEY && process.env.ORDERS_EMAIL) {
