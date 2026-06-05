@@ -16,6 +16,7 @@ import { saveCustomer } from '../../lib/customer-cache';
 import { createOrder, storeAwbMapping } from '../../lib/velocity';
 import { kv } from '@vercel/kv';
 import { generateOrderId } from '../../lib/orders';
+import { supabase } from '../../lib/supabase';
 
 const formatUtm = (utm = {}) => {
   if (!Object.keys(utm).length) return 'Direct / Unknown';
@@ -236,6 +237,27 @@ export default async function handler(req, res) {
   kv.set(`referral:owner:${orderId}`, mobile?.trim() || '', { ex: 15552000 }).catch(() => {});
   if (referrerId) {
     kv.set(`referral:used:${orderId}`, { referrerId, discount: 50, method: 'prepaid', at: Date.now() }, { ex: 15552000 }).catch(() => {});
+  }
+
+  // ── Persist order to Supabase ────────────────────────────────────────────
+  if (supabase) {
+    await supabase.from('orders').insert({
+      order_id:    orderId,
+      method:      'prepaid',
+      status:      'confirmed',
+      name,
+      mobile:      mobile?.trim() || null,
+      email:       email?.trim()  || null,
+      address,
+      city,
+      state,
+      pincode,
+      pack,
+      qty:         Number(qty),
+      price:       Number(amount) / 100,
+      utm:         Object.keys(utm || {}).length ? utm : null,
+      referrer_id: referrerId || null,
+    }).catch(err => console.error('orders insert (prepaid) failed:', err.message));
   }
 
   return res.status(200).json({ success: true, orderId });
