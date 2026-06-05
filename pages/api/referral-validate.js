@@ -5,30 +5,22 @@
  * Returns { valid: false, reason: 'returning' } — mobile has placed an
  *   order before; referral is for new customers only.
  *
- * Identification: mobile number looked up against customer:{mobile} KV key
- * (written by saveCustomer() on every COD + prepaid order).
+ * Identification: mobile number looked up against orders table in Supabase.
  */
-import { kv } from '@vercel/kv';
+import { supabase } from '../../lib/supabase.js';
 
 export async function isNewCustomer(mobile) {
   const cleanMobile = String(mobile || '').replace(/\D/g, '');
-  if (!/^[6-9]\d{9}$/.test(cleanMobile)) return true; // not a valid mobile yet — allow
-
+  if (!/^[6-9]\d{9}$/.test(cleanMobile)) return true;
   try {
-    // Primary check: customer cache (written on every order)
-    const existing = await kv.get(`customer:${cleanMobile}`);
-    if (existing) return false;
-
-    // Backup: Velocity or legacy NimbusPost phone index
-    const [vIds, nIds] = await Promise.all([
-      kv.lrange(`velocity:phone:${cleanMobile}`, 0, 1).catch(() => []),
-      kv.lrange(`nimbuspost:phone:${cleanMobile}`, 0, 1).catch(() => []),
-    ]);
-    if (vIds?.length || nIds?.length) return false;
-
-    return true; // no record — new customer
+    const { count, error } = await supabase
+      .from('orders')
+      .select('id', { count: 'exact', head: true })
+      .eq('mobile', cleanMobile);
+    if (error) return true;
+    return count === 0;
   } catch {
-    return true; // KV unavailable — allow
+    return true;
   }
 }
 
