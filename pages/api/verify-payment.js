@@ -219,7 +219,7 @@ export default async function handler(req, res) {
 
   // ── Persist order to Supabase ────────────────────────────────────────────
   if (supabase) {
-    await supabase.from('orders').insert({
+    const { error: ordErr } = await supabase.from('orders').insert({
       order_id:    orderId,
       method:      'prepaid',
       status:      'confirmed',
@@ -235,7 +235,8 @@ export default async function handler(req, res) {
       price:       Number(amount) / 100,
       utm:         Object.keys(utm || {}).length ? utm : null,
       referrer_id: referrerId || null,
-    }).catch(err => console.error('orders insert (prepaid) failed:', err.message));
+    });
+    if (ordErr) console.error('orders insert (prepaid) failed:', ordErr.message);
   }
 
   return res.status(200).json({ success: true, orderId });

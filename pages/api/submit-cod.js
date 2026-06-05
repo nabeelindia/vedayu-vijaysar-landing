@@ -215,7 +215,7 @@ export default async function handler(req, res) {
 
   // ── Persist order to Supabase ────────────────────────────────────────────
   if (supabase) {
-    await supabase.from('orders').insert({
+    const { error: ordErr } = await supabase.from('orders').insert({
       order_id:    orderId,
       method:      'cod',
       status:      'pending',
@@ -231,18 +231,20 @@ export default async function handler(req, res) {
       price:       safePrice,
       utm:         Object.keys(utm).length ? utm : null,
       referrer_id: referrerId || null,
-    }).catch(err => console.error('orders insert failed:', err.message));
+    });
+    if (ordErr) console.error('orders insert failed:', ordErr.message);
   }
 
   // ── COD verification — store record and send WhatsApp ───────────────────
   const normalised = mobile.trim().startsWith('91') ? mobile.trim() : `91${mobile.trim()}`;
   if (supabase) {
-    await supabase.from('cod_verifications').insert({
+    const { error: cvErr } = await supabase.from('cod_verifications').insert({
       order_id: orderId,
       mobile:   normalised,
       name,
       status:   'pending',
-    }).catch(err => console.error('cod_verifications insert failed:', err.message));
+    });
+    if (cvErr) console.error('cod_verifications insert failed:', cvErr.message);
   }
 
   await kv.set(`cod_verify:${normalised}`, {
