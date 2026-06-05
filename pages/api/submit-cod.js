@@ -9,12 +9,13 @@
 import { Resend } from 'resend';
 import { sendCapiPurchase } from '../../lib/meta-capi';
 import { enqueueFollowup } from '../../lib/followup-queue';
-import { waOrderConfirmed } from '../../lib/whatsapp';
+import { waOrderConfirmed, waCodVerify } from '../../lib/whatsapp';
 import { saveCustomer } from '../../lib/customer-cache';
 import { createOrder, storeAwbMapping } from '../../lib/velocity';
 import { kv } from '@vercel/kv';
 import { isNewCustomer } from './referral-validate';
 import { generateOrderId } from '../../lib/orders';
+import { supabase } from '../../lib/supabase';
 
 const formatUtm = (utm = {}) => {
   if (!Object.keys(utm).length) return 'Direct / Unknown';
@@ -232,6 +233,46 @@ export default async function handler(req, res) {
   if (referrerId) {
     kv.set(`referral:used:${orderId}`, { referrerId, discount: 50, method: 'cod', at: Date.now() }, { ex: 15552000 }).catch(() => {});
   }
+
+  // ── Persist order to Supabase ────────────────────────────────────────────
+  if (supabase) {
+    await supabase.from('orders').insert({
+      order_id:    orderId,
+      method:      'cod',
+      status:      'pending',
+      name,
+      mobile:      mobile.trim(),
+      email:       email?.trim() || null,
+      address,
+      city,
+      state,
+      pincode,
+      pack,
+      qty:         Number(qty),
+      price:       safePrice,
+      utm:         Object.keys(utm).length ? utm : null,
+      referrer_id: referrerId || null,
+    }).catch(err => console.error('orders insert failed:', err.message));
+  }
+
+  // ── COD verification — store record and send WhatsApp ───────────────────
+  const normalised = mobile.trim().startsWith('91') ? mobile.trim() : `91${mobile.trim()}`;
+  if (supabase) {
+    await supabase.from('cod_verifications').insert({
+      order_id: orderId,
+      mobile:   normalised,
+      name,
+      status:   'pending',
+    }).catch(err => console.error('cod_verifications insert failed:', err.message));
+  }
+
+  await kv.set(`cod_verify:${normalised}`, {
+    orderId, name, pack, price: safePrice, status: 'pending', createdAt: Date.now(),
+  }, { ex: 172800 }).catch(() => {});
+
+  await waCodVerify({
+    mobile: mobile.trim(), name, orderId, pack, price: safePrice, address: fullAddr,
+  }).catch(() => {});
 
   return res.status(200).json({ success: true, orderId });
 }
