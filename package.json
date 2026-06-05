@@ -19,6 +19,7 @@
     "next-mdx-remote": "^6.0.0",
     "razorpay": "2.9.2",
     "react": "18.3.1",
+    "react-day-picker": "^10.0.1",
     "react-dom": "18.3.1",
     "resend": "3.2.0",
     "web-push": "^3.6.7"
