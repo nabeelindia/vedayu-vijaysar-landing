@@ -1793,7 +1793,7 @@ export default function Home() {
               {(deliveryEst || shipsBy) && (() => {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
-                const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
+                const minDate  = new Date(today); minDate.setDate(minDate.getDate() + 2);
                 const maxDate  = new Date(today); maxDate.setDate(maxDate.getDate() + 14);
                 const holidayDates = getHolidayDates();
                 return (
@@ -1847,11 +1847,12 @@ export default function Home() {
                           mode="single"
                           selected={scheduledDate}
                           onSelect={(date) => { handleScheduledDate(date); if (date) setScheduleOpen(false); }}
-                          fromDate={tomorrow}
+                          fromDate={minDate}
                           toDate={maxDate}
-                          startMonth={tomorrow}
+                          startMonth={minDate}
                           endMonth={maxDate}
                           disabled={[
+                            { before: minDate },
                             { dayOfWeek: [0] },
                             ...holidayDates,
                           ]}
