@@ -71,7 +71,7 @@ export default function AdminLayout({ title, children }) {
         ))}
       </nav>
 
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @media (max-width: 768px) {
           .admin-sidebar { display: none !important; }
           .admin-bottom-nav { display: flex !important; }
@@ -103,7 +103,7 @@ export default function AdminLayout({ title, children }) {
         @media (max-width: 768px) {
           .admin-bottom-nav a { min-height: 52px; justify-content: center; }
         }
-      `}</style>
+      ` }} />
     </>
   );
 }
