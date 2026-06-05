@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import SiteFooter from '../components/SiteFooter';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
-import { isBlockedDay, getHolidayDates } from '../lib/holidays';
+import { getHolidayDates } from '../lib/holidays';
 
 /* ─── Meta Pixel helper ──────────────────────────────────── */
 const fbq = (event, params = {}) => {
