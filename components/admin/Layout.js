@@ -7,6 +7,8 @@ const NAV = [
   { href: '/admin/customers', label: 'Customers', icon: '👥' },
   { href: '/admin/whatsapp',  label: 'WhatsApp',  icon: '💬' },
   { href: '/admin/analytics', label: 'Analytics', icon: '📊' },
+  { href: '/admin/referrals', label: 'Referrals', icon: '🎁' },
+  { href: '/admin/settings',  label: 'Settings',  icon: '⚙️' },
 ];
 
 const BROWN = '#5C3D1E';
