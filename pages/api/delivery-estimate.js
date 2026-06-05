@@ -100,8 +100,8 @@ export default function handler(req, res) {
       return res.status(400).json({ serviceable: false, reason: 'invalid_fromDate' });
     }
     const parsed = new Date(fromDate + 'T00:00:00+05:30');
-    const nowMidnight = new Date();
-    nowMidnight.setHours(0, 0, 0, 0);
+    const todayIST = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+    const nowMidnight = new Date(todayIST + 'T00:00:00+05:30');
     const maxDate = new Date(nowMidnight);
     maxDate.setDate(maxDate.getDate() + 14);
     if (isNaN(parsed.getTime()) || parsed < nowMidnight || parsed > maxDate) {

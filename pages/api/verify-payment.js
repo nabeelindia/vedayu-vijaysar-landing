@@ -68,7 +68,8 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Invalid scheduled ship date format' });
     }
     const d = new Date(scheduledShipDate + 'T00:00:00+05:30');
-    const nowMidnight = new Date(); nowMidnight.setHours(0, 0, 0, 0);
+    const todayIST = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+    const nowMidnight = new Date(todayIST + 'T00:00:00+05:30');
     const max = new Date(nowMidnight); max.setDate(max.getDate() + 14);
     if (isNaN(d.getTime()) || d <= nowMidnight || d > max || isBlockedDay(d)) {
       return res.status(400).json({ error: 'Invalid scheduled ship date' });
