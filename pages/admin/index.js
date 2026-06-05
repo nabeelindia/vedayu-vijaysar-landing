@@ -9,26 +9,23 @@ const fmt = n => `₹${Number(n || 0).toLocaleString('en-IN')}`;
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const [analytics, setAnalytics] = useState(null);
+  const [stats, setStats] = useState(null);
   const [recent,    setRecent]    = useState([]);
   const [pending,   setPending]   = useState([]);
   const [loading,   setLoading]   = useState(true);
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/admin/analytics').then(r => r.json()),
+      fetch('/api/admin/dashboard-stats').then(r => r.json()),
       fetch('/api/admin/orders?page=1').then(r => r.json()),
       fetch('/api/admin/orders?status=pending&method=cod&page=1').then(r => r.json()),
-    ]).then(([a, r, p]) => {
-      setAnalytics(a);
+    ]).then(([s, r, p]) => {
+      setStats(s);
       setRecent((r.data || []).slice(0, 8));
       setPending((p.data || []).slice(0, 5));
       setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
-
-  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
-  const todayRevenue = analytics?.revenueByDay?.[today] || 0;
 
   return (
     <AdminLayout title="Dashboard">
@@ -36,12 +33,13 @@ export default function AdminDashboard() {
       {loading ? <p style={{ color:'#888', fontSize:'.9rem' }}>Loading…</p> : (
         <>
           <div className="admin-stat-grid" style={{ marginBottom:24 }}>
-            <StatCard label="Today's Revenue" value={fmt(todayRevenue)} color="#5C3D1E" />
-            <StatCard label="Total Orders (30d)" value={analytics?.totalOrders || 0} />
-            <StatCard label="Pending Verifications"
-              value={analytics?.verification?.pending || 0} color="#E65100"
+            <StatCard label="Today's Orders"    value={stats?.todayOrders    || 0} />
+            <StatCard label="Today's Revenue"   value={`₹${Number(stats?.todayRevenue || 0).toLocaleString('en-IN')}`} color="#5C3D1E" />
+            <StatCard label="Awaiting Dispatch" value={stats?.awaitingDispatch || 0} color="#E65100"
+              onClick={() => router.push('/admin/orders')} />
+            <StatCard label="Pending COD Reply" value={stats?.pendingCodVerify || 0} color="#E65100"
               onClick={() => router.push('/admin/whatsapp?tab=verifications')} />
-            <StatCard label="Total Revenue (30d)" value={fmt(analytics?.totalRevenue)} color="#4A7C59" />
+            <StatCard label="RTOs This Week"    value={stats?.rtosThisWeek   || 0} color="#C62828" />
           </div>
 
           {pending.length > 0 && (
