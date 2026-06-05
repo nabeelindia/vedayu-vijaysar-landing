@@ -211,7 +211,7 @@ export default async function handler(req, res) {
     referrer_id:  referrerId || null,
     discount:     referrerId ? 50 : null,
     method:       'cod',
-  }).then(() => {}).catch(() => {});
+  }).then(() => {}, () => {});
 
   // ── Persist order to Supabase ────────────────────────────────────────────
   if (supabase) {

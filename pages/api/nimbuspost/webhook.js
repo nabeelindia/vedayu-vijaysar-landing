@@ -35,7 +35,7 @@ export default async function handler(req, res) {
   else if (s.includes('sent') || s.includes('picked'))  { statusUpdates.status = 'sent';      statusUpdates.sent_at      = new Date().toISOString(); }
 
   if (Object.keys(statusUpdates).length > 1) {
-    await supabase.from('orders').update(statusUpdates).eq('awb', awb).catch(() => {});
+    await supabase.from('orders').update(statusUpdates).eq('awb', awb).then(() => {}, () => {});
   }
 
   // RTO — notify owner
