@@ -1,8 +1,10 @@
 import Link from 'next/link';
+import { useTranslation } from 'react-i18next';
 
 const YEAR = new Date().getFullYear();
 
 export default function SiteFooter() {
+  const { t } = useTranslation('common');
   return (
     <footer className="site-footer">
       <div className="container">
@@ -10,7 +12,7 @@ export default function SiteFooter() {
           {/* Brand */}
           <div className="footer-brand">
             <span className="footer-logo">🪵 Vedayu</span>
-            <p className="footer-tagline">Ancient Ayurvedic wisdom in every sip. Crafted from genuine Vijaysar wood.</p>
+            <p className="footer-tagline">{t('footer.tagline')}</p>
             <p className="footer-contact-line">
               <a href="mailto:hi@vedayulife.com">hi@vedayulife.com</a>
               &nbsp;·&nbsp;
@@ -42,25 +44,25 @@ export default function SiteFooter() {
 
           {/* Blog + Policy Links */}
           <div className="footer-links">
-            <h4 className="footer-links-heading">Explore</h4>
+            <h4 className="footer-links-heading">{t('footer.explore_heading')}</h4>
             <ul>
-              <li><Link href="/blog">Wellness Blog</Link></li>
+              <li><Link href="/blog">{t('footer.blog_link')}</Link></li>
             </ul>
-            <h4 className="footer-links-heading" style={{ marginTop: '1rem' }}>Customer Support</h4>
+            <h4 className="footer-links-heading" style={{ marginTop: '1rem' }}>{t('footer.support_heading')}</h4>
             <ul>
-              <li><Link href="/track" className="footer-track-btn">📦 Track My Order</Link></li>
-              <li><Link href="/contact">Contact Us</Link></li>
-              <li><Link href="/shipping-policy">Shipping Policy</Link></li>
-              <li><Link href="/refund-policy">Refund &amp; Return Policy</Link></li>
-              <li><Link href="/terms">Terms &amp; Conditions</Link></li>
-              <li><Link href="/privacy">Privacy Policy</Link></li>
+              <li><Link href="/track" className="footer-track-btn">{t('footer.track_link')}</Link></li>
+              <li><Link href="/contact">{t('footer.contact_link')}</Link></li>
+              <li><Link href="/shipping-policy">{t('footer.shipping_link')}</Link></li>
+              <li><Link href="/refund-policy">{t('footer.refund_link')}</Link></li>
+              <li><Link href="/terms">{t('footer.terms_link')}</Link></li>
+              <li><Link href="/privacy">{t('footer.privacy_link')}</Link></li>
             </ul>
           </div>
         </div>
 
         <div className="footer-bottom">
-          <p>© {YEAR} Hashcart eCommerce Pvt. Ltd. All rights reserved. &nbsp;·&nbsp; <a href="https://vedayulife.com">vedayulife.com</a></p>
-          <p className="footer-disclaimer">⚠️ Disclaimer: This product is not a medicine and is not intended to diagnose, treat, cure, or prevent any disease. The Vedayu Vijaysar Wooden Glass is a traditional wellness product inspired by Ayurvedic practice. People with diabetes or any medical condition should consult a qualified doctor before making changes to their routine. Results may vary.</p>
+          <p>{t('footer.copyright', { year: YEAR })} &nbsp;·&nbsp; <a href="https://vedayulife.com">vedayulife.com</a></p>
+          <p className="footer-disclaimer">{t('footer.disclaimer')}</p>
         </div>
       </div>
     </footer>
