@@ -10,6 +10,11 @@ const timeAgo = (iso) => {
   return `${Math.floor(h / 24)}d ago`;
 };
 
+const fmtShortDate = (iso) => {
+  const d = new Date(iso + 'T00:00:00+05:30');
+  return d.toLocaleDateString('en-IN', { weekday:'short', day:'numeric', month:'short', timeZone:'Asia/Kolkata' });
+};
+
 export default function OrderCard({ order, onClick }) {
   return (
     <div onClick={onClick} style={{
@@ -28,9 +33,15 @@ export default function OrderCard({ order, onClick }) {
         <div style={{ fontSize: '.75rem', color: '#888', marginTop: 2 }}>
           {order.pack} · {fmt(order.price)} · {timeAgo(order.created_at)}
         </div>
+        {order.scheduled_ship_date && (
+          <div style={{ fontSize: '.72rem', color: '#4527A0', marginTop: 3, fontWeight: 600 }}>
+            🗓 Ships: {fmtShortDate(order.scheduled_ship_date)}
+          </div>
+        )}
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5, flexShrink: 0 }}>
         <StatusBadge status={order.status} small />
+        {order.scheduled_ship_date && <StatusBadge status="scheduled" small />}
         <span style={{ fontSize: '.65rem', fontWeight: 700,
           color: order.method === 'cod' ? '#6D4C00' : '#2E7D32',
           background: order.method === 'cod' ? '#FFF8E1' : '#E8F5E9',
