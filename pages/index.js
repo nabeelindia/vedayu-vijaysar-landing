@@ -1847,12 +1847,12 @@ export default function Home() {
                           mode="single"
                           selected={scheduledDate}
                           onSelect={(date) => { handleScheduledDate(date); if (date) setScheduleOpen(false); }}
-                          fromDate={minDate}
-                          toDate={maxDate}
-                          startMonth={minDate}
-                          endMonth={maxDate}
+                          startMonth={new Date(minDate.getFullYear(), minDate.getMonth(), 1)}
+                          endMonth={new Date(maxDate.getFullYear(), maxDate.getMonth(), 1)}
+                          hideNavigation={minDate.getMonth() === maxDate.getMonth() && minDate.getFullYear() === maxDate.getFullYear()}
                           disabled={[
                             { before: minDate },
+                            { after: maxDate },
                             { dayOfWeek: [0] },
                             ...holidayDates,
                           ]}

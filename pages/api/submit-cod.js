@@ -59,8 +59,9 @@ export default async function handler(req, res) {
     const d = new Date(scheduledShipDate + 'T00:00:00+05:30');
     const todayIST = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
     const nowMidnight = new Date(todayIST + 'T00:00:00+05:30');
+    const minAllowed = new Date(nowMidnight); minAllowed.setDate(minAllowed.getDate() + 2);
     const max = new Date(nowMidnight); max.setDate(max.getDate() + 14);
-    if (isNaN(d.getTime()) || d <= nowMidnight || d > max || isBlockedDay(d)) {
+    if (isNaN(d.getTime()) || d < minAllowed || d > max || isBlockedDay(d)) {
       return res.status(400).json({ error: 'Invalid scheduled ship date' });
     }
     safeScheduledDate = scheduledShipDate;
