@@ -1,91 +1,53 @@
-/**
- * POST /api/nimbuspost/webhook
- *
- * NimbusPost pushes real-time status updates here.
- * Configure this URL in your NimbusPost dashboard → Settings → Webhooks.
- *
- * Events handled:
- *  - picked_up         → update KV
- *  - in_transit        → update KV
- *  - out_for_delivery  → update KV
- *  - delivered         → update KV (follow-up email is already scheduled via queue)
- *  - ndr               → update KV, log for manual action
- *  - rto_initiated     → update KV, notify owner
- *  - rto_delivered     → update KV
- */
-
-import { kv } from '@vercel/kv';
+import { supabase } from '../../../lib/supabase.js';
 import { Resend } from 'resend';
-import { supabase } from '../../../lib/supabase';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
-  // Optional: verify webhook secret header
   const secret = process.env.NIMBUSPOST_WEBHOOK_SECRET;
   if (secret) {
     const incomingSecret = req.headers['x-nimbuspost-secret'] || req.headers['x-webhook-secret'];
-    if (incomingSecret !== secret) {
-      console.warn('NimbusPost webhook: invalid secret');
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
+    if (incomingSecret !== secret) return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const body = req.body;
+  const body   = req.body;
   const awb    = body?.awb    || body?.tracking_number;
   const status = body?.status || body?.current_status;
 
-  if (!awb || !status) {
-    return res.status(400).json({ error: 'Missing awb or status' });
-  }
+  if (!awb || !status) return res.status(400).json({ error: 'Missing awb or status' });
 
   console.log(`NimbusPost webhook: AWB=${awb} STATUS=${status}`);
 
   const s = status.toLowerCase();
 
-  // Update shipment status in KV (for tracking page)
-  try {
-    const existing = await kv.get(`nimbuspost:awb:${awb}`);
-    await kv.set(`nimbuspost:awb:${awb}`, {
-      ...(existing || {}),
-      awb,
-      status,
-      lastUpdated: new Date().toISOString(),
-      rawEvent: body,
-    }, { ex: 15552000 });
+  // Upsert shipment status
+  await supabase.from('shipments').upsert({
+    awb,
+    status,
+    last_updated_at: new Date().toISOString(),
+    raw_event:       body,
+  }, { onConflict: 'awb' }).catch(err => console.error('Webhook shipments upsert error:', err));
 
-    // Write status back to orders table so admin panel shows live tracking
-    if (supabase) {
-      const updates = { updated_at: new Date().toISOString() };
-      if (s.includes('delivered'))                         { updates.status = 'delivered'; updates.delivered_at = new Date().toISOString(); }
-      else if (s.includes('rto'))                          { updates.status = 'returned';  updates.returned_at  = new Date().toISOString(); }
-      else if (s.includes('sent') || s.includes('picked')) { updates.status = 'sent';      updates.sent_at      = new Date().toISOString(); }
+  // Write status back to orders table
+  const statusUpdates = { updated_at: new Date().toISOString() };
+  if (s.includes('delivered'))                          { statusUpdates.status = 'delivered'; statusUpdates.delivered_at = new Date().toISOString(); }
+  else if (s.includes('rto'))                           { statusUpdates.status = 'returned';  statusUpdates.returned_at  = new Date().toISOString(); }
+  else if (s.includes('sent') || s.includes('picked'))  { statusUpdates.status = 'sent';      statusUpdates.sent_at      = new Date().toISOString(); }
 
-      if (Object.keys(updates).length > 1) {
-        const orderRecord = await kv.get(`nimbuspost:awb_to_order:${awb}`).catch(() => null);
-        if (orderRecord?.orderId) {
-          await supabase.from('orders').update(updates).eq('order_id', orderRecord.orderId).catch(() => {});
-        } else if (awb) {
-          await supabase.from('orders').update(updates).eq('awb', awb).catch(() => {});
-        }
-      }
-    }
-  } catch (err) {
-    console.error('Webhook KV update error:', err);
+  if (Object.keys(statusUpdates).length > 1) {
+    await supabase.from('orders').update(statusUpdates).eq('awb', awb).catch(() => {});
   }
 
-  // ── Handle specific events ────────────────────────────────────────────────
-
-  // RTO — notify store owner
+  // RTO — notify owner
   if (s.includes('rto') && process.env.RESEND_API_KEY && process.env.ORDERS_EMAIL) {
     try {
+      const { data: shipment } = await supabase
+        .from('shipments').select('order_id, name').eq('awb', awb).maybeSingle();
+
+      const orderId      = shipment?.order_id || 'Unknown';
+      const customerName = shipment?.name     || '';
+
       const resend = new Resend(process.env.RESEND_API_KEY);
-
-      // Try to get order ID from KV
-      const orderRecord = await kv.get(`nimbuspost:awb_to_order:${awb}`).catch(() => null);
-      const orderId = orderRecord?.orderId || 'Unknown';
-      const customerName = orderRecord?.name || '';
-
       await resend.emails.send({
         from:    'Vedayu System <orders@vedayulife.com>',
         to:      process.env.ORDERS_EMAIL,
@@ -104,7 +66,7 @@ export default async function handler(req, res) {
                 <tr><td style="padding:10px 0;font-weight:600;">Time</td><td style="padding:10px 0;">${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST</td></tr>
               </table>
               <div style="background:#FFF8E1;border-left:4px solid #e67e22;padding:12px 16px;margin-top:20px;font-size:.85rem;color:#6D4C00;border-radius:0 6px 6px 0;">
-                Log into <a href="https://ship.nimbuspost.com" style="color:#5C3D1E;">NimbusPost dashboard</a> to take NDR action — re-attempt, address change, or confirm RTO.
+                Log into <a href="https://ship.nimbuspost.com" style="color:#5C3D1E;">NimbusPost dashboard</a> to take NDR action.
               </div>
             </div>
           </div>
@@ -113,13 +75,6 @@ export default async function handler(req, res) {
     } catch (emailErr) {
       console.error('RTO email failed:', emailErr);
     }
-  }
-
-  // NDR — log for follow-up (NimbusPost handles WhatsApp nudge automatically)
-  if (s.includes('ndr') || s.includes('undelivered')) {
-    console.log(`NDR event for AWB ${awb}:`, body);
-    // NimbusPost's automated NDR workflow handles WhatsApp + IVR retry.
-    // Nothing else needed here unless you want custom logic.
   }
 
   return res.status(200).json({ received: true });
