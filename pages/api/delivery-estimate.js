@@ -70,7 +70,7 @@ function toReadable(date) {
 export default function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).end();
 
-  const { pincode, cod = '1' } = req.query;
+  const { pincode, cod = '1', fromDate } = req.query;
 
   if (!pincode || !/^[1-9][0-9]{5}$/.test(pincode)) {
     return res.status(400).json({ serviceable: false, reason: 'invalid_pincode' });
@@ -93,21 +93,32 @@ export default function handler(req, res) {
     });
   }
 
+  // Determine base date: fromDate param or now
+  let baseDate = new Date();
+  if (fromDate) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(fromDate)) {
+      return res.status(400).json({ serviceable: false, reason: 'invalid_fromDate' });
+    }
+    const parsed = new Date(fromDate + 'T00:00:00+05:30');
+    const now = new Date();
+    const maxDate = new Date(now);
+    maxDate.setDate(maxDate.getDate() + 14);
+    if (isNaN(parsed.getTime()) || parsed < now.setHours(0,0,0,0) || parsed > maxDate) {
+      return res.status(400).json({ serviceable: false, reason: 'invalid_fromDate' });
+    }
+    baseDate = parsed;
+  }
+
   // Compute ETA from zone
   const [, maxDays] = ZONE_DAYS[zone] || DEFAULT_DAYS;
-  const now = new Date();
-  const etaDate = addBusinessDays(now, maxDays);
+  const etaDate = addBusinessDays(baseDate, maxDays);
 
   const eta = toISODate(etaDate);
   const etaFormatted = toReadable(etaDate);
 
-  // Cache aggressively — zone data changes only when pincode DB is rebuilt
-  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
+  res.setHeader('Cache-Control', fromDate
+    ? 'no-store'
+    : 'public, s-maxage=3600, stale-while-revalidate=86400');
 
-  return res.status(200).json({
-    serviceable: true,
-    zone,
-    eta,
-    etaFormatted,
-  });
+  return res.status(200).json({ serviceable: true, zone, eta, etaFormatted });
 }
