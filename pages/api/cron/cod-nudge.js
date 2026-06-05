@@ -3,7 +3,7 @@ import { supabase } from '../../../lib/supabase';
 import { waCodNudge } from '../../../lib/whatsapp';
 
 export default async function handler(req, res) {
-  if (req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (req.headers.authorization !== `Bearer ${process.env.SESSION_SECRET}`) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
   if (!supabase) return res.status(503).json({ error: 'Supabase not configured' });
