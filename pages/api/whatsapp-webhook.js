@@ -4,6 +4,8 @@ import { getBotReply, FALLBACK_REPLY } from '../../lib/wa-knowledge';
 import { supabase } from '../../lib/supabase';
 import webpush from 'web-push';
 import { Resend } from 'resend';
+import { kv } from '@vercel/kv';
+import { waCodPrepaidOffer } from '../../lib/whatsapp';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -39,6 +41,49 @@ export default async function handler(req, res) {
 
     if (msgArr?.length) {
       for (const msg of msgArr) {
+        // ── Interactive button reply (COD verification) ──────────────────
+        if (msg.type === 'interactive' && msg.interactive?.type === 'button_reply') {
+          if (recentIds.has(msg.id)) continue;
+          recentIds.add(msg.id);
+          if (recentIds.size > 200) recentIds.delete(recentIds.values().next().value);
+
+          const phone    = msg.from; // already in e164 format e.g. '919876543210'
+          const buttonId = msg.interactive.button_reply.id; // 'CONFIRM_COD' | 'CANCEL_COD'
+          const record   = await kv.get(`cod_verify:${phone}`).catch(() => null);
+
+          if (!record || record.status !== 'pending') continue;
+
+          if (buttonId === 'CONFIRM_COD') {
+            await kv.set(`cod_verify:${phone}`, { ...record, status: 'confirmed' }, { ex: 172800 }).catch(() => {});
+            if (supabase) {
+              await supabase.from('cod_verifications')
+                .update({ status: 'confirmed', verified_at: new Date().toISOString() })
+                .eq('order_id', record.orderId).catch(() => {});
+              await supabase.from('orders')
+                .update({ status: 'confirmed', updated_at: new Date().toISOString() })
+                .eq('order_id', record.orderId).catch(() => {});
+            }
+            await sendWAMessage(phone,
+              `Namaste ${record.name} ji 🙏 Thank you! Your order ${record.orderId} is confirmed. We will send your order to you — please keep ₹${record.price} ready to give the delivery person.`
+            );
+            notifyOwnerCodAction({ orderId: record.orderId, name: record.name, action: 'confirmed' }).catch(() => {});
+
+          } else if (buttonId === 'CANCEL_COD') {
+            await kv.set(`cod_verify:${phone}`, { ...record, status: 'cancelled' }, { ex: 172800 }).catch(() => {});
+            if (supabase) {
+              await supabase.from('cod_verifications')
+                .update({ status: 'cancelled', cancelled_at: new Date().toISOString() })
+                .eq('order_id', record.orderId).catch(() => {});
+              await supabase.from('orders')
+                .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+                .eq('order_id', record.orderId).catch(() => {});
+            }
+            await waCodPrepaidOffer({ mobile: phone, name: record.name, orderId: record.orderId });
+            notifyOwnerCodAction({ orderId: record.orderId, name: record.name, action: 'cancelled' }).catch(() => {});
+          }
+          continue;
+        }
+
         if (msg.type !== 'text') continue;
 
         // Dedup
@@ -166,4 +211,17 @@ async function notifyAdmin({ phone, contact, text, isFallback }) {
       ).catch(err => console.error('Push error:', err.message))
     )
   );
+}
+
+async function notifyOwnerCodAction({ orderId, name, action }) {
+  if (!process.env.RESEND_API_KEY || !process.env.ORDERS_EMAIL) return;
+  const emoji  = action === 'confirmed' ? '✅' : '❌';
+  const label  = action === 'confirmed' ? 'Confirmed' : 'Cancelled';
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  await resend.emails.send({
+    from:    'Vedayu Orders <orders@vedayulife.com>',
+    to:      process.env.ORDERS_EMAIL,
+    subject: `${emoji} COD ${label} — ${orderId} | ${name}`,
+    html: `<p style="font-family:sans-serif">Customer <b>${name}</b> tapped <b>${label}</b> for order <b>${orderId}</b> on WhatsApp.</p>`,
+  });
 }
