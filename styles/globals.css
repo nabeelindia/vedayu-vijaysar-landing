@@ -1224,3 +1224,8 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
   margin: 0;
   font-size: .85rem;
 }
+
+/* Regional script fonts */
+:lang(hi) { font-family: 'Noto Sans Devanagari', system-ui, sans-serif; }
+:lang(ta) { font-family: 'Noto Sans Tamil', system-ui, sans-serif; }
+:lang(te) { font-family: 'Noto Sans Telugu', system-ui, sans-serif; }
