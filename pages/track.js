@@ -7,21 +7,24 @@ import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-
-const STATUS_CONFIG = {
-  pending:   { label: 'Order Placed',        icon: '📦', color: '#C9A84C', done: true  },
-  picked:    { label: 'Picked Up',           icon: '🚚', color: '#C9A84C', done: true  },
-  transit:   { label: 'In Transit',          icon: '🛣️',  color: '#C9A84C', done: true  },
-  out:       { label: 'Out for Delivery',    icon: '🏠', color: '#4A7C59', done: true  },
-  delivered: { label: 'Delivered',           icon: '✅', color: '#4A7C59', done: true  },
-  failed:    { label: 'Delivery Attempted',  icon: '⚠️', color: '#e67e22', done: false },
-  rto:       { label: 'Returning to Origin', icon: '↩️', color: '#c0392b', done: false },
-};
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { useTranslation } from 'next-i18next';
 
 const STEPS = ['pending', 'picked', 'transit', 'out', 'delivered'];
 
 export default function TrackPage() {
   const router = useRouter();
+  const { t } = useTranslation('common');
+
+  const STATUS_CONFIG = {
+    pending:   { label: t('track.status.pending'),   icon: '📦', color: '#C9A84C', done: true  },
+    picked:    { label: t('track.status.picked'),    icon: '🚚', color: '#C9A84C', done: true  },
+    transit:   { label: t('track.status.transit'),   icon: '🛣️',  color: '#C9A84C', done: true  },
+    out:       { label: t('track.status.out'),       icon: '🏠', color: '#4A7C59', done: true  },
+    delivered: { label: t('track.status.delivered'), icon: '✅', color: '#4A7C59', done: true  },
+    failed:    { label: t('track.status.failed'),    icon: '⚠️', color: '#e67e22', done: false },
+    rto:       { label: t('track.status.rto'),       icon: '↩️', color: '#c0392b', done: false },
+  };
   const [query, setQuery]         = useState('');
   const [queryType, setQueryType] = useState('order'); // order | awb | phone | email
   const [loading, setLoading]     = useState(false);
@@ -68,7 +71,7 @@ export default function TrackPage() {
   return (
     <>
       <Head>
-        <title>Track Your Order — Vedayu</title>
+        <title>{t('track.page_title')}</title>
         <meta name="description" content="Track your Vedayu Vijaysar Wooden Glass order by Order ID, AWB number, phone, or email." />
       </Head>
 
@@ -78,7 +81,7 @@ export default function TrackPage() {
           <Link href="/" className="track-logo">
             <span className="track-logo-leaf">🌿</span> Vedayu
           </Link>
-          <p className="track-tagline">Track Your Order</p>
+          <p className="track-tagline">{t('track.heading')}</p>
         </header>
 
         {/* Search Card */}
@@ -90,10 +93,10 @@ export default function TrackPage() {
             {/* Type Selector */}
             <div className="track-type-tabs">
               {[
-                { value: 'order', label: '📋 Order ID'    },
-                { value: 'awb',   label: '🏷️ AWB Number'  },
-                { value: 'phone', label: '📱 Phone'        },
-                { value: 'email', label: '✉️ Email'        },
+                { value: 'order', label: `📋 ${t('track.tab.order')}` },
+                { value: 'awb',   label: `🏷️ ${t('track.tab.awb')}` },
+                { value: 'phone', label: `📱 ${t('track.tab.phone')}` },
+                { value: 'email', label: `✉️ ${t('track.tab.email')}` },
               ].map(tab => (
                 <button
                   key={tab.value}
@@ -112,13 +115,13 @@ export default function TrackPage() {
                 type={queryType === 'email' ? 'email' : 'text'}
                 value={query}
                 onChange={e => setQuery(e.target.value)}
-                placeholder={PLACEHOLDERS[queryType]}
+                placeholder={t(`track.input.${queryType}_placeholder`)}
                 inputMode={queryType === 'phone' ? 'numeric' : 'text'}
                 autoCapitalize={queryType === 'order' || queryType === 'awb' ? 'characters' : 'none'}
                 required
               />
               <button className="track-btn" type="submit" disabled={loading}>
-                {loading ? 'Tracking…' : 'Track Order →'}
+                {loading ? t('track.loading') : t('track.submit')}
               </button>
             </form>
 
@@ -408,4 +411,12 @@ function formatDateTime(dateStr) {
       day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
     });
   } catch { return dateStr; }
+}
+
+export async function getServerSideProps({ locale }) {
+  return {
+    props: {
+      ...(await serverSideTranslations(locale, ['common'])),
+    },
+  };
 }
