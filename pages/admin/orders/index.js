@@ -14,6 +14,9 @@ export default function OrdersList() {
   const [search,  setSearch]  = useState('');
   const [page,    setPage]    = useState(1);
   const [loading, setLoading] = useState(true);
+  const [selected,    setSelected]    = useState(new Set());
+  const [bulkStatus,  setBulkStatus]  = useState('confirmed');
+  const [bulking,     setBulking]     = useState(false);
 
   const load = (f = filter, s = search, p = page) => {
     setLoading(true);
@@ -30,9 +33,48 @@ export default function OrdersList() {
 
   useEffect(() => { load(); }, []);
 
-  const handleFilter = (f) => { setFilter(f); setPage(1); load(f, search, 1); };
+  const handleFilter = (f) => { setSelected(new Set()); setFilter(f); setPage(1); load(f, search, 1); };
   const handleSearch = (e) => {
-    if (e.key === 'Enter') { setPage(1); load(filter, e.target.value, 1); }
+    if (e.key === 'Enter') { setSelected(new Set()); setPage(1); load(filter, e.target.value, 1); }
+  };
+
+  const toggleSelect  = (id) => setSelected(prev => {
+    const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next;
+  });
+  const selectAll     = () => setSelected(new Set(orders.map(o => o.order_id)));
+  const deselectAll   = () => setSelected(new Set());
+
+  const bulkUpdate = async () => {
+    if (!selected.size) return;
+    if (!confirm(`Update ${selected.size} order(s) to "${bulkStatus}"?`)) return;
+    setBulking(true);
+    await fetch('/api/admin/orders/bulk', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderIds: [...selected], status: bulkStatus }),
+    });
+    setSelected(new Set());
+    load();
+    setBulking(false);
+  };
+
+  const exportCSV = () => {
+    const rows = selected.size ? orders.filter(o => selected.has(o.order_id)) : orders;
+    const header = ['Order ID','Date','Name','Mobile','Email','Address','City','State','Pincode','Pack','Qty','Amount','Method','Status','AWB','Courier'];
+    const lines  = rows.map(o => [
+      o.order_id,
+      new Date(o.created_at).toLocaleDateString('en-IN', { timeZone:'Asia/Kolkata' }),
+      o.name, o.mobile, o.email || '',
+      `"${(o.address || '').replace(/"/g,'""')}"`,
+      o.city, o.state, o.pincode,
+      o.pack, o.qty, o.price,
+      o.method, o.status, o.awb || '', o.courier || '',
+    ].join(','));
+    const csv  = [header.join(','), ...lines].join('\n');
+    const blob = new Blob([csv], { type:'text/csv' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = `vedayu-orders-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click(); URL.revokeObjectURL(url);
   };
 
   return (
@@ -42,6 +84,37 @@ export default function OrdersList() {
         value={search} onChange={e => setSearch(e.target.value)} onKeyDown={handleSearch}
         style={{ width:'100%', boxSizing:'border-box', padding:'10px 14px', borderRadius:10,
           border:'1.5px solid #e0d8cc', fontSize:'.88rem', marginBottom:12, outline:'none' }} />
+      {/* Bulk action bar */}
+      <div style={{ display:'flex', gap:8, alignItems:'center', marginBottom:8, flexWrap:'wrap' }}>
+        <button onClick={selected.size === orders.length ? deselectAll : selectAll}
+          style={{ padding:'5px 10px', fontSize:'.72rem', fontWeight:700, borderRadius:6,
+            border:'1.5px solid #d0c8bc', background:'#fff', cursor:'pointer' }}>
+          {selected.size === orders.length && orders.length > 0 ? 'Deselect all' : `Select all ${orders.length}`}
+        </button>
+        {selected.size > 0 && (
+          <>
+            <span style={{ fontSize:'.75rem', color:'#555' }}>{selected.size} selected</span>
+            <select value={bulkStatus} onChange={e => setBulkStatus(e.target.value)}
+              style={{ padding:'5px 8px', borderRadius:6, border:'1.5px solid #d0c8bc', fontSize:'.75rem' }}>
+              <option value="confirmed">Confirmed</option>
+              <option value="sent">Sent</option>
+              <option value="delivered">Delivered</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+            <button onClick={bulkUpdate} disabled={bulking}
+              style={{ padding:'5px 12px', background:'#5C3D1E', color:'#fff',
+                border:'none', borderRadius:6, fontSize:'.75rem', fontWeight:700, cursor:'pointer' }}>
+              {bulking ? '…' : 'Update'}
+            </button>
+          </>
+        )}
+        <button onClick={exportCSV}
+          style={{ padding:'5px 12px', background:'#f0ede8', color:'#5C3D1E',
+            border:'none', borderRadius:6, fontSize:'.72rem', fontWeight:700,
+            cursor:'pointer', marginLeft:'auto' }}>
+          ⬇ Export CSV{selected.size > 0 ? ` (${selected.size})` : ''}
+        </button>
+      </div>
       <div className="admin-filter-bar" style={{ marginBottom:16 }}>
         {FILTERS.map(f => (
           <button key={f} onClick={() => handleFilter(f)}
@@ -58,8 +131,14 @@ export default function OrdersList() {
           <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
             {orders.length === 0 && <p style={{ color:'#aaa', fontSize:'.88rem' }}>No orders found.</p>}
             {orders.map(o => (
-              <OrderCard key={o.order_id} order={o}
-                onClick={() => router.push(`/admin/orders/${o.order_id}`)} />
+              <div key={o.order_id} style={{ display:'flex', alignItems:'flex-start', gap:8 }}>
+                <input type="checkbox" checked={selected.has(o.order_id)}
+                  onChange={() => toggleSelect(o.order_id)}
+                  style={{ marginTop:14, width:16, height:16, cursor:'pointer', flexShrink:0 }} />
+                <div style={{ flex:1 }}>
+                  <OrderCard order={o} onClick={() => router.push(`/admin/orders/${o.order_id}`)} />
+                </div>
+              </div>
             ))}
           </div>
           <div style={{ display:'flex', gap:10, justifyContent:'center', marginTop:20 }}>
