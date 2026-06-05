@@ -15,6 +15,7 @@ import { waOrderConfirmed } from '../../lib/whatsapp';
 import { saveCustomer } from '../../lib/customer-cache';
 import { generateOrderId } from '../../lib/orders';
 import { supabase } from '../../lib/supabase';
+import { sendPush } from '../../lib/push';
 
 const formatUtm = (utm = {}) => {
   if (!Object.keys(utm).length) return 'Direct / Unknown';
@@ -206,6 +207,7 @@ export default async function handler(req, res) {
 
   // ── WhatsApp — instant order confirmation ────────────────────────────────────
   await waOrderConfirmed({ mobile, name, pack, orderId, price }).catch(() => {});
+  sendPush({ title: `💳 New prepaid order — ${name}`, body: `${pack} · ₹${price} · ${mobile?.trim()}` }).catch(() => {});
 
   // ── Referral tracking ────────────────────────────────────────────────────
   // Store this order's mobile as the referral owner so future self-referral checks work

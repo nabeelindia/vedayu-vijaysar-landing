@@ -1,5 +1,6 @@
 import { supabase } from '../../../lib/supabase';
 import { Resend } from 'resend';
+import { sendPush } from '../../../lib/push';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
@@ -72,6 +73,7 @@ export default async function handler(req, res) {
           </div>
         `,
       });
+      sendPush({ title: `⚠️ RTO — AWB ${awb}`, body: `Order ${orderId} · ${customerName}` }).catch(() => {});
     } catch (emailErr) {
       console.error('RTO email failed:', emailErr);
     }

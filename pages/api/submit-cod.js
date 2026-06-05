@@ -15,6 +15,7 @@ import { kv } from '@vercel/kv';
 import { isNewCustomer } from './referral-validate';
 import { generateOrderId } from '../../lib/orders';
 import { supabase } from '../../lib/supabase';
+import { sendPush } from '../../lib/push';
 
 const formatUtm = (utm = {}) => {
   if (!Object.keys(utm).length) return 'Direct / Unknown';
@@ -202,6 +203,7 @@ export default async function handler(req, res) {
 
   // ── WhatsApp — instant order confirmation ────────────────────────────────────
   await waOrderConfirmed({ mobile: mobile.trim(), name, pack, orderId, price: safePrice }).catch(() => {});
+  sendPush({ title: `🛒 New COD order — ${name}`, body: `${pack} · ₹${safePrice} · ${mobile.trim()}` }).catch(() => {});
 
   // ── Referral tracking ────────────────────────────────────────────────────
   // Store this order's mobile as the referral owner so future self-referral checks work
