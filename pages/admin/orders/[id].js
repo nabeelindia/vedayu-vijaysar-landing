@@ -27,6 +27,8 @@ export default function OrderDetail() {
   const [waText,    setWaText]    = useState('');
   const [waSending, setWaSending] = useState(false);
   const [waMsg,     setWaMsg]     = useState('');
+  const [editingSchedule,  setEditingSchedule]  = useState(false);
+  const [scheduleInput,    setScheduleInput]    = useState('');
 
   useEffect(() => {
     if (!id) return;
@@ -46,6 +48,11 @@ export default function OrderDetail() {
     const d = await res.json();
     if (d.order) setData(prev => ({ ...prev, order: d.order }));
     setSaving(false);
+  };
+
+  const saveScheduledDate = async () => {
+    await patch({ scheduled_ship_date: scheduleInput || null });
+    setEditingSchedule(false);
   };
 
   const confirmOrder = () => patch({
@@ -124,6 +131,7 @@ export default function OrderDetail() {
             <h2 style={{ margin:0, fontSize:'.85rem', fontWeight:700, textTransform:'uppercase',
               letterSpacing:'.7px', color:'#888' }}>Order Details</h2>
             <StatusBadge status={order.status} small />
+            {order.scheduled_ship_date && <StatusBadge status="scheduled" small />}
           </div>
           <table style={{ width:'100%', borderCollapse:'collapse' }}>
             <tbody>
@@ -135,6 +143,41 @@ export default function OrderDetail() {
               <Row label="Amount"     value={fmt(order.price)} />
               <Row label="Payment"    value={order.method === 'cod' ? 'Cash on Delivery' : 'Prepaid (UPI/Card)'} />
               <Row label="Placed at"  value={fmtD(order.created_at)} />
+              <tr style={{ borderBottom:'1px solid #f0ede8' }}>
+                <td style={{ padding:'9px 0', fontWeight:600, color:'#555', width:'40%', fontSize:'.85rem' }}>🗓 Scheduled Ship Date</td>
+                <td style={{ padding:'9px 0', fontSize:'.85rem', color:'#1a1a1a' }}>
+                  {editingSchedule ? (
+                    <span style={{ display:'flex', gap:6, alignItems:'center' }}>
+                      <input
+                        type="date"
+                        value={scheduleInput}
+                        onChange={e => setScheduleInput(e.target.value)}
+                        style={{ padding:'4px 8px', borderRadius:6, border:'1.5px solid #4A7C59', fontSize:'.82rem' }}
+                      />
+                      <button onClick={saveScheduledDate} disabled={saving}
+                        style={{ padding:'4px 10px', background:'#4A7C59', color:'#fff', border:'none', borderRadius:6, fontSize:'.78rem', fontWeight:700, cursor:'pointer' }}>
+                        {saving ? '…' : 'Save'}
+                      </button>
+                      <button onClick={() => setEditingSchedule(false)}
+                        style={{ padding:'4px 8px', background:'none', border:'none', color:'#888', fontSize:'.78rem', cursor:'pointer' }}>
+                        Cancel
+                      </button>
+                    </span>
+                  ) : (
+                    <span style={{ display:'flex', gap:8, alignItems:'center' }}>
+                      <span>{order.scheduled_ship_date
+                        ? new Date(order.scheduled_ship_date + 'T00:00:00+05:30').toLocaleDateString('en-IN',
+                            { weekday:'short', day:'numeric', month:'short', year:'numeric', timeZone:'Asia/Kolkata' })
+                        : '—'}</span>
+                      <button
+                        onClick={() => { setScheduleInput(order.scheduled_ship_date || ''); setEditingSchedule(true); }}
+                        style={{ background:'none', border:'none', cursor:'pointer', fontSize:'.8rem', color:'#4A7C59', padding:0 }}
+                        title="Edit scheduled date"
+                      >✏️</button>
+                    </span>
+                  )}
+                </td>
+              </tr>
               {order.awb         && <Row label="Tracking No." value={order.awb} />}
               {order.courier     && <Row label="Courier"      value={order.courier} />}
               {order.sent_at     && <Row label="Order sent"   value={fmtD(order.sent_at)} />}
