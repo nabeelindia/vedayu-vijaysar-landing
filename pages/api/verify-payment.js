@@ -13,7 +13,6 @@ import { sendCapiPurchase } from '../../lib/meta-capi';
 import { enqueueFollowup } from '../../lib/followup-queue';
 import { waOrderConfirmed } from '../../lib/whatsapp';
 import { saveCustomer } from '../../lib/customer-cache';
-import { createOrder, storeAwbMapping } from '../../lib/velocity';
 import { generateOrderId } from '../../lib/orders';
 import { supabase } from '../../lib/supabase';
 
@@ -207,29 +206,6 @@ export default async function handler(req, res) {
 
   // ── WhatsApp — instant order confirmation ────────────────────────────────────
   await waOrderConfirmed({ mobile, name, pack, orderId, price }).catch(() => {});
-
-  // ── 6. Velocity Shipping — push order to dashboard for auto-dispatch ─────────
-  // Must be awaited before res.json() — Vercel kills the function once the response
-  // is sent, so fire-and-forget promises are cut off and orders never reach Velocity.
-  if (process.env.VELOCITY_USERNAME && process.env.VELOCITY_PASSWORD && process.env.VELOCITY_WAREHOUSE_ID) {
-    try {
-      const result = await createOrder({
-        orderId, name, mobile: mobile?.trim(), address, city, state, pincode,
-        email: email?.trim() || undefined,
-        pack, qty, price, is_cod: false,
-      });
-      console.log(`Velocity order created: ${orderId}`, result);
-      if (result?.awb) {
-        await storeAwbMapping({
-          orderId, awb: result.awb, shipmentId: result.shipmentId,
-          mobile: mobile?.trim(), email: email?.trim() || undefined,
-          courierName: result.courierName, name,
-        }).catch(() => {});
-      }
-    } catch (err) {
-      console.error('Velocity order push failed (order still placed):', err.message);
-    }
-  }
 
   // ── Referral tracking ────────────────────────────────────────────────────
   // Store this order's mobile as the referral owner so future self-referral checks work
