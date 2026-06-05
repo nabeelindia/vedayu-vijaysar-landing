@@ -3,6 +3,9 @@ import Image from 'next/image';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import SiteFooter from '../components/SiteFooter';
+import { DayPicker } from 'react-day-picker';
+import 'react-day-picker/dist/style.css';
+import { isBlockedDay, getHolidayDates } from '../lib/holidays';
 
 /* ─── Meta Pixel helper ──────────────────────────────────── */
 const fbq = (event, params = {}) => {
@@ -182,6 +185,8 @@ export default function Home() {
   const [exitIntent, setExitIntent] = useState(false);
   const [deliveryEst, setDeliveryEst] = useState('');
   const [shipsBy,     setShipsBy]     = useState(null);
+  const [scheduleOpen,    setScheduleOpen]    = useState(false);
+  const [scheduledDate,   setScheduledDate]   = useState(null); // Date object | null
   const [touched,     setTouched]     = useState({});
   const [galleryIdx,  setGalleryIdx]  = useState(0);
   const [referralDiscount, setReferralDiscount] = useState(0);
@@ -455,6 +460,26 @@ export default function Home() {
     setPincodeLoading(false);
   }, []);
 
+  const handleScheduledDate = async (date) => {
+    if (!date) {
+      setScheduledDate(null);
+      // Revert to default ETA
+      if (form.pincode?.length === 6) {
+        const est = await fetch(`/api/delivery-estimate?pincode=${form.pincode}&cod=1`).then(r => r.json());
+        if (est?.serviceable && est?.etaFormatted) setDeliveryEst(`by ${est.etaFormatted}`);
+      }
+      return;
+    }
+    setScheduledDate(date);
+    const fromDate = date.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+    const est = await fetch(`/api/delivery-estimate?pincode=${form.pincode}&cod=1&fromDate=${fromDate}`).then(r => r.json());
+    if (est?.serviceable && est?.etaFormatted) setDeliveryEst(`by ${est.etaFormatted}`);
+  };
+
+  const scheduledDateFormatted = scheduledDate
+    ? scheduledDate.toLocaleDateString('en-IN', { weekday:'short', day:'numeric', month:'short', timeZone:'Asia/Kolkata' })
+    : null;
+
   /* validation */
   const validate = () => {
     if (!form.name.trim())                                        return 'Please enter your full name.';
@@ -483,6 +508,9 @@ export default function Home() {
       payment,
       utm,
       referrerId: referrerId || undefined,
+      scheduledShipDate: scheduledDate
+        ? scheduledDate.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })
+        : null,
       ...form,
     };
 
@@ -551,6 +579,9 @@ export default function Home() {
                   qty:        selectedPack.qty,
                   utm,
                   referrerId: referrerId || undefined,
+                  scheduledShipDate: scheduledDate
+                    ? scheduledDate.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })
+                    : null,
                   ...form,
                 }),
               });
@@ -1732,10 +1763,10 @@ export default function Home() {
               </div>
 
               {(deliveryEst || shipsBy) && (
-                <div style={{ background:'#F0F9F3', border:'1px solid #4A7C59', borderRadius:8, padding:'10px 14px', marginBottom:12, fontSize:'.88rem', color:'#2d6b40' }}>
+                <div style={{ background:'#F0F9F3', border:'1px solid #4A7C59', borderRadius:8, padding:'10px 14px', marginBottom:6, fontSize:'.88rem', color:'#2d6b40' }}>
                   {shipsBy && (
                     <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom: deliveryEst ? 5 : 0 }}>
-                      📦 <span>Ships: <strong>{shipsBy.label}</strong>{shipsBy.note && <span style={{ fontWeight:400, color:'#4A7C59', marginLeft:6 }}>· {shipsBy.note}</span>}</span>
+                      📦 <span>Ships: <strong>{scheduledDate ? scheduledDateFormatted + ' (scheduled)' : shipsBy.label}</strong>{!scheduledDate && shipsBy.note && <span style={{ fontWeight:400, color:'#4A7C59', marginLeft:6 }}>· {shipsBy.note}</span>}</span>
                     </div>
                   )}
                   {deliveryEst && (
@@ -1745,6 +1776,53 @@ export default function Home() {
                   )}
                 </div>
               )}
+
+              {/* Schedule for later toggle */}
+              {(deliveryEst || shipsBy) && !scheduleOpen && (
+                <button
+                  type="button"
+                  onClick={() => setScheduleOpen(true)}
+                  style={{ background:'none', border:'none', color:'#4A7C59', fontSize:'.82rem', fontWeight:600, cursor:'pointer', padding:'2px 0', marginBottom:10, textDecoration:'underline' }}
+                >
+                  🗓 Schedule delivery for a later date →
+                </button>
+              )}
+
+              {scheduleOpen && (() => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
+                const maxDate  = new Date(today); maxDate.setDate(maxDate.getDate() + 14);
+                const holidayDates = getHolidayDates();
+                return (
+                  <div style={{ background:'#fff', border:'1px solid #4A7C59', borderRadius:8, padding:'12px 14px', marginBottom:10 }}>
+                    <div style={{ fontSize:'.82rem', fontWeight:600, color:'#2d6b40', marginBottom:8 }}>Choose a ship date:</div>
+                    <DayPicker
+                      mode="single"
+                      selected={scheduledDate}
+                      onSelect={handleScheduledDate}
+                      fromDate={tomorrow}
+                      toDate={maxDate}
+                      disabled={[
+                        { dayOfWeek: [0] },
+                        ...holidayDates,
+                      ]}
+                      styles={{
+                        root: { fontSize: '.82rem' },
+                        caption: { color: '#2d6b40', fontWeight: 700 },
+                        day_selected: { backgroundColor: '#4A7C59', color: '#fff' },
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => { setScheduleOpen(false); handleScheduledDate(null); }}
+                      style={{ background:'none', border:'none', color:'#888', fontSize:'.78rem', cursor:'pointer', textDecoration:'underline', marginTop:4 }}
+                    >
+                      × Ship as soon as possible
+                    </button>
+                  </div>
+                );
+              })()}
 
               {/* Payment */}
               <label className="field-label" style={{ marginBottom: 8 }}>Payment Method:</label>
