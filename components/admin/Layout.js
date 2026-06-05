@@ -51,7 +51,7 @@ export default function AdminLayout({ title, children }) {
           </div>
         </aside>
 
-        <main style={{ flex:1, padding:'20px 20px 80px', maxWidth:'100%', overflowX:'hidden' }}>
+        <main className="admin-main" style={{ flex:1, padding:'20px 20px 80px', maxWidth:'100%', overflowX:'hidden' }}>
           {children}
         </main>
       </div>
@@ -75,6 +75,33 @@ export default function AdminLayout({ title, children }) {
         @media (max-width: 768px) {
           .admin-sidebar { display: none !important; }
           .admin-bottom-nav { display: flex !important; }
+          .admin-main { padding: 14px 12px 88px !important; }
+        }
+
+        /* Stat card grid — 2 columns on mobile */
+        .admin-stat-grid { display: flex; gap: 12px; flex-wrap: wrap; }
+        @media (max-width: 600px) {
+          .admin-stat-grid > * { flex: 0 0 calc(50% - 6px) !important; min-width: 0 !important; }
+        }
+
+        /* Filter chips — horizontal scroll on small screens */
+        .admin-filter-bar {
+          display: flex; gap: 6px; overflow-x: auto;
+          padding-bottom: 4px; -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+        }
+        .admin-filter-bar::-webkit-scrollbar { display: none; }
+        .admin-filter-bar button { flex-shrink: 0; }
+
+        /* Two-column card layouts stack on mobile */
+        .admin-card-row { display: flex; gap: 16px; flex-wrap: wrap; }
+        @media (max-width: 600px) {
+          .admin-card-row > * { flex: 1 1 100% !important; }
+        }
+
+        /* Touch-friendly tap targets */
+        @media (max-width: 768px) {
+          .admin-bottom-nav a { min-height: 52px; justify-content: center; }
         }
       `}</style>
     </>

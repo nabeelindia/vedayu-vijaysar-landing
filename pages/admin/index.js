@@ -35,7 +35,7 @@ export default function AdminDashboard() {
       <PageHeader title="Dashboard" />
       {loading ? <p style={{ color:'#888', fontSize:'.9rem' }}>Loading…</p> : (
         <>
-          <div style={{ display:'flex', gap:12, flexWrap:'wrap', marginBottom:24 }}>
+          <div className="admin-stat-grid" style={{ marginBottom:24 }}>
             <StatCard label="Today's Revenue" value={fmt(todayRevenue)} color="#5C3D1E" />
             <StatCard label="Total Orders (30d)" value={analytics?.totalOrders || 0} />
             <StatCard label="Pending Verifications"

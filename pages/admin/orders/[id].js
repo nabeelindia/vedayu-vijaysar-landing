@@ -54,7 +54,7 @@ export default function OrderDetail() {
       <PageHeader title={order.order_id}
         action={<a href="/admin/orders" style={{ fontSize:'.8rem', color:'#5C3D1E', fontWeight:600 }}>← Orders</a>} />
 
-      <div style={{ display:'flex', gap:16, flexWrap:'wrap' }}>
+      <div className="admin-card-row" style={{ gap:16 }}>
         <div style={{ flex:'1 1 280px', background:'#fff', borderRadius:12,
           padding:'18px 20px', boxShadow:'0 1px 3px rgba(0,0,0,.07)' }}>
           <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:14 }}>

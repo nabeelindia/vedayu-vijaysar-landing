@@ -28,7 +28,7 @@ export default function AdminAnalytics() {
     <AdminLayout title="Analytics">
       <PageHeader title="Analytics (last 30 days)" />
 
-      <div style={{ display:'flex', gap:12, flexWrap:'wrap', marginBottom:24 }}>
+      <div className="admin-stat-grid" style={{ marginBottom:24 }}>
         <StatCard label="Total Revenue"  value={fmt(totalRevenue)} color="#5C3D1E" />
         <StatCard label="Total Orders"   value={totalOrders} />
         <StatCard label="COD Orders"     value={codCount}
@@ -61,7 +61,7 @@ export default function AdminAnalytics() {
           textTransform:'uppercase', letterSpacing:'.8px', color:'#888' }}>
           WhatsApp Confirmation — COD Orders
         </h3>
-        <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
+        <div className="admin-stat-grid">
           <StatCard label="Customer confirmed"    value={verification.confirmed}
             sub={pct(verification.confirmed, codCount)} color="#2E7D32" />
           <StatCard label="Auto-confirmed"        value={verification.autoConfirmed}

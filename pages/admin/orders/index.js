@@ -42,7 +42,7 @@ export default function OrdersList() {
         value={search} onChange={e => setSearch(e.target.value)} onKeyDown={handleSearch}
         style={{ width:'100%', boxSizing:'border-box', padding:'10px 14px', borderRadius:10,
           border:'1.5px solid #e0d8cc', fontSize:'.88rem', marginBottom:12, outline:'none' }} />
-      <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:16 }}>
+      <div className="admin-filter-bar" style={{ marginBottom:16 }}>
         {FILTERS.map(f => (
           <button key={f} onClick={() => handleFilter(f)}
             style={{ padding:'5px 12px', borderRadius:20, border:'none', cursor:'pointer',
