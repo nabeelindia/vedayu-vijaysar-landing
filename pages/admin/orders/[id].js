@@ -24,6 +24,9 @@ export default function OrderDetail() {
   const [rtoReason, setRtoReason] = useState('');
   const [showRTO,   setShowRTO]   = useState(false);
   const [saving2,   setSaving2]   = useState(false);
+  const [waText,    setWaText]    = useState('');
+  const [waSending, setWaSending] = useState(false);
+  const [waMsg,     setWaMsg]     = useState('');
 
   useEffect(() => {
     if (!id) return;
@@ -78,6 +81,18 @@ export default function OrderDetail() {
     const d = await res.json();
     if (d.refund) { setRefunds(r => [d.refund, ...r]); setRefAmount(''); setRefNote(''); }
     setSaving2(false);
+  };
+
+  const sendWA = async (type) => {
+    setWaSending(true); setWaMsg('');
+    const res = await fetch('/api/admin/orders/wa-send', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId: order.order_id, type, customText: waText }),
+    });
+    const d = await res.json();
+    setWaMsg(d.ok ? 'Sent ✓' : `Error: ${d.error}`);
+    if (d.ok && type === 'custom') setWaText('');
+    setWaSending(false);
   };
 
   const markSent = async () => {
@@ -281,6 +296,36 @@ export default function OrderDetail() {
               </div>
             ))
         }
+      {/* WhatsApp */}
+      <div style={{ background:'#fff', borderRadius:12, padding:'18px 20px',
+        boxShadow:'0 1px 3px rgba(0,0,0,.07)', marginTop:16 }}>
+        <h2 style={{ margin:'0 0 12px', fontSize:'.85rem', fontWeight:700,
+          textTransform:'uppercase', letterSpacing:'.7px', color:'#888' }}>Send WhatsApp</h2>
+        <div style={{ display:'flex', gap:8, marginBottom:10, flexWrap:'wrap' }}>
+          <button onClick={() => sendWA('dispatch')} disabled={waSending}
+            style={{ padding:'8px 14px', background:'#25D366', color:'#fff',
+              border:'none', borderRadius:8, fontSize:'.82rem', fontWeight:700, cursor:'pointer' }}>
+            {waSending ? '…' : '📦 Dispatch update'}
+          </button>
+        </div>
+        <div style={{ display:'flex', gap:8 }}>
+          <textarea value={waText} onChange={e => setWaText(e.target.value)}
+            placeholder="Custom message…" rows={3}
+            style={{ flex:1, padding:'8px 12px', borderRadius:8,
+              border:'1.5px solid #d0c8bc', fontSize:'.82rem', resize:'vertical' }} />
+          <button onClick={() => sendWA('custom')} disabled={waSending || !waText.trim()}
+            style={{ padding:'8px 14px', background:'#5C3D1E', color:'#fff',
+              border:'none', borderRadius:8, fontSize:'.82rem', fontWeight:700,
+              cursor:'pointer', alignSelf:'flex-end' }}>
+            {waSending ? '…' : 'Send'}
+          </button>
+        </div>
+        {waMsg && (
+          <p style={{ marginTop:8, fontSize:'.82rem',
+            color: waMsg.startsWith('Error') ? '#C62828' : '#4A7C59' }}>
+            {waMsg}
+          </p>
+        )}
       </div>
     </AdminLayout>
   );
