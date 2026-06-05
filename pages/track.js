@@ -7,8 +7,8 @@ import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import { serverSideTranslations } from 'next-i18next/pages/serverSideTranslations';
-import { useTranslation } from 'react-i18next';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { useTranslation } from 'next-i18next';
 
 const STEPS = ['pending', 'picked', 'transit', 'out', 'delivered'];
 

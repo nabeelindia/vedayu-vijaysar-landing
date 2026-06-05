@@ -1,7 +1,7 @@
 import Script from 'next/script';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
-import { appWithTranslation } from 'next-i18next/pages';
+import { appWithTranslation } from 'next-i18next';
 import '../styles/globals.css';
 
 const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_ID;
