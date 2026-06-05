@@ -197,6 +197,8 @@ export default function Home() {
   const pincodeAbort      = useRef(null);
   const swipeX            = useRef(null);
   const schedulePopupRef  = useRef(null);
+  const scheduleBtnRef    = useRef(null);
+  const [schedulePopupPos, setSchedulePopupPos] = useState({ top: 0, left: 0 });
 
   /* sticky CTA on scroll */
   useEffect(() => {
@@ -347,7 +349,10 @@ export default function Home() {
   useEffect(() => {
     if (!scheduleOpen) return;
     const handleClickOutside = (e) => {
-      if (schedulePopupRef.current && !schedulePopupRef.current.contains(e.target)) {
+      if (
+        schedulePopupRef.current && !schedulePopupRef.current.contains(e.target) &&
+        scheduleBtnRef.current && !scheduleBtnRef.current.contains(e.target)
+      ) {
         setScheduleOpen(false);
       }
     };
@@ -1797,10 +1802,17 @@ export default function Home() {
                 const maxDate  = new Date(today); maxDate.setDate(maxDate.getDate() + 14);
                 const holidayDates = getHolidayDates();
                 return (
-                  <div style={{ position:'relative', marginBottom:10 }}>
+                  <div style={{ marginBottom:10 }}>
                     <button
                       type="button"
-                      onClick={() => setScheduleOpen(o => !o)}
+                      ref={scheduleBtnRef}
+                      onClick={() => {
+                        if (scheduleBtnRef.current) {
+                          const r = scheduleBtnRef.current.getBoundingClientRect();
+                          setSchedulePopupPos({ top: r.bottom + window.scrollY + 6, left: r.left + window.scrollX });
+                        }
+                        setScheduleOpen(o => !o);
+                      }}
                       style={{
                         background: scheduledDate ? '#F0F9F3' : 'none',
                         border: scheduledDate ? '1px solid #4A7C59' : 'none',
@@ -1829,17 +1841,17 @@ export default function Home() {
                       <div
                         ref={schedulePopupRef}
                         style={{
-                          position:'absolute',
-                          zIndex:1000,
-                          top:'100%',
-                          left:0,
+                          position:'fixed',
+                          zIndex:9999,
+                          top: schedulePopupPos.top,
+                          left: schedulePopupPos.left,
                           background:'#fff',
                           border:'1px solid #4A7C59',
                           borderRadius:10,
-                          boxShadow:'0 4px 20px rgba(0,0,0,.13)',
+                          boxShadow:'0 4px 24px rgba(0,0,0,.18)',
                           padding:'12px 14px 10px',
-                          marginTop:4,
                           minWidth:280,
+                          maxWidth: 'calc(100vw - 32px)',
                         }}
                       >
                         <div style={{ fontSize:'.78rem', fontWeight:600, color:'#2d6b40', marginBottom:6 }}>Choose a ship date:</div>
