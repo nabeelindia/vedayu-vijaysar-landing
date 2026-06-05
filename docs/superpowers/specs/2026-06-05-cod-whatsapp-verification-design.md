@@ -46,7 +46,11 @@ When a COD order is placed, send the customer a WhatsApp message showing their d
 - Language: en
 - Body variables: `{{1}}` name, `{{2}}` orderId
 - Body text:
-  > Hi {{1}}, your order {{2}} has been cancelled as requested. Want to reorder and get ₹50 off? Pay via UPI and we'll apply the discount automatically. Tap below to reorder.
+  > Namaste {{1}} ji 🙏 Koi baat nahi! Aapka order {{2}} cancel ho gaya.
+  >
+  > Agar aap UPI ya card se pay karein toh hum aapko ₹50 ki special discount denge — aur order bhi jaldi bhejenge! 🎁
+  >
+  > Offer sirf aaj ke liye hai.
 - Button (URL): "Reorder with ₹50 Off" → `https://vedayulife.com/?cod_cancel_upsell=1`
 
 ---

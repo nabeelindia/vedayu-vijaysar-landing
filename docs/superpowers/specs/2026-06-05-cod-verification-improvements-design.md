@@ -47,8 +47,17 @@ This string becomes the 6th body variable `{{6}}` in the `vedayu_cod_verify` tem
 **Previous body (from base spec):**
 > Hi {{1}}, we received your COD order {{2}} for {{3}} ({{4}}). Your delivery address on file: {{5}}. Please confirm this is correct — once confirmed, your order will be shipped within 24 business hours.
 
-**New body:**
-> Namaste {{1}} ji 🙏 We have received your order {{2}} for {{3}} ({{4}}). We will send it to this address: {{5}}. Is this address correct? If yes, please press *Yes, Send My Order*. If not correct, press *Cancel Order* and place a new order with the right address. {{6}}.
+**Final body (Option A — validation-first, Hinglish):**
+> Namaste {{1}} ji 🙏 Bahut achha decision liya aapne!
+>
+> Aapka Vedayu Vijaysar Glass ({{3}}, {{4}}) tayyar hai — sirf address confirm karna hai.
+>
+> Hum yahan bhejenge:
+> 📍 {{5}}
+>
+> Sahi hai? Bas *Yes, Send My Order* dabaiye — {{6}}! 🌿
+
+**Why:** Opens by validating the purchase decision (counters buyer's remorse). Address is presented as "where we'll deliver" not "is this correct?" (fact vs interrogation). `{{6}}` = "aaj hi bhej denge" or "kal subah bhej denge" based on IST time.
 
 Variables: `{{1}}` name · `{{2}}` orderId · `{{3}}` pack · `{{4}}` price · `{{5}}` address · `{{6}}` sending time line
 
@@ -89,7 +98,13 @@ Also insert a row in `cod_verifications` (Supabase) immediately with `status = '
 2. For each: send WhatsApp nudge, update `nudged_at = now()` in DB.
 
 **Nudge message** — use a new template `vedayu_cod_nudge`:
-> Namaste {{1}} ji 🙏 Your Vedayu order {{2}} is ready to be sent to you! We are waiting for your reply. Please press *Yes, Send My Order* so we can send it — {{3}}. If you do not want it, press *Cancel Order*.
+> Namaste {{1}} ji 🙏 Aapka Vijaysar Glass ready rakha hai — sirf aapka intezaar ho raha hai!
+>
+> Hazaaron log isko roz subah paani peekar sugar control kar rahe hain 🌿
+>
+> Order {{2}} — {{3}}. Bas ek baar *Yes* dabaiye!
+
+**Why:** Reframes waiting as anticipation ("only waiting for you"). Social proof line re-sells the health benefit at the exact moment of doubt (6h after order = peak second-guessing).
 
 Variables: `{{1}}` name · `{{2}}` orderId · `{{3}}` shipping line (dynamic, same helper)
 
