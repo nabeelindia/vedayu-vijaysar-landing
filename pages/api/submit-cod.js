@@ -220,7 +220,7 @@ export default async function handler(req, res) {
   await saveCustomer({ mobile, email, name, address, city, state, pincode }).catch(() => {});
 
   // ── WhatsApp — instant order confirmation ────────────────────────────────────
-  await waOrderConfirmed({ mobile: mobile.trim(), name, pack, orderId, price: safePrice, scheduledShipDate: safeScheduledDate }).catch(() => {});
+  await waOrderConfirmed({ mobile: mobile.trim(), name, pack, orderId, price: safePrice, scheduledShipDate: safeScheduledDate, method: 'cod' }).catch(() => {});
   sendPush({ title: `🛒 New COD order — ${name}`, body: `${pack} · ₹${safePrice} · ${mobile.trim()}` }).catch(() => {});
 
   // ── Referral tracking ────────────────────────────────────────────────────

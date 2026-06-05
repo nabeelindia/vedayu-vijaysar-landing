@@ -226,7 +226,7 @@ export default async function handler(req, res) {
   await saveCustomer({ mobile, email, name, address, city, state, pincode }).catch(() => {});
 
   // ── WhatsApp — instant order confirmation ────────────────────────────────────
-  await waOrderConfirmed({ mobile, name, pack, orderId, price, scheduledShipDate: safeScheduledDate }).catch(() => {});
+  await waOrderConfirmed({ mobile, name, pack, orderId, price, scheduledShipDate: safeScheduledDate, method: 'prepaid' }).catch(() => {});
   sendPush({ title: `💳 New prepaid order — ${name}`, body: `${pack} · ₹${price} · ${mobile?.trim()}` }).catch(() => {});
 
   // ── Referral tracking ────────────────────────────────────────────────────
