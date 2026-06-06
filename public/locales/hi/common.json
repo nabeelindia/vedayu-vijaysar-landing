@@ -461,5 +461,8 @@
   "order_confirmed.dispatch_scheduled": "{{date}} को शिपमेंट",
   "order_confirmed.banner_subtitle": "आपका ऑर्डर कन्फर्म हो गया है और तैयार किया जा रहा है।",
   "order_confirmed.order_summary_header": "ऑर्डर सारांश",
-  "order_confirmed.miswak_claim_btn": "क्लेम करें ↓"
+  "order_confirmed.miswak_claim_btn": "क्लेम करें ↓",
+  "order_confirmed.pack_of_1": "1 का पैक",
+  "order_confirmed.pack_of_2": "2 का पैक",
+  "order_confirmed.pack_of_5": "5 का पैक"
 }

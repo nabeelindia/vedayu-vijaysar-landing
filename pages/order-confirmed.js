@@ -222,6 +222,8 @@ export default function OrderConfirmed() {
 
   const isCOD    = method === 'cod';
   const priceStr = price ? '₹' + Number(price).toLocaleString('en-IN') : '';
+  const PACK_KEY_MAP = { 'Pack of 1': 'order_confirmed.pack_of_1', 'Pack of 2': 'order_confirmed.pack_of_2', 'Pack of 5': 'order_confirmed.pack_of_5' };
+  const packDisplay = pack ? t(PACK_KEY_MAP[pack] || 'order_confirmed.pack_of_1') : pack;
   const dispatchValue = scheduledShipDate
     ? t('order_confirmed.dispatch_scheduled', { date: new Date(scheduledShipDate + 'T00:00:00+05:30').toLocaleDateString(router.locale === 'hi' ? 'hi-IN' : router.locale === 'ta' ? 'ta-IN' : router.locale === 'te' ? 'te-IN' : 'en-IN', { weekday: 'short', day: 'numeric', month: 'short' }) })
     : t('order_confirmed.dispatch_value');
@@ -285,7 +287,7 @@ export default function OrderConfirmed() {
             <div className="oc-card-body">
               {[
                 [t('order_confirmed.product_label'), t('order_confirmed.product_name'), false],
-                ...(pack     ? [[t('order_confirmed.pack_label'),   pack,    false]] : []),
+                ...(pack     ? [[t('order_confirmed.pack_label'),   packDisplay, false]] : []),
                 ...(priceStr ? [[t('order_confirmed.amount_label'), isCOD ? t('order_confirmed.amount_cod', { price: priceStr }) : t('order_confirmed.amount_prepaid', { price: priceStr }), false]] : []),
                 [t('order_confirmed.delivery_label'), t('order_confirmed.delivery_value'), false],
                 [t('order_confirmed.dispatch_label'), dispatchValue, true],

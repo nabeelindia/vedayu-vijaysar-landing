@@ -461,5 +461,8 @@
   "order_confirmed.dispatch_scheduled": "{{date}} న పంపబడుతుంది",
   "order_confirmed.banner_subtitle": "మీ ఆర్డర్ నిర్ధారించబడింది మరియు సిద్ధం చేయబడుతోంది.",
   "order_confirmed.order_summary_header": "ఆర్డర్ సారాంశం",
-  "order_confirmed.miswak_claim_btn": "క్లెయిమ్ చేయండి ↓"
+  "order_confirmed.miswak_claim_btn": "క్లెయిమ్ చేయండి ↓",
+  "order_confirmed.pack_of_1": "1 ప్యాక్",
+  "order_confirmed.pack_of_2": "2 ప్యాక్",
+  "order_confirmed.pack_of_5": "5 ప్యాక్"
 }

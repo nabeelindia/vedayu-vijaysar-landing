@@ -461,5 +461,8 @@
   "order_confirmed.dispatch_scheduled": "{{date}} அன்று அனுப்பப்படும்",
   "order_confirmed.banner_subtitle": "உங்கள் ஆர்டர் உறுதிப்படுத்தப்பட்டு தயாரிக்கப்படுகிறது.",
   "order_confirmed.order_summary_header": "ஆர்டர் சுருக்கம்",
-  "order_confirmed.miswak_claim_btn": "கோர ↓"
+  "order_confirmed.miswak_claim_btn": "கோர ↓",
+  "order_confirmed.pack_of_1": "1 பேக்",
+  "order_confirmed.pack_of_2": "2 பேக்",
+  "order_confirmed.pack_of_5": "5 பேக்"
 }

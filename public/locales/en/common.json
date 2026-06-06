@@ -461,5 +461,8 @@
   "order_confirmed.dispatch_scheduled": "Ships on {{date}}",
   "order_confirmed.banner_subtitle": "Your order is confirmed and being prepared.",
   "order_confirmed.order_summary_header": "Order Summary",
-  "order_confirmed.miswak_claim_btn": "Claim ↓"
+  "order_confirmed.miswak_claim_btn": "Claim ↓",
+  "order_confirmed.pack_of_1": "Pack of 1",
+  "order_confirmed.pack_of_2": "Pack of 2",
+  "order_confirmed.pack_of_5": "Pack of 5"
 }
