@@ -1248,3 +1248,33 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
 :lang(hi) { font-family: 'Noto Sans Devanagari', system-ui, sans-serif; }
 :lang(ta) { font-family: 'Noto Sans Tamil', system-ui, sans-serif; }
 :lang(te) { font-family: 'Noto Sans Telugu', system-ui, sans-serif; }
+
+/* ---- Mobile: allow long translated text to wrap in buttons ---- */
+@media (max-width: 768px) {
+  .btn {
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    line-height: 1.35;
+  }
+  .sticky-cta a,
+  .sticky-cta button {
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    line-height: 1.35;
+    flex-shrink: 1;
+  }
+  .exit-pack-row {
+    flex-wrap: wrap;
+  }
+  /* Prevent any element from blowing past viewport */
+  * {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  img, video, iframe {
+    max-width: 100%;
+    height: auto;
+  }
+}
