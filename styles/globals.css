@@ -128,7 +128,7 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
    MARQUEE
    ==================================================== */
 .marquee       { background: var(--vd-green); overflow: hidden; padding: 9px 0; }
-.marquee-track { display: flex; width: max-content; animation: marqueeScroll 30s linear infinite; }
+.marquee-track { display: flex; width: max-content; animation: marqueeScroll 20s linear infinite; }
 .marquee-item  { padding: 0 40px; font-size: .8rem; font-weight: 600; color: #fff; white-space: nowrap; }
 .marquee-item::before { content: '🌿  '; }
 
@@ -684,6 +684,7 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
    RESPONSIVE
    ==================================================== */
 @media (max-width: 768px) {
+  .marquee-track { animation-duration: 14s; }
   .section { padding: 48px 0; }
   .hero { padding: 40px 0 36px; }
   .hero-grid { grid-template-columns: 1fr; gap: 32px; }
@@ -1273,11 +1274,6 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
   }
   .exit-pack-row {
     flex-wrap: wrap;
-  }
-  /* Prevent any element from blowing past viewport */
-  * {
-    max-width: 100%;
-    box-sizing: border-box;
   }
   img, video, iframe {
     max-width: 100%;
