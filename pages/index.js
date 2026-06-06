@@ -187,6 +187,7 @@ export default function Home() {
   const [pincodeLoading, setPincodeLoading] = useState(false);
   const [utm,            setUtm]            = useState({});
   const [showSticky, setShowSticky] = useState(false);
+  const [scrolled,   setScrolled]   = useState(false);
   const [exitIntent, setExitIntent] = useState(false);
   const [deliveryEst, setDeliveryEst] = useState('');
   const [shipsBy,     setShipsBy]     = useState(null);
@@ -205,10 +206,11 @@ export default function Home() {
   const scheduleBtnRef    = useRef(null);
   const [schedulePopupPos, setSchedulePopupPos] = useState({ top: 0, left: 0 });
 
-  /* sticky CTA on scroll */
+  /* sticky CTA + header scroll state */
   useEffect(() => {
     const onScroll = () => {
       setShowSticky(window.scrollY > 500);
+      setScrolled(window.scrollY > 80);
       setScheduleOpen(false);
     };
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -896,7 +898,7 @@ export default function Home() {
         };
         return (
           <>
-            <nav style={{ position:'sticky', top:0, zIndex:200, background:'#fff', boxShadow:'0 2px 8px rgba(92,61,30,.07)' }}>
+            <nav style={{ position:'sticky', top:0, zIndex:200, background:'#fff', boxShadow: scrolled ? '0 4px 20px rgba(92,61,30,.18)' : '0 2px 8px rgba(92,61,30,.07)', transition:'box-shadow .25s' }}>
               {/* Top micro trust bar — desktop only */}
               <div className="nav-trust-bar">
                 <div style={{ maxWidth:1280, margin:'0 auto', padding:'0 20px', display:'flex', alignItems:'center', justifyContent:'center', gap:24, flexWrap:'nowrap' }}>
@@ -2098,6 +2100,29 @@ export default function Home() {
           </div>
         );
       })()}
+
+      {/* ── GO TO TOP ── */}
+      {scrolled && (
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          aria-label="Back to top"
+          style={{
+            position: 'fixed', bottom: 28, left: '50%', transform: 'translateX(-50%)',
+            zIndex: 190, background: '#5C3D1E', color: '#fff',
+            border: 'none', borderRadius: 24, padding: '9px 20px',
+            display: 'flex', alignItems: 'center', gap: 7,
+            fontSize: '.82rem', fontWeight: 700, cursor: 'pointer',
+            boxShadow: '0 4px 16px rgba(92,61,30,.35)',
+            transition: 'opacity .2s, transform .2s',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="18 15 12 9 6 15"/>
+          </svg>
+          Top
+        </button>
+      )}
 
       {/* ── SITE FOOTER ── */}
       <SiteFooter />
