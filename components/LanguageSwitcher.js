@@ -15,11 +15,15 @@ function switchLocale(router, code) {
   router.push(router.asPath, router.asPath, { locale: code, scroll: false });
 }
 
-// Inline pills — for mobile drawer
+// 2×2 grid — for mobile drawer
 function InlineSwitcher() {
   const router = useRouter();
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: 8,
+    }}>
       {LANGUAGES.map(lang => {
         const active = lang.code === router.locale;
         return (
@@ -30,13 +34,15 @@ function InlineSwitcher() {
               background: active ? '#5C3D1E' : '#f5ede0',
               color: active ? '#fff' : '#5C3D1E',
               border: '1.5px solid ' + (active ? '#5C3D1E' : '#d0c4b0'),
-              borderRadius: 20,
-              padding: '7px 14px',
-              fontSize: 14,
+              borderRadius: 10,
+              padding: '10px 4px',
+              fontSize: 15,
               fontWeight: 700,
               cursor: active ? 'default' : 'pointer',
-              minHeight: 38,
+              minHeight: 44,
               lineHeight: 1.3,
+              textAlign: 'center',
+              fontFamily: 'inherit',
             }}
           >
             {lang.full}
