@@ -656,14 +656,148 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
 /* ====================================================
    CONFIRMATION PAGE
    ==================================================== */
-.confirm-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--vd-cream); padding: 40px 20px; }
-.confirm-card { background: #fff; border-radius: 16px; padding: 48px 40px; text-align: center; max-width: 520px; box-shadow: 0 4px 40px rgba(92,61,30,.12); }
-.confirm-icon { font-size: 4rem; margin-bottom: 20px; }
-.confirm-card h1 { color: var(--vd-dark-brown); margin-bottom: 14px; font-size: 1.8rem; }
-.confirm-card p  { color: var(--vd-text-light); margin-bottom: 28px; }
-.confirm-details { background: var(--vd-off-white); border-radius: 10px; padding: 18px; text-align: left; margin-bottom: 28px; font-size: .9rem; }
-.confirm-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--vd-border); }
-.confirm-row:last-child { border-bottom: none; }
+
+/* Banner — full-width green gradient */
+.oc-banner {
+  background: linear-gradient(135deg, #2d6b40 0%, #4A7C59 100%);
+  color: #fff; text-align: center; padding: 24px 20px 28px;
+}
+.oc-banner h1 { font-size: 1.45rem; font-weight: 800; margin-bottom: 6px; color: #fff; }
+.oc-banner > p { font-size: .9rem; opacity: .88; line-height: 1.5; margin-bottom: 0; }
+.oc-banner-icon { font-size: 2.8rem; margin-bottom: 8px; }
+.oc-order-pill {
+  display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center;
+  background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3);
+  border-radius: 40px; padding: 8px 18px; margin-top: 14px;
+  font-size: .82rem; font-weight: 700;
+}
+.oc-order-pill-label { opacity: .8; }
+.oc-order-pill-id { font-family: monospace; font-size: .95rem; letter-spacing: 1px; }
+.oc-copy-btn {
+  background: rgba(255,255,255,.25); border: none; color: #fff;
+  border-radius: 20px; padding: 4px 12px; font-size: .72rem;
+  font-weight: 600; cursor: pointer;
+}
+
+/* Info strip — white bar below banner */
+.oc-info-strip {
+  background: #fff; border-bottom: 1px solid #e8e0d5;
+  padding: 11px 20px;
+  display: flex; align-items: center; justify-content: center;
+  gap: 20px; flex-wrap: wrap; font-size: .78rem; color: #8a7060;
+}
+.oc-info-strip span { display: flex; align-items: center; gap: 5px; }
+.oc-info-strip strong { color: #3d2b1f; }
+
+/* Grid — single column mobile, two column desktop */
+.oc-grid {
+  max-width: 1100px; margin: 0 auto;
+  padding: 24px 16px 90px;
+  display: grid; grid-template-columns: 1fr; gap: 14px;
+}
+
+/* Card */
+.oc-card {
+  background: #fff; border-radius: 14px; overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06); margin-bottom: 14px;
+}
+.oc-card:last-child { margin-bottom: 0; }
+.oc-card-header {
+  padding: 13px 20px; border-bottom: 1px solid #f0ebe3;
+  font-size: .75rem; font-weight: 800;
+  color: #5C3D1E; text-transform: uppercase; letter-spacing: .6px;
+}
+.oc-card-body { padding: 20px; }
+
+/* Detail rows inside Order Summary card */
+.oc-detail-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 11px 0; border-bottom: 1px solid #f5f0e8;
+  font-size: .88rem; gap: 12px;
+}
+.oc-detail-row:last-child { border-bottom: none; padding-bottom: 0; }
+.oc-detail-row:first-child { padding-top: 0; }
+.oc-detail-label { color: #8a7060; font-weight: 500; white-space: nowrap; }
+.oc-detail-value { color: #3d2b1f; font-weight: 600; text-align: right; }
+.oc-dispatch-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: #e8f5e9; color: #2d6b40;
+  border-radius: 20px; padding: 3px 10px; font-size: .78rem; font-weight: 700;
+}
+
+/* Numbered steps — How to Use */
+.oc-step-list { list-style: none; padding: 0; margin: 0; }
+.oc-step-list li {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 10px 0; border-bottom: 1px solid #f5f0e8;
+  font-size: .88rem; color: #3d2b1f; line-height: 1.4;
+}
+.oc-step-list li:last-child { border-bottom: none; padding-bottom: 0; }
+.oc-step-list li:first-child { padding-top: 0; }
+.oc-step-num {
+  width: 24px; height: 24px; flex-shrink: 0;
+  background: #2d6b40; color: #fff; border-radius: 50%;
+  font-size: .72rem; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Teaser rows — mobile only inline anchors */
+.oc-teaser {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; border-radius: 12px;
+  margin-bottom: 14px; cursor: pointer; user-select: none;
+}
+.oc-teaser-green { background: linear-gradient(90deg,#f0f9f4,#e4f5ea); border: 1.5px solid #4A7C59; }
+.oc-teaser-gold  { background: linear-gradient(90deg,#fffbf0,#fff3d0); border: 1.5px solid #C9A84C; }
+.oc-teaser-icon  { font-size: 1.3rem; }
+.oc-teaser-text  { flex: 1; }
+.oc-teaser-text strong { display: block; font-size: .82rem; margin-bottom: 1px; }
+.oc-teaser-green .oc-teaser-text strong { color: #1a5c2a; }
+.oc-teaser-gold  .oc-teaser-text strong { color: #5C3D1E; }
+.oc-teaser-text span { font-size: .72rem; }
+.oc-teaser-green .oc-teaser-text span { color: #4A7C59; }
+.oc-teaser-gold  .oc-teaser-text span { color: #8a6500; }
+.oc-teaser-chevron { font-size: 1rem; flex-shrink: 0; }
+.oc-teaser-green .oc-teaser-chevron { color: #4A7C59; }
+.oc-teaser-gold  .oc-teaser-chevron { color: #C9A84C; }
+
+/* Sticky bottom bar — mobile only */
+.oc-sticky-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: linear-gradient(135deg, #2d6b40, #4A7C59);
+  color: #fff; padding: 12px 18px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  box-shadow: 0 -4px 20px rgba(45,107,64,.35);
+  z-index: 100; cursor: pointer;
+}
+.oc-sticky-bar-text strong { display: block; font-size: .85rem; font-weight: 800; }
+.oc-sticky-bar-text span   { font-size: .72rem; opacity: .85; }
+.oc-sticky-bar-btn {
+  background: #fff; color: #2d6b40; border: none;
+  border-radius: 20px; padding: 8px 16px;
+  font-size: .78rem; font-weight: 800; cursor: pointer; white-space: nowrap; flex-shrink: 0;
+}
+
+/* CTA strip */
+.oc-cta-strip { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+
+/* ── Desktop layout (≥ 768px) ── */
+@media (min-width: 768px) {
+  .oc-grid {
+    grid-template-columns: 1fr 380px;
+    align-items: start;
+    padding: 32px 24px 60px;
+    gap: 20px;
+  }
+  .oc-right        { position: sticky; top: 24px; align-self: start; }
+  .oc-mobile-only  { display: none !important; }
+  .oc-sticky-bar   { display: none !important; }
+}
+
+/* ── Mobile (< 768px) ── */
+@media (max-width: 767px) {
+  .oc-right { display: none !important; }
+}
 
 /* ====================================================
    TOAST NOTIFICATION
@@ -1181,9 +1315,11 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
   .toast { background: #1E1508 !important; border-color: #3A2810 !important; color: #EDE0CC !important; }
 
   /* Confirm page */
-  .confirm-card { background: #1E1508 !important; }
-  .confirm-details { background: #1A1208 !important; }
-  .confirm-row { border-bottom-color: #3A2810 !important; }
+  .oc-card        { background: #1E1508 !important; }
+  .oc-card-header { border-bottom-color: #3A2810 !important; }
+  .oc-detail-row  { border-bottom-color: #3A2810 !important; }
+  .oc-info-strip  { background: #1E1508 !important; border-bottom-color: #3A2810 !important; }
+  .oc-step-list li { border-bottom-color: #3A2810 !important; }
 
   /* Policy pages */
   .policy-content h2 { border-bottom-color: #2A1E10 !important; }
