@@ -188,6 +188,8 @@ export default function Home() {
   const [utm,            setUtm]            = useState({});
   const [showSticky, setShowSticky] = useState(false);
   const [scrolled,   setScrolled]   = useState(false);
+  const [navVisible, setNavVisible] = useState(true);
+  const lastScrollY = useRef(0);
   const [exitIntent, setExitIntent] = useState(false);
   const [deliveryEst, setDeliveryEst] = useState('');
   const [shipsBy,     setShipsBy]     = useState(null);
@@ -206,11 +208,14 @@ export default function Home() {
   const scheduleBtnRef    = useRef(null);
   const [schedulePopupPos, setSchedulePopupPos] = useState({ top: 0, left: 0 });
 
-  /* sticky CTA + header scroll state */
+  /* sticky CTA + header hide-on-scroll-down / show-on-scroll-up */
   useEffect(() => {
     const onScroll = () => {
-      setShowSticky(window.scrollY > 500);
-      setScrolled(window.scrollY > 80);
+      const y = window.scrollY;
+      setShowSticky(y > 500);
+      setScrolled(y > 80);
+      setNavVisible(y < 80 || y < lastScrollY.current);
+      lastScrollY.current = y;
       setScheduleOpen(false);
     };
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -898,7 +903,8 @@ export default function Home() {
         };
         return (
           <>
-            <nav style={{ position:'sticky', top:0, zIndex:200, background:'#fff', boxShadow: scrolled ? '0 4px 20px rgba(92,61,30,.18)' : '0 2px 8px rgba(92,61,30,.07)', transition:'box-shadow .25s' }}>
+            <div style={{ height: 'var(--nav-h, 56px)' }} aria-hidden="true" />
+            <nav style={{ position:'fixed', top:0, left:0, right:0, zIndex:200, background:'#fff', boxShadow: scrolled ? '0 4px 20px rgba(92,61,30,.18)' : '0 1px 4px rgba(92,61,30,.08)', transform: navVisible ? 'translateY(0)' : 'translateY(-110%)', transition:'transform .28s cubic-bezier(.4,0,.2,1), box-shadow .25s' }}>
               {/* Top micro trust bar — desktop only */}
               <div className="nav-trust-bar">
                 <div style={{ maxWidth:1280, margin:'0 auto', padding:'0 20px', display:'flex', alignItems:'center', justifyContent:'center', gap:24, flexWrap:'nowrap' }}>
@@ -980,9 +986,13 @@ export default function Home() {
               </a>
             </div>
             <style>{`
+              :root { --nav-h: 56px; }
               .nav-trust-bar {
                 background: #5C3D1E;
                 padding: 5px 0;
+              }
+              @media (min-width: 769px) {
+                :root { --nav-h: 81px; } /* trust bar (~25px) + nav row (~46px) + border (1px) */
               }
               @media (max-width: 768px) {
                 .nav-trust-bar { display: none; }
