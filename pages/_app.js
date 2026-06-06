@@ -3,6 +3,8 @@ import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import { appWithTranslation } from 'next-i18next';
 import '../styles/globals.css';
+import LanguageBar from '../components/LanguageBar';
+import LanguageWelcomeModal from '../components/LanguageWelcomeModal';
 
 const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_ID;
 const GA_ID = 'G-HRCBLBTPM0';
@@ -129,6 +131,8 @@ function App({ Component, pageProps }) {
         />
       )}
 
+      <LanguageWelcomeModal />
+      <LanguageBar />
       <Component {...pageProps} />
     </>
   );
