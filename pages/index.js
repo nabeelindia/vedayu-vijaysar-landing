@@ -9,6 +9,7 @@ import { hi as hiLocale, ta as taLocale, te as teLocale } from 'date-fns/locale'
 import { getHolidayDates } from '../lib/holidays';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 
 /* ─── Meta Pixel helper ──────────────────────────────────── */
 const fbq = (event, params = {}) => {
@@ -923,6 +924,7 @@ export default function Home() {
                       onMouseLeave={e => e.currentTarget.style.background='transparent'}
                     >{label}</a>
                   ))}
+                  <LanguageSwitcher />
                   <a href="#checkout" onClick={e => navClick(e, '#checkout')}
                     style={{ fontSize:'.90rem', fontWeight:800, color:'#fff', background:'#5C3D1E', padding:'6px 16px', borderRadius:20, textDecoration:'none', whiteSpace:'nowrap', marginLeft:8, flexShrink:0 }}>
                     {t('nav.order_now')}
@@ -967,6 +969,9 @@ export default function Home() {
                 </a>
               ))}
 
+              <div style={{ padding:'14px 0', borderBottom:'1px solid var(--vd-border)' }}>
+                <LanguageSwitcher />
+              </div>
               <a href="#checkout" onClick={e => navClick(e, '#checkout')}
                 style={{ marginTop:24, background:'var(--vd-brown)', color:'#fff', textAlign:'center', padding:'14px', borderRadius:10, fontWeight:800, fontSize:'1rem', textDecoration:'none' }}>
                 {t('nav.order_now')} →
