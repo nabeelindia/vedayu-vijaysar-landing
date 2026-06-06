@@ -780,6 +780,7 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
 
 /* CTA strip */
 .oc-cta-strip { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+@media (min-width: 768px) { .oc-cta-strip--row { flex-direction: row; } .oc-cta-strip--row .btn { flex: 1; } }
 
 /* ── Desktop layout (≥ 768px) ── */
 @media (min-width: 768px) {

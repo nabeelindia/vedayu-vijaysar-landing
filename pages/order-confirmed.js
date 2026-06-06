@@ -89,7 +89,7 @@ function ReferralCard({ id, orderId, refMsg, t }) {
 function BottomCTAs({ waHref, backHref, t }) {
   return (
     <>
-      <div className="oc-cta-strip">
+      <div className="oc-cta-strip oc-cta-strip--row">
         <a href={waHref} target="_blank" rel="noopener noreferrer" className="btn btn-green btn-full">
           {t('order_confirmed.whatsapp_track_cta')}
         </a>
@@ -344,10 +344,8 @@ export default function OrderConfirmed() {
             </div>
           </div>
 
-          {/* Mobile-only: CTA buttons + disclaimer */}
-          <div className="oc-mobile-only">
-            <BottomCTAs waHref={`https://wa.me/91${WA_NUM}?text=${waMessage}`} backHref="/" t={t} />
-          </div>
+          {/* CTA buttons + disclaimer — below How to Use, always in left column */}
+          <BottomCTAs waHref={`https://wa.me/91${WA_NUM}?text=${waMessage}`} backHref="/" t={t} />
 
         </div>
 
@@ -355,7 +353,6 @@ export default function OrderConfirmed() {
         <div className="oc-right">
           <MiswakCard id="miswak-upsell-desktop" miswakState={miswakState} miswakErr={miswakErr} handleMiswakPayment={handleMiswakPayment} setMiswakState={setMiswakState} t={t} />
           <ReferralCard id="referral-share-desktop" orderId={orderId} refMsg={refMsg} t={t} />
-          <BottomCTAs waHref={`https://wa.me/91${WA_NUM}?text=${waMessage}`} backHref="/" t={t} />
         </div>
 
       </div>

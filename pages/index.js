@@ -567,7 +567,7 @@ export default function Home() {
         orderPlaced.current = true;
         writeCustomerCookie({ name: form.name, mobile: form.mobile, email: form.email, address: form.address, pincode: form.pincode, city: form.city, state: form.state });
         try { sessionStorage.setItem('vc_upsell_ctx', JSON.stringify({ mobile: form.mobile, email: form.email || '' })); } catch (_) {}
-        router.push(`/order-confirmed?method=cod&pack=${encodeURIComponent(selectedPack.name)}&price=${finalPrice}&name=${encodeURIComponent(form.name)}&orderId=${encodeURIComponent(data.orderId)}`);
+        router.push(`/order-confirmed?method=cod&pack=${encodeURIComponent(selectedPack.name)}&price=${finalPrice}&name=${encodeURIComponent(form.name)}&orderId=${encodeURIComponent(data.orderId)}${scheduledDate ? `&scheduledShipDate=${scheduledDate.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })}` : ''}`);
 
       } else {
         /* ── Razorpay prepaid flow ── */
@@ -629,7 +629,7 @@ export default function Home() {
               if (vData.orderId) finalOrderId = vData.orderId;
             } catch { /* non-blocking — redirect regardless */ }
             try { sessionStorage.setItem('vc_upsell_ctx', JSON.stringify({ mobile: form.mobile, email: form.email || '' })); } catch (_) {}
-            router.push(`/order-confirmed?method=prepaid&pack=${encodeURIComponent(selectedPack.name)}&price=${finalPrice}&name=${encodeURIComponent(form.name)}&orderId=${encodeURIComponent(finalOrderId)}`);
+            router.push(`/order-confirmed?method=prepaid&pack=${encodeURIComponent(selectedPack.name)}&price=${finalPrice}&name=${encodeURIComponent(form.name)}&orderId=${encodeURIComponent(finalOrderId)}${scheduledDate ? `&scheduledShipDate=${scheduledDate.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })}` : ''}`);
           },
         });
         rzp.open();

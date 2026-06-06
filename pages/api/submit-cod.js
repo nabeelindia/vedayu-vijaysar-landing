@@ -35,6 +35,10 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  if (!supabase) {
+    return res.status(500).json({ error: 'Database not configured (SUPABASE_SERVICE_KEY missing)' });
+  }
+
   const { name, mobile, email, address, city, state, pincode, pack, price, qty, utm = {}, referrerId, scheduledShipDate } = req.body;
 
   // Basic server-side validation
