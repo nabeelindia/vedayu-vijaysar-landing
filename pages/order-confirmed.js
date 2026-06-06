@@ -16,6 +16,92 @@ const loadRazorpay = () =>
     document.body.appendChild(s);
   });
 
+function MiswakCard({ id, miswakState, miswakErr, handleMiswakPayment, setMiswakState, t }) {
+  if (miswakState === 'done') {
+    return (
+      <div id={id} style={{ background: 'linear-gradient(135deg,#F0F9F3,#e6f4ea)', border: '2px solid #4A7C59', borderRadius: 16, padding: '20px 24px', marginBottom: 16, textAlign: 'center' }}>
+        <div style={{ fontSize: '2.5rem', marginBottom: 8 }}>🌿</div>
+        <p style={{ margin: '0 0 6px', fontWeight: 800, fontSize: '1.05rem', color: '#2d6b40' }}>{t('order_confirmed.miswak_added_title')}</p>
+        <p style={{ margin: 0, fontSize: '.85rem', color: '#4A7C59', lineHeight: 1.6 }}>{t('order_confirmed.miswak_added_desc')}</p>
+      </div>
+    );
+  }
+  if (miswakState === 'declined') return null;
+  return (
+    <div id={id} style={{ background: 'linear-gradient(135deg,#f7fef9,#edf7f0)', border: '2px solid #4A7C59', borderRadius: 16, marginBottom: 16, overflow: 'hidden' }}>
+      <div style={{ background: 'linear-gradient(90deg,#2d6b40,#4A7C59)', padding: '10px 20px', textAlign: 'center' }}>
+        <p style={{ margin: 0, color: '#fff', fontWeight: 800, fontSize: '.88rem' }}>{t('order_confirmed.special_offer_ribbon')}</p>
+      </div>
+      <div style={{ padding: '20px 20px 0' }}>
+        <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+          <div style={{ flex: '0 0 auto', width: 120, borderRadius: 12, overflow: 'hidden', border: '1px solid #c6e6cc', background: '#fff' }}>
+            <Image src="/images/miswak-product.jpg" alt="Free Premium Miswak" width={120} height={120} style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }} />
+          </div>
+          <div style={{ flex: 1, minWidth: 160 }}>
+            <p style={{ margin: '0 0 4px', fontWeight: 800, fontSize: '1rem', color: '#1a5c2a' }}>{t('order_confirmed.miswak_product_title')}</p>
+            <p style={{ margin: '0 0 10px', fontSize: '.78rem', color: '#4A7C59' }}>{t('order_confirmed.miswak_product_subtitle')}</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+              {[t('order_confirmed.miswak_pill_organic'), t('order_confirmed.miswak_pill_antibacterial'), t('order_confirmed.miswak_pill_fresh'), t('order_confirmed.miswak_pill_sealed')].map(f => (
+                <span key={f} style={{ background: '#d4edda', color: '#1a5c2a', padding: '3px 10px', borderRadius: 20, fontSize: '.7rem', fontWeight: 600 }}>{f}</span>
+              ))}
+            </div>
+            <div style={{ background: '#FFF8E1', border: '1px solid #C9A84C', borderRadius: 8, padding: '8px 12px' }}>
+              <p style={{ margin: 0, fontSize: '.78rem', color: '#6D4C00', lineHeight: 1.5 }}>{t('order_confirmed.miswak_shipping_note')}</p>
+            </div>
+          </div>
+        </div>
+        {miswakErr && <p style={{ margin: '12px 0 0', fontSize: '.78rem', color: '#e53e3e', textAlign: 'center' }}>⚠️ {miswakErr}</p>}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '16px 0 20px' }}>
+          <button
+            onClick={handleMiswakPayment}
+            disabled={miswakState === 'paying'}
+            style={{ background: miswakState === 'paying' ? '#9CBDA8' : 'linear-gradient(135deg,#2d6b40,#4A7C59)', color: '#fff', border: 'none', borderRadius: 10, padding: '14px 20px', fontSize: '.95rem', fontWeight: 800, cursor: miswakState === 'paying' ? 'not-allowed' : 'pointer', boxShadow: '0 4px 14px rgba(45,107,64,.3)', transition: 'all .2s' }}
+          >
+            {miswakState === 'paying' ? t('order_confirmed.miswak_paying_btn') : t('order_confirmed.miswak_pay_btn')}
+          </button>
+          <button onClick={() => setMiswakState('declined')} disabled={miswakState === 'paying'} style={{ background: 'transparent', color: '#999', border: 'none', fontSize: '.78rem', cursor: 'pointer', padding: '4px', textDecoration: 'underline' }}>
+            {t('order_confirmed.miswak_decline')}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ReferralCard({ id, orderId, refMsg, t }) {
+  if (!orderId) return null;
+  return (
+    <div id={id} style={{ background: '#FFF8E1', border: '2px solid #C9A84C', borderRadius: 14, padding: '18px 20px', marginBottom: 16, textAlign: 'center' }}>
+      <p style={{ margin: '0 0 4px', fontWeight: 800, fontSize: '.95rem', color: '#5C3D1E' }}>{t('order_confirmed.referral_title')}</p>
+      <p style={{ margin: '0 0 14px', fontSize: '.78rem', color: '#6D4C00', lineHeight: 1.5 }}>{t('order_confirmed.referral_desc')}</p>
+      <a
+        href={`https://wa.me/?text=${refMsg}`}
+        target="_blank" rel="noopener noreferrer"
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#25D366', color: '#fff', textDecoration: 'none', padding: '11px 22px', borderRadius: 10, fontWeight: 700, fontSize: '.88rem' }}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.125.558 4.122 1.533 5.85L.057 23.927a.5.5 0 0 0 .609.609l6.127-1.476A11.95 11.95 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.805 9.805 0 0 1-5.021-1.378l-.36-.214-3.733.899.916-3.635-.235-.374A9.797 9.797 0 0 1 2.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z"/></svg>
+        {t('order_confirmed.referral_whatsapp')}
+      </a>
+    </div>
+  );
+}
+
+function BottomCTAs({ waHref, backHref, t }) {
+  return (
+    <>
+      <div className="oc-cta-strip">
+        <a href={waHref} target="_blank" rel="noopener noreferrer" className="btn btn-green btn-full">
+          {t('order_confirmed.whatsapp_track_cta')}
+        </a>
+        <a href={backHref} className="btn btn-outline btn-full">{t('order_confirmed.back_home')}</a>
+      </div>
+      <p style={{ marginTop: 8, fontSize: '.72rem', color: 'var(--vd-text-light)', lineHeight: 1.6, textAlign: 'center' }}>
+        <em>{t('order_confirmed.disclaimer')}</em>
+      </p>
+    </>
+  );
+}
+
 export default function OrderConfirmed() {
   const router  = useRouter();
   const { t } = useTranslation('common');
@@ -157,81 +243,6 @@ export default function OrderConfirmed() {
     `Hey! I just ordered a Vijaysar Wooden Glass from Vedayu — it's amazing for blood sugar & diabetes care! 🌿\n\nYou'll get ₹50 off automatically with my link:\nhttps://vedayulife.com/?ref=${orderId}`
   );
 
-  const MiswakCard = ({ id }) => miswakState === 'done' ? (
-    <div id={id} style={{ background: 'linear-gradient(135deg,#F0F9F3,#e6f4ea)', border: '2px solid #4A7C59', borderRadius: 16, padding: '20px 24px', marginBottom: 16, textAlign: 'center' }}>
-      <div style={{ fontSize: '2.5rem', marginBottom: 8 }}>🌿</div>
-      <p style={{ margin: '0 0 6px', fontWeight: 800, fontSize: '1.05rem', color: '#2d6b40' }}>{t('order_confirmed.miswak_added_title')}</p>
-      <p style={{ margin: 0, fontSize: '.85rem', color: '#4A7C59', lineHeight: 1.6 }}>{t('order_confirmed.miswak_added_desc')}</p>
-    </div>
-  ) : miswakState !== 'declined' ? (
-    <div id={id} style={{ background: 'linear-gradient(135deg,#f7fef9,#edf7f0)', border: '2px solid #4A7C59', borderRadius: 16, marginBottom: 16, overflow: 'hidden' }}>
-      <div style={{ background: 'linear-gradient(90deg,#2d6b40,#4A7C59)', padding: '10px 20px', textAlign: 'center' }}>
-        <p style={{ margin: 0, color: '#fff', fontWeight: 800, fontSize: '.88rem' }}>{t('order_confirmed.special_offer_ribbon')}</p>
-      </div>
-      <div style={{ padding: '20px 20px 0' }}>
-        <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-          <div style={{ flex: '0 0 auto', width: 120, borderRadius: 12, overflow: 'hidden', border: '1px solid #c6e6cc', background: '#fff' }}>
-            <Image src="/images/miswak-product.jpg" alt="Free Premium Miswak" width={120} height={120} style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }} />
-          </div>
-          <div style={{ flex: 1, minWidth: 160 }}>
-            <p style={{ margin: '0 0 4px', fontWeight: 800, fontSize: '1rem', color: '#1a5c2a' }}>{t('order_confirmed.miswak_product_title')}</p>
-            <p style={{ margin: '0 0 10px', fontSize: '.78rem', color: '#4A7C59' }}>{t('order_confirmed.miswak_product_subtitle')}</p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
-              {[t('order_confirmed.miswak_pill_organic'), t('order_confirmed.miswak_pill_antibacterial'), t('order_confirmed.miswak_pill_fresh'), t('order_confirmed.miswak_pill_sealed')].map(f => (
-                <span key={f} style={{ background: '#d4edda', color: '#1a5c2a', padding: '3px 10px', borderRadius: 20, fontSize: '.7rem', fontWeight: 600 }}>{f}</span>
-              ))}
-            </div>
-            <div style={{ background: '#FFF8E1', border: '1px solid #C9A84C', borderRadius: 8, padding: '8px 12px' }}>
-              <p style={{ margin: 0, fontSize: '.78rem', color: '#6D4C00', lineHeight: 1.5 }}>{t('order_confirmed.miswak_shipping_note')}</p>
-            </div>
-          </div>
-        </div>
-        {miswakErr && <p style={{ margin: '12px 0 0', fontSize: '.78rem', color: '#e53e3e', textAlign: 'center' }}>⚠️ {miswakErr}</p>}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '16px 0 20px' }}>
-          <button
-            onClick={handleMiswakPayment}
-            disabled={miswakState === 'paying'}
-            style={{ background: miswakState === 'paying' ? '#9CBDA8' : 'linear-gradient(135deg,#2d6b40,#4A7C59)', color: '#fff', border: 'none', borderRadius: 10, padding: '14px 20px', fontSize: '.95rem', fontWeight: 800, cursor: miswakState === 'paying' ? 'not-allowed' : 'pointer', boxShadow: '0 4px 14px rgba(45,107,64,.3)', transition: 'all .2s' }}
-          >
-            {miswakState === 'paying' ? t('order_confirmed.miswak_paying_btn') : t('order_confirmed.miswak_pay_btn')}
-          </button>
-          <button onClick={() => setMiswakState('declined')} disabled={miswakState === 'paying'} style={{ background: 'transparent', color: '#999', border: 'none', fontSize: '.78rem', cursor: 'pointer', padding: '4px', textDecoration: 'underline' }}>
-            {t('order_confirmed.miswak_decline')}
-          </button>
-        </div>
-      </div>
-    </div>
-  ) : null;
-
-  const ReferralCard = ({ id }) => orderId ? (
-    <div id={id} style={{ background: '#FFF8E1', border: '2px solid #C9A84C', borderRadius: 14, padding: '18px 20px', marginBottom: 16, textAlign: 'center' }}>
-      <p style={{ margin: '0 0 4px', fontWeight: 800, fontSize: '.95rem', color: '#5C3D1E' }}>{t('order_confirmed.referral_title')}</p>
-      <p style={{ margin: '0 0 14px', fontSize: '.78rem', color: '#6D4C00', lineHeight: 1.5 }}>{t('order_confirmed.referral_desc')}</p>
-      <a
-        href={`https://wa.me/?text=${refMsg}`}
-        target="_blank" rel="noopener noreferrer"
-        style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#25D366', color: '#fff', textDecoration: 'none', padding: '11px 22px', borderRadius: 10, fontWeight: 700, fontSize: '.88rem' }}
-      >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.125.558 4.122 1.533 5.85L.057 23.927a.5.5 0 0 0 .609.609l6.127-1.476A11.95 11.95 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.805 9.805 0 0 1-5.021-1.378l-.36-.214-3.733.899.916-3.635-.235-.374A9.797 9.797 0 0 1 2.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z"/></svg>
-        {t('order_confirmed.referral_whatsapp')}
-      </a>
-    </div>
-  ) : null;
-
-  const BottomCTAs = () => (
-    <>
-      <div className="oc-cta-strip">
-        <a href={`https://wa.me/91${WA_NUM}?text=${waMessage}`} target="_blank" rel="noopener noreferrer" className="btn btn-green btn-full">
-          {t('order_confirmed.whatsapp_track_cta')}
-        </a>
-        <a href="/" className="btn btn-outline btn-full">{t('order_confirmed.back_home')}</a>
-      </div>
-      <p style={{ marginTop: 8, fontSize: '.72rem', color: 'var(--vd-text-light)', lineHeight: 1.6, textAlign: 'center' }}>
-        <em>{t('order_confirmed.disclaimer')}</em>
-      </p>
-    </>
-  );
-
   return (
     <>
       <Head>
@@ -314,8 +325,8 @@ export default function OrderConfirmed() {
 
           {/* Mobile-only: full offer cards */}
           <div className="oc-mobile-only">
-            <MiswakCard id="miswak-upsell-mobile" />
-            <ReferralCard id="referral-share-mobile" />
+            <MiswakCard id="miswak-upsell-mobile" miswakState={miswakState} miswakErr={miswakErr} handleMiswakPayment={handleMiswakPayment} setMiswakState={setMiswakState} t={t} />
+            <ReferralCard id="referral-share-mobile" orderId={orderId} refMsg={refMsg} t={t} />
           </div>
 
           {/* How to Use card */}
@@ -335,16 +346,16 @@ export default function OrderConfirmed() {
 
           {/* Mobile-only: CTA buttons + disclaimer */}
           <div className="oc-mobile-only">
-            <BottomCTAs />
+            <BottomCTAs waHref={`https://wa.me/91${WA_NUM}?text=${waMessage}`} backHref="/" t={t} />
           </div>
 
         </div>
 
         {/* ═══ RIGHT COLUMN (desktop only, sticky) ═══ */}
         <div className="oc-right">
-          <MiswakCard id="miswak-upsell-desktop" />
-          <ReferralCard id="referral-share-desktop" />
-          <BottomCTAs />
+          <MiswakCard id="miswak-upsell-desktop" miswakState={miswakState} miswakErr={miswakErr} handleMiswakPayment={handleMiswakPayment} setMiswakState={setMiswakState} t={t} />
+          <ReferralCard id="referral-share-desktop" orderId={orderId} refMsg={refMsg} t={t} />
+          <BottomCTAs waHref={`https://wa.me/91${WA_NUM}?text=${waMessage}`} backHref="/" t={t} />
         </div>
 
       </div>
