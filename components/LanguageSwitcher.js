@@ -2,19 +2,58 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/router';
 
 const LANGUAGES = [
-  { code: 'en', label: 'English',  native: 'English'  },
-  { code: 'hi', label: 'Hindi',    native: 'हिन्दी'    },
-  { code: 'ta', label: 'Tamil',    native: 'தமிழ்'    },
-  { code: 'te', label: 'Telugu',   native: 'తెలుగు'   },
+  { code: 'en', native: 'EN', full: 'English' },
+  { code: 'hi', native: 'हि', full: 'हिन्दी' },
+  { code: 'ta', native: 'த', full: 'தமிழ்' },
+  { code: 'te', native: 'తె', full: 'తెలుగు' },
 ];
 
-export default function LanguageSwitcher() {
-  const router          = useRouter();
-  const [open, setOpen] = useState(false);
-  const ref             = useRef(null);
-  const current         = LANGUAGES.find(l => l.code === router.locale) || LANGUAGES[0];
+function switchLocale(router, code) {
+  if (code === router.locale) return;
+  try { localStorage.setItem('vedayu_lang', code); } catch (_) {}
+  document.cookie = `NEXT_LOCALE=${code};path=/;max-age=31536000;SameSite=Lax`;
+  router.push(router.asPath, router.asPath, { locale: code, scroll: false });
+}
 
-  // Close on outside click
+// Inline pills — for mobile drawer
+function InlineSwitcher() {
+  const router = useRouter();
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+      {LANGUAGES.map(lang => {
+        const active = lang.code === router.locale;
+        return (
+          <button
+            key={lang.code}
+            onClick={() => switchLocale(router, lang.code)}
+            style={{
+              background: active ? '#5C3D1E' : '#f5ede0',
+              color: active ? '#fff' : '#5C3D1E',
+              border: '1.5px solid ' + (active ? '#5C3D1E' : '#d0c4b0'),
+              borderRadius: 20,
+              padding: '7px 14px',
+              fontSize: 14,
+              fontWeight: 700,
+              cursor: active ? 'default' : 'pointer',
+              minHeight: 38,
+              lineHeight: 1.3,
+            }}
+          >
+            {lang.full}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// Dropdown — for desktop nav
+function DropdownSwitcher() {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const current = LANGUAGES.find(l => l.code === router.locale) || LANGUAGES[0];
+
   useEffect(() => {
     if (!open) return;
     const handler = (e) => {
@@ -23,16 +62,6 @@ export default function LanguageSwitcher() {
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [open]);
-
-  const switchTo = (code) => {
-    if (code === router.locale) { setOpen(false); return; }
-    // Persist preference
-    try { localStorage.setItem('vedayu_lang', code); } catch (_) {}
-    // Set NEXT_LOCALE cookie (SSR picks it up on next request)
-    document.cookie = `NEXT_LOCALE=${code};path=/;max-age=31536000;SameSite=Lax`;
-    router.push(router.asPath, router.asPath, { locale: code, scroll: false });
-    setOpen(false);
-  };
 
   return (
     <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
@@ -47,8 +76,8 @@ export default function LanguageSwitcher() {
           background: 'none',
           border: '1.5px solid #d0c4b0',
           borderRadius: 20,
-          padding: '3px 10px',
-          fontSize: '.78rem',
+          padding: '4px 10px',
+          fontSize: '.82rem',
           fontWeight: 700,
           color: '#5C3D1E',
           cursor: 'pointer',
@@ -61,29 +90,22 @@ export default function LanguageSwitcher() {
 
       {open && (
         <div style={{
-          position: 'fixed',
+          position: 'absolute',
+          top: 'calc(100% + 6px)',
+          right: 0,
           zIndex: 9999,
           background: '#fff',
           border: '1.5px solid #d0c4b0',
           borderRadius: 10,
           boxShadow: '0 4px 20px rgba(0,0,0,.13)',
-          minWidth: 140,
+          minWidth: 130,
           overflow: 'hidden',
-          top: ref.current
-            ? ref.current.getBoundingClientRect().bottom + 4
-            : 50,
-          left: ref.current
-            ? Math.max(8, ref.current.getBoundingClientRect().left - 40)
-            : 'auto',
-          right: ref.current
-            ? 'auto'
-            : 8,
         }}>
           {LANGUAGES.map(lang => (
             <button
               key={lang.code}
               type="button"
-              onClick={() => switchTo(lang.code)}
+              onClick={() => { switchLocale(router, lang.code); setOpen(false); }}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -93,19 +115,24 @@ export default function LanguageSwitcher() {
                 background: lang.code === router.locale ? '#FFF8E1' : 'none',
                 border: 'none',
                 borderBottom: '1px solid #f5efe6',
-                fontSize: '.85rem',
+                fontSize: '.88rem',
                 fontWeight: lang.code === router.locale ? 700 : 500,
                 color: '#2C1810',
                 cursor: 'pointer',
                 textAlign: 'left',
+                whiteSpace: 'nowrap',
               }}
             >
-              <span>{lang.native}</span>
-              {lang.code === router.locale && <span style={{ color: '#4A7C59', fontSize: '.8rem' }}>✓</span>}
+              <span>{lang.full}</span>
+              {lang.code === router.locale && <span style={{ color: '#4A7C59', marginLeft: 8 }}>✓</span>}
             </button>
           ))}
         </div>
       )}
     </div>
   );
+}
+
+export default function LanguageSwitcher({ inline = false }) {
+  return inline ? <InlineSwitcher /> : <DropdownSwitcher />;
 }

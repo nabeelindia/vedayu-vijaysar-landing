@@ -970,7 +970,7 @@ export default function Home() {
               ))}
 
               <div style={{ padding:'14px 0', borderBottom:'1px solid var(--vd-border)' }}>
-                <LanguageSwitcher />
+                <LanguageSwitcher inline />
               </div>
               <a href="#checkout" onClick={e => navClick(e, '#checkout')}
                 style={{ marginTop:24, background:'var(--vd-brown)', color:'#fff', textAlign:'center', padding:'14px', borderRadius:10, fontWeight:800, fontSize:'1rem', textDecoration:'none' }}>
