@@ -1223,6 +1223,25 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
   --rdp-today-color: #4A7C59;
   margin: 0;
   font-size: .85rem;
+  width: 100%;
+}
+
+.rdp-month_grid {
+  width: 100%;
+}
+
+.rdp-month {
+  width: 100%;
+}
+
+@media (max-width: 499px) {
+  .rdp-root {
+    font-size: .78rem;
+  }
+  .rdp-day {
+    width: 2.2rem;
+    height: 2.2rem;
+  }
 }
 
 /* Regional script fonts */

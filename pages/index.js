@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import SiteFooter from '../components/SiteFooter';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
+import { hi as hiLocale, ta as taLocale, te as teLocale } from 'date-fns/locale';
 import { getHolidayDates } from '../lib/holidays';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
@@ -24,7 +25,7 @@ const PACKS = {
 const fmt = (n) => '₹' + Number(n).toLocaleString('en-IN');
 
 /* ─── Delivery estimate helper ──────────────────────────────── */
-function getDeliveryEst(pincode) {
+function getDeliveryEst(pincode, locale) {
   const p = parseInt((pincode || '').slice(0, 3), 10);
   const isMetro = [110,111,400,401,402,560,561,600,601,700,500,380,411,122,302,226,208].some(m => p === m);
   const [lo, hi] = isMetro ? [3, 5] : [5, 8];
@@ -34,7 +35,8 @@ function getDeliveryEst(pincode) {
     while (added < n) { d.setDate(d.getDate() + 1); if (d.getDay() !== 0) added++; }
     return d;
   };
-  const fmt2 = d => d.toLocaleDateString('en-IN', { weekday:'short', day:'numeric', month:'short' });
+  const dtLocale = locale === 'hi' ? 'hi-IN' : locale === 'ta' ? 'ta-IN' : locale === 'te' ? 'te-IN' : 'en-IN';
+  const fmt2 = d => d.toLocaleDateString(dtLocale, { weekday:'short', day:'numeric', month:'short' });
   return `${fmt2(addDays(lo))} – ${fmt2(addDays(hi))}`;
 }
 
@@ -59,7 +61,7 @@ function renderBold(str) {
   );
 }
 
-function getShipsBy() {
+function getShipsBy(dtLocale) {
   const now = new Date();
   // Convert to IST by adding UTC+5:30 offset
   const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
@@ -95,7 +97,7 @@ function getShipsBy() {
 
   const label = diffDays === 1
     ? 'Tomorrow'
-    : next.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+    : next.toLocaleDateString(dtLocale || 'en-IN', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
 
   return { label, note: null };
 }
@@ -109,27 +111,6 @@ const GALLERY = [
 ];
 
 /* ─── FAQ data ──────────────────────────────────────────── */
-// Extra SEO FAQs (English-only, not translated in v1)
-const EXTRA_FAQS = [
-  { q: 'Is online / Razorpay payment available?', a: 'Yes. We accept all major payment methods via Razorpay — UPI (GPay, PhonePe, Paytm), debit cards, credit cards, net banking, and wallets.' },
-  { q: 'How long should water be kept in the Vijaysar glass?', a: 'Ideally 6–8 hours. An overnight soak is the most convenient option — fill it before bed and your infused water is ready each morning. Do not soak for more than 10 hours.' },
-  { q: 'Can I use hot water?', a: 'No. Use only room temperature or cold drinking water. Hot water can damage the natural wood. Never pour boiling or warm water into the tumbler.' },
-  { q: 'Is Vijaysar glass safe for people with diabetes?', a: 'The Vijaysar wooden glass is a traditional Ayurvedic wellness product — it is NOT a medicine and does NOT treat, cure, or prevent diabetes or any other medical condition. Many people with diabetes use it as part of a healthy daily hydration habit, but it should not replace prescribed medication or medical advice. Always consult your doctor before making changes to your health routine.' },
-  { q: 'What is the return and replacement policy?', a: '7-day replacement/return policy from the date of delivery. If your product arrives damaged or defective, contact us within 7 days and we will arrange a replacement.' },
-  { q: 'How many days does delivery take?', a: 'Orders dispatched within 1–2 business days. Metro cities: 2–4 days. Other cities: 3–6 days. Remote areas: 5–8 days.' },
-  { q: 'Can I gift this product?', a: 'Absolutely! It makes a beautiful, meaningful gift — especially for parents, in-laws, and elders. The Family Pack of 5 is our most popular gifting option. We can deliver directly to your recipient\'s address.' },
-  { q: 'Does the wood colour vary between glasses?', a: 'Yes. Since each glass is made from natural wood, grain pattern, colour, and texture will vary slightly between pieces. This is not a defect — it is a natural characteristic of handcrafted wooden products.' },
-  { q: 'Is this product suitable for daily use?', a: 'Yes. With proper care — rinsing with plain water, drying thoroughly, and storing in a dry place — it will last a long time.' },
-
-  // ── High-search-volume additions — Week 2 SEO ──────────────────────────
-  { q: 'Is Vijaysar glass safe for people with diabetes?', a: 'The Vijaysar wooden glass is a traditional Ayurvedic wellness product — it is NOT a medicine and does NOT treat, cure, or prevent diabetes or any other medical condition. Many people with diabetes use it as part of a healthy daily hydration habit, but it should not replace prescribed medication or medical advice. Always consult your doctor before making changes to your health routine.' },
-  { q: 'How many days should I use the Vijaysar glass continuously?', a: 'Traditional Ayurvedic practice recommends using the Vijaysar glass daily for 90 days for a complete wellness cycle, then taking a 15–30 day break before resuming. Most people notice a subtle change in their water taste within the first few days. Consistent daily use is key — occasional use will not give the same experience as a regular morning ritual.' },
-  { q: 'Vijaysar glass vs copper glass — which is better?', a: 'They serve different purposes. Copper glasses are used in Ayurveda primarily for their antimicrobial properties and are recommended for drinking water stored overnight. Vijaysar wooden glasses are used specifically for the natural wood infusion — Vijaysar wood (Pterocarpus marsupium) has been used in traditional Indian wellness for centuries. Many households keep both. If you are new to Ayurvedic rituals, the Vijaysar glass is gentler to start with as it does not alter the water\'s mineral profile the way copper does.' },
-  { q: 'Can children use the Vijaysar wooden glass?', a: 'Vijaysar wood is a natural material with no synthetic coatings or chemicals. However, as with any traditional wellness product, it is intended for adults. We do not specifically recommend it for young children without consulting a paediatrician or Ayurvedic practitioner first. Teenagers and adults can use it as part of a healthy daily routine.' },
-  { q: 'Why does the water turn pinkish or brownish overnight?', a: 'This is completely normal and expected — it is the natural tannins and botanical properties of the Vijaysar wood infusing into the water. The slight colour change (from pale pink to light brown) is a sign that the wood is authentic and active. The water is safe to drink. If your water shows no colour change at all after a week of use, contact us for a replacement.' },
-  { q: 'Is Vijaysar glass better than plastic or steel bottles?', a: 'Yes, from a wellness perspective. Plastic bottles can leach microplastics and chemicals over time. Steel bottles are neutral — they add nothing to the water. The Vijaysar wooden glass is unique because it adds the natural wood infusion to water, making it part of an active Ayurvedic wellness ritual rather than just a storage container. It is not designed to replace a water bottle for carrying water — it is a dedicated daily-ritual tumbler.' },
-  { q: 'What is Vijaysar wood (Pterocarpus marsupium)?', a: 'Vijaysar, botanically known as Pterocarpus marsupium, is a large deciduous tree native to India and Sri Lanka, commonly called the Indian Kino Tree or Malabar Kino. Its heartwood has been used in Ayurvedic medicine for centuries. The wood is dense, naturally fragrant, and has a rich reddish-brown colour. It is mentioned in classical Ayurvedic texts including Charaka Samhita. Our glasses are handcrafted from the heartwood of mature Vijaysar trees sourced responsibly from licensed suppliers.' },
-];
 
 /* ─── Indian states ─────────────────────────────────────── */
 const STATES = ['Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chandigarh','Chhattisgarh','Delhi','Goa','Gujarat','Haryana','Himachal Pradesh','Jammu & Kashmir','Jharkhand','Karnataka','Kerala','Ladakh','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Puducherry','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal'];
@@ -171,17 +152,28 @@ export default function Home() {
   const router = useRouter();
   const { t } = useTranslation('common');
 
-  // Translated FAQs — first 8 use locale JSON; rest are English-only SEO additions
   const FAQS = [
-    { q: t('faq.q1'), a: t('faq.a1') },
-    { q: t('faq.q2'), a: t('faq.a2') },
-    { q: t('faq.q3'), a: t('faq.a3') },
-    { q: t('faq.q4'), a: t('faq.a4') },
-    { q: t('faq.q5'), a: t('faq.a5') },
-    { q: t('faq.q6'), a: t('faq.a6') },
-    { q: t('faq.q7'), a: t('faq.a7') },
-    { q: t('faq.q8'), a: t('faq.a8') },
-    ...EXTRA_FAQS,
+    { q: t('faq.q1'),  a: t('faq.a1')  },
+    { q: t('faq.q2'),  a: t('faq.a2')  },
+    { q: t('faq.q3'),  a: t('faq.a3')  },
+    { q: t('faq.q4'),  a: t('faq.a4')  },
+    { q: t('faq.q5'),  a: t('faq.a5')  },
+    { q: t('faq.q6'),  a: t('faq.a6')  },
+    { q: t('faq.q7'),  a: t('faq.a7')  },
+    { q: t('faq.q8'),  a: t('faq.a8')  },
+    { q: t('faq.q9'),  a: t('faq.a9')  },
+    { q: t('faq.q10'), a: t('faq.a10') },
+    { q: t('faq.q11'), a: t('faq.a11') },
+    { q: t('faq.q12'), a: t('faq.a12') },
+    { q: t('faq.q13'), a: t('faq.a13') },
+    { q: t('faq.q14'), a: t('faq.a14') },
+    { q: t('faq.q15'), a: t('faq.a15') },
+    { q: t('faq.q16'), a: t('faq.a16') },
+    { q: t('faq.q17'), a: t('faq.a17') },
+    { q: t('faq.q18'), a: t('faq.a18') },
+    { q: t('faq.q19'), a: t('faq.a19') },
+    { q: t('faq.q20'), a: t('faq.a20') },
+    { q: t('faq.q21'), a: t('faq.a21') },
   ];
 
   /* form state */
@@ -215,13 +207,30 @@ export default function Home() {
 
   /* sticky CTA on scroll */
   useEffect(() => {
-    const onScroll = () => setShowSticky(window.scrollY > 500);
+    const onScroll = () => {
+      setShowSticky(window.scrollY > 500);
+      setScheduleOpen(false);
+    };
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   /* compute ships-by once on mount (client-only — avoids SSR mismatch) */
-  useEffect(() => { setShipsBy(getShipsBy()); }, []);
+  useEffect(() => {
+    const raw = getShipsBy(dtLocale);
+    if (!raw) return;
+    const todayLabel = t('delivery.today') || 'Today';
+    const tomorrowLabel = t('delivery.tomorrow') || 'Tomorrow';
+    const notePrefix = t('delivery.order_within') || 'order within';
+    let label = raw.label;
+    if (label === 'Today') label = todayLabel;
+    else if (label === 'Tomorrow') label = tomorrowLabel;
+    let note = raw.note;
+    if (note && note.startsWith('order within')) note = notePrefix + note.slice('order within'.length);
+    setShipsBy({ label, note });
+  }, []);
+
+  const dayPickerLocale = router.locale === 'hi' ? hiLocale : router.locale === 'ta' ? taLocale : router.locale === 'te' ? teLocale : undefined;
 
   /* ── Cookie helpers ─────────────────────────────────────────────────────── */
   const readCustomerCookie = () => {
@@ -464,7 +473,7 @@ export default function Home() {
         }
         // Pincode not serviceable — clear estimate and show warning
         if (pinData && pinData.serviceable === false) {
-          setDeliveryEst('⚠️ Delivery not available to this pincode');
+          setDeliveryEst('⚠️ ' + t('delivery.not_available'));
           setPincodeLoading(false);
           return;
         }
@@ -474,14 +483,14 @@ export default function Home() {
       if (estRes.status === 'fulfilled') {
         const est = await estRes.value.json().catch(() => null);
         if (est?.serviceable && est?.etaFormatted) {
-          setDeliveryEst(`by ${est.etaFormatted}`);
+          setDeliveryEst(t('delivery.by_prefix') + ' ' + est.etaFormatted);
         } else if (est?.codAvailable === false) {
-          setDeliveryEst('⚠️ COD not available — prepaid only for this pincode');
+          setDeliveryEst('⚠️ ' + t('delivery.cod_not_available'));
         } else {
-          setDeliveryEst(getDeliveryEst(val));
+          setDeliveryEst(getDeliveryEst(val, router.locale));
         }
       } else {
-        setDeliveryEst(getDeliveryEst(val));
+        setDeliveryEst(getDeliveryEst(val, router.locale));
       }
     } catch (_) {
       // AbortError from rapid typing — silently ignored
@@ -496,7 +505,7 @@ export default function Home() {
       // Revert to default ETA
       if (form.pincode?.length === 6) {
         const est = await fetch(`/api/delivery-estimate?pincode=${form.pincode}&cod=1`).then(r => r.json());
-        if (est?.serviceable && est?.etaFormatted) setDeliveryEst(`by ${est.etaFormatted}`);
+        if (est?.serviceable && est?.etaFormatted) setDeliveryEst(t('delivery.by_prefix') + ' ' + est.etaFormatted);
       }
       return;
     }
@@ -506,8 +515,9 @@ export default function Home() {
     if (est?.serviceable && est?.etaFormatted) setDeliveryEst(`by ${est.etaFormatted}`);
   };
 
+  const dtLocale = router.locale === 'hi' ? 'hi-IN' : router.locale === 'ta' ? 'ta-IN' : router.locale === 'te' ? 'te-IN' : 'en-IN';
   const scheduledDateFormatted = scheduledDate
-    ? scheduledDate.toLocaleDateString('en-IN', { weekday:'short', day:'numeric', month:'short', timeZone:'Asia/Kolkata' })
+    ? scheduledDate.toLocaleDateString(dtLocale, { weekday:'short', day:'numeric', month:'short', timeZone:'Asia/Kolkata' })
     : null;
 
   /* validation */
@@ -866,16 +876,16 @@ export default function Home() {
       {/* ── NAVBAR ── */}
       {(() => {
         const NAV = [
-          { label: 'The Problem',  href: '#problem' },
-          { label: 'The Solution', href: '#solution' },
-          { label: 'Benefits',     href: '#benefits',          desktopHide: true },
-          { label: 'How It Works', href: '#how-it-works' },
-          { label: 'Videos',       href: '#video-testimonial', desktopHide: true },
-          { label: 'Lab Certified',href: '#lab-certified' },
-          { label: 'Specs',        href: '#product-details',   mobileHide: true },
-          { label: 'Pricing',      href: '#pricing' },
-          { label: 'Reviews',      href: '#reviews' },
-          { label: 'FAQs',         href: '#faq' },
+          { label: t('nav.problem'),      href: '#problem' },
+          { label: t('nav.solution'),     href: '#solution' },
+          { label: t('nav.benefits'),     href: '#benefits',          desktopHide: true },
+          { label: t('nav.how_it_works'), href: '#how-it-works' },
+          { label: t('nav.videos'),       href: '#video-testimonial', desktopHide: true },
+          { label: t('nav.lab'),          href: '#lab-certified' },
+          { label: t('nav.specs'),        href: '#product-details',   mobileHide: true },
+          { label: t('nav.pricing'),      href: '#pricing' },
+          { label: t('nav.reviews'),      href: '#reviews' },
+          { label: t('nav.faqs'),         href: '#faq' },
         ];
         const navClick = (e, href) => {
           e.preventDefault();
@@ -951,16 +961,19 @@ export default function Home() {
             }}>
               <button onClick={() => setDrawerOpen(false)} aria-label="Close menu"
                 style={{ position:'absolute', top:14, right:16, background:'none', border:'none', cursor:'pointer', color:'var(--vd-brown)', fontSize:'1.5rem', lineHeight:1 }}>✕</button>
-              <p style={{ fontSize:'.65rem', fontWeight:800, color:'#aaa', letterSpacing:1.5, textTransform:'uppercase', marginBottom:16 }}>Navigate</p>
+              <p style={{ fontSize:'.65rem', fontWeight:800, color:'#aaa', letterSpacing:1.5, textTransform:'uppercase', marginBottom:16 }}>{t('nav.navigate')}</p>
               {NAV.filter(n => !n.mobileHide).map(({ label, href }) => (
                 <a key={href} href={href} onClick={e => navClick(e, href)}
                   style={{ fontSize:'.97rem', fontWeight:600, color:'var(--vd-brown)', textDecoration:'none', padding:'11px 0', borderBottom:'1px solid var(--vd-border)', flexShrink:0 }}>
                   {label}
                 </a>
               ))}
+              <div style={{ padding:'14px 0', borderBottom:'1px solid var(--vd-border)' }}>
+                <LanguageSwitcher />
+              </div>
               <a href="#checkout" onClick={e => navClick(e, '#checkout')}
                 style={{ marginTop:24, background:'var(--vd-brown)', color:'#fff', textAlign:'center', padding:'14px', borderRadius:10, fontWeight:800, fontSize:'1rem', textDecoration:'none' }}>
-                Order Now →
+                {t('nav.order_now')} →
               </a>
             </div>
             <style>{`
@@ -982,9 +995,9 @@ export default function Home() {
       <div className="marquee" aria-hidden="true">
         <div className="marquee-track">
           {(() => {
-            const items = ['🌿 Natural Vijaysar Wood','🚚 Free Delivery All Over India','🏺 Inspired by Traditional Ayurveda','💳 COD Available','↩️ 7-Day Replacement Guarantee','✋ Premium Handcrafted Finish','☀️ Sugar-Conscious Wellness Ritual','🎁 Gift for Parents & Family','✅ No Side Effects'];
-            return [...items, ...items].map((t, i) => (
-              <span key={i} className="marquee-item">{t}</span>
+            const items = [1,2,3,4,5,6,7,8,9].map(n => t(`marquee.${n}`));
+            return [...items, ...items].map((item, i) => (
+              <span key={i} className="marquee-item">{item}</span>
             ));
           })()}
         </div>
@@ -999,25 +1012,25 @@ export default function Home() {
 
             <div>
               <div className="badge-row">
-                <span className="badge">🌿 Inspired by Ayurveda</span>
-                <span className="badge badge-green">🚚 Free Delivery</span>
-                <span className="badge">💳 COD Available</span>
+                <span className="badge">🌿 {t('badge.ayurveda')}</span>
+                <span className="badge badge-green">🚚 {t('badge.free_delivery')}</span>
+                <span className="badge">💳 {t('badge.cod')}</span>
               </div>
-              <p className="eyebrow">Vedayu — Indian Wellness</p>
+              <p className="eyebrow">{t('hero.eyebrow')}</p>
               <h1 onClick={() => scrollToCheckout()} style={{ cursor:'pointer' }} title="Tap to order">
                 {utm.source === 'facebook' || utm.source === 'instagram' || utm.medium === 'paid'
                   ? 'Yes, This Is the Vijaysar Glass From the Ad — Here\'s Why 500+ Families Use It Daily'
-                  : 'Vijaysar Wooden Glass — Start Your Daily Ayurvedic Wellness Ritual'}
+                  : t('hero.title')}
               </h1>
               <p className="hero-sub" style={{ marginTop: 14 }}>
                 {utm.source === 'facebook' || utm.source === 'instagram' || utm.medium === 'paid'
                   ? 'Fill with water overnight, drink first thing each morning. Natural Vijaysar wood — no chemicals, no pills. Just an ancient Indian wellness ritual, delivered to your door.'
-                  : 'The traditional Vijaysar wooden tumbler — fill with water overnight, drink first thing each morning. A simple, natural hydration ritual inspired by thousands of years of Ayurvedic wisdom.'}
+                  : t('hero.desc')}
               </p>
               <div className="hero-price">
                 <span className="price-main">₹{PACKS[pack].price.toLocaleString('en-IN')}</span>
                 <span className="price-original">₹{PACKS[pack].original.toLocaleString('en-IN')}</span>
-                <span className="price-save">{PACKS[pack].saving.split('—')[0].trim()}</span>
+                <span className="price-save">{t('pack.save_prefix')} ₹{(PACKS[pack].original - PACKS[pack].price).toLocaleString('en-IN')}</span>
               </div>
 
               {/* Quick pack picker */}
@@ -1030,30 +1043,30 @@ export default function Home() {
                     role="button" tabIndex={0}
                     onKeyDown={e => e.key === 'Enter' && setPack(+k)}
                   >
-                    {+k === 2 && <span className="pack-popular-tag">⭐ Most Popular</span>}
-                    {+k === 5 && <span className="pack-popular-tag" style={{ background:'var(--vd-gold)' }}>🏆 Best Value</span>}
+                    {+k === 2 && <span className="pack-popular-tag">{t('pack.most_popular_badge')}</span>}
+                    {+k === 5 && <span className="pack-popular-tag" style={{ background:'var(--vd-gold)' }}>🏆 {t('pack.best_value')}</span>}
                     {+k === 1 && <span style={{ display:'block', height:18, marginBottom:2 }} />}
-                    <span className="pack-name">{p.name}</span>
+                    <span className="pack-name">{+k === 1 ? t('pricing.pack1.title') : +k === 2 ? t('pricing.pack2.title') : t('pricing.pack5.title')}</span>
                     <span className="pack-price">₹{p.price.toLocaleString('en-IN')}</span>
                     <span style={{ fontSize:'.68rem', color:'var(--vd-text-light)', display:'block', marginTop:2 }}>
-                      {+k === 1 ? '₹499/glass' : +k === 2 ? '₹449/glass' : '₹400/glass'}
+                      {t(`pack.per_glass_${+k}`)}
                     </span>
                     {+k > 1 && <span style={{ fontSize:'.62rem', background:'var(--vd-off-white)', color:'var(--vd-green)', padding:'1px 5px', borderRadius:8, marginTop:3, display:'inline-block', fontWeight:700 }}>
-                      Save ₹{(p.original - p.price).toLocaleString('en-IN')}
+                      {t('pack.save_prefix')} ₹{(p.original - p.price).toLocaleString('en-IN')}
                     </span>}
                   </div>
                 ))}
               </div>
 
               <div className="hero-cta">
-                <button className="btn btn-brown btn-lg" onClick={() => scrollToCheckout()}>Order Now — Free Delivery →</button>
-                <a href="#how-it-works" className="btn btn-outline">How It Works ↓</a>
+                <button className="btn btn-brown btn-lg" onClick={() => scrollToCheckout()}>{t('hero.cta_order')}</button>
+                <a href="#how-it-works" className="btn btn-outline">{t('hero.cta_how')}</a>
               </div>
               <div className="hero-micro">
-                <span>✅ Razorpay Secure</span>
-                <span>✅ Cash on Delivery</span>
-                <span>✅ 7-Day Replacement</span>
-                <span>✅ Made in India</span>
+                <span>{t('hero.micro.razorpay')}</span>
+                <span>{t('hero.micro.cod')}</span>
+                <span>{t('hero.micro.replacement')}</span>
+                <span>{t('hero.micro.made_in_india')}</span>
               </div>
             </div>
 
@@ -1086,7 +1099,7 @@ export default function Home() {
                   onClick={() => setLightbox({ imgs: GALLERY.map(g => g.src), idx: galleryIdx })}
                   style={{ transition:'opacity .25s', display:'block', width:'100%', height:'100%', objectFit:'contain', cursor:'zoom-in' }}
                 />
-                <span onClick={() => setLightbox({ imgs: GALLERY.map(g => g.src), idx: galleryIdx })} style={{ position:'absolute', bottom:10, right:10, background:'rgba(0,0,0,.45)', color:'#fff', fontSize:'.65rem', padding:'3px 8px', borderRadius:20, cursor:'zoom-in', zIndex:2 }}>🔍 Tap to zoom</span>
+                <span onClick={() => setLightbox({ imgs: GALLERY.map(g => g.src), idx: galleryIdx })} style={{ position:'absolute', bottom:10, right:10, background:'rgba(0,0,0,.45)', color:'#fff', fontSize:'.65rem', padding:'3px 8px', borderRadius:20, cursor:'zoom-in', zIndex:2 }}>{t('spec.zoom')}</span>
                 {/* Prev / Next arrows */}
                 {galleryIdx > 0 && (
                   <button onClick={() => setGalleryIdx(i => i-1)} style={{ position:'absolute', left:8, top:'50%', transform:'translateY(-50%)', background:'rgba(255,255,255,.85)', border:'none', borderRadius:'50%', width:36, height:36, fontSize:'1.1rem', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 2px 8px rgba(0,0,0,.15)' }} aria-label="Previous image">‹</button>
@@ -1102,9 +1115,9 @@ export default function Home() {
                 </div>
               </div>
               <div className="spec-pills">
-                <span className="spec-pill">📏 6 inch tall</span>
-                <span className="spec-pill">💧 80 ml capacity</span>
-                <span className="spec-pill">🪵 100% Natural Wood</span>
+                <span className="spec-pill">{t('spec.pill1')}</span>
+                <span className="spec-pill">{t('spec.pill2')}</span>
+                <span className="spec-pill">{t('spec.pill3')}</span>
               </div>
             </div>
 
@@ -1117,17 +1130,17 @@ export default function Home() {
           ══════════════════════════════════════════ */}
       <section className="section section-alt" id="problem">
         <div className="container">
-          <h2 className="section-title">Does This Sound Like Your Daily Struggle?</h2>
-          <p className="section-sub">Millions of Indian families face these everyday wellness challenges</p>
+          <h2 className="section-title">{t('section.problem')}</h2>
+          <p className="section-sub">{t('section.problem_sub')}</p>
           <div className="divider" />
           <div className="problem-grid">
             {[
-              { icon: '🍬', title: 'Too Much Sugar in Daily Diet',       body: 'Sweets, chai, processed foods — sugar sneaks into every meal. You want to be more mindful but don\'t know where to anchor a healthy habit.' },
-              { icon: '💧', title: 'No Healthy Morning Routine',          body: 'You wake up, reach for your phone, have chai, and rush. There\'s no simple, grounding wellness ritual to start your day right.' },
-              { icon: '🌿', title: 'Searching for Natural Alternatives',  body: 'Expensive supplements and pills feel artificial. You want something rooted in Indian tradition — natural, simple, and trustworthy.' },
-              { icon: '👨‍👩‍👧‍👦', title: 'Worried About Parents\' Health',   body: 'You want to gift your parents something meaningful — not another pill, but a timeless natural daily habit they\'ll actually love.' },
-              { icon: '⏰', title: 'No Time for Complex Routines',        body: 'Complex diets don\'t stick. You need something that takes 30 seconds each morning and builds into a habit automatically.' },
-              { icon: '🏺', title: 'Disconnected from Ayurvedic Roots',  body: 'Our grandparents had simple, effective wellness traditions. In the rush of modern life, those traditions have been forgotten.' },
+              { icon: '🍬', title: t('problem.p1.title'), body: t('problem.p1.body') },
+              { icon: '💧', title: t('problem.p2.title'), body: t('problem.p2.body') },
+              { icon: '🌿', title: t('problem.p3.title'), body: t('problem.p3.body') },
+              { icon: '👨‍👩‍👧‍👦', title: t('problem.p4.title'), body: t('problem.p4.body') },
+              { icon: '⏰', title: t('problem.p5.title'), body: t('problem.p5.body') },
+              { icon: '🏺', title: t('problem.p6.title'), body: t('problem.p6.body') },
             ].map(({ icon, title, body }) => (
               <div className="problem-card" key={title}>
                 <div className="problem-icon">{icon}</div>
@@ -1142,8 +1155,8 @@ export default function Home() {
       {/* CTA STRIP */}
       <div className="cta-strip">
         <div className="container">
-          <p>Start a simple, natural daily wellness ritual today.</p>
-          <button className="btn btn-gold btn-lg" onClick={() => scrollToCheckout()}>Order Now — Free Delivery →</button>
+          <p>{t('cta.problem_strip')}</p>
+          <button className="btn btn-gold btn-lg" onClick={() => scrollToCheckout()}>{t('hero.cta_order')}</button>
         </div>
       </div>
 
@@ -1162,27 +1175,20 @@ export default function Home() {
                   height={400}
                   style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
                 />
-                <span style={{ position:'absolute', bottom:16, left:'50%', transform:'translateX(-50%)', background:'rgba(0,0,0,.45)', color:'#fff', fontSize:'.65rem', padding:'3px 8px', borderRadius:20, whiteSpace:'nowrap' }}>🔍 Tap to zoom</span>
+                <span style={{ position:'absolute', bottom:16, left:'50%', transform:'translateX(-50%)', background:'rgba(0,0,0,.45)', color:'#fff', fontSize:'.65rem', padding:'3px 8px', borderRadius:20, whiteSpace:'nowrap' }}>{t('spec.zoom')}</span>
               </div>
             </div>
             <div>
-              <p className="solution-sub">The Solution</p>
-              <h2>Meet Your New Daily Wellness Companion — The Vedayu Vijaysar Wooden Glass</h2>
+              <p className="solution-sub">{t('solution.sub')}</p>
+              <h2>{t('solution.heading')}</h2>
               <div className="divider divider-left" style={{ marginTop: 14 }} />
-              <p style={{ marginBottom: 20 }}>Vijaysar wood has been used in traditional Indian wellness practices for generations. The Vedayu Vijaysar Wooden Glass brings this ancient tradition into your modern daily routine — simply, beautifully, and naturally.</p>
+              <p style={{ marginBottom: 20 }}>{t('solution.desc')}</p>
               <ul className="solution-points">
-                {[
-                  'Fill with **room temperature** water **overnight** — let the natural wood do its work while you sleep',
-                  'Drink your first glass of **Vijaysar wood infused water** every morning',
-                  'Support your **sugar-conscious lifestyle** with a purposeful natural hydration ritual',
-                  '**100% natural**, reusable, eco-friendly — no chemicals, no artificial ingredients',
-                  'Inspired by **Ayurveda** — a tradition trusted for thousands of years in India',
-                  'A deeply meaningful **gift** for parents, family, and wellness-conscious loved ones',
-                ].map(pt => (
-                  <li key={pt}><span className="check" /><span>{renderBold(pt)}</span></li>
+                {[1,2,3,4,5,6].map(n => (
+                  <li key={n}><span className="check" /><span>{t(`solution.pt${n}`)}</span></li>
                 ))}
               </ul>
-              <button className="btn btn-brown" onClick={() => scrollToCheckout()}>Get Yours — ₹499 Only →</button>
+              <button className="btn btn-brown" onClick={() => scrollToCheckout()}>{t('solution.cta')}</button>
             </div>
           </div>
         </div>
@@ -1193,9 +1199,9 @@ export default function Home() {
           ══════════════════════════════════════════ */}
       <section className="section" id="celebrity">
         <div className="container">
-          <div className="celebrity-label">🎬 As Seen With</div>
-          <h2 className="section-title">Sanjay Mishra on Vijaysar Wood</h2>
-          <p className="section-sub">Popular Bollywood actor Sanjay Mishra shares why he swears by the power of Vijaysar wood</p>
+          <div className="celebrity-label">{t('celebrity.label')}</div>
+          <h2 className="section-title">{t('section.celebrity')}</h2>
+          <p className="section-sub">{t('section.celebrity_sub')}</p>
           <div className="divider" />
           <div className="celebrity-wrap">
             <div className="celebrity-video-wrap">
@@ -1215,11 +1221,11 @@ export default function Home() {
                 <div className="celebrity-byline">— Sanjay Mishra, Actor</div>
               </div>
               <div className="celebrity-badges">
-                <span className="video-badge">🎬 Actor</span>
-                <span className="video-badge">✅ Verified Endorsement</span>
+                <span className="video-badge">{t('celebrity.badge.actor')}</span>
+                <span className="video-badge">{t('celebrity.badge.verified')}</span>
               </div>
               <a href="#checkout" className="btn btn-brown btn-lg">
-                Order Now — Free Delivery →
+                {t('hero.cta_order')}
               </a>
             </div>
           </div>
@@ -1231,8 +1237,8 @@ export default function Home() {
           ══════════════════════════════════════════ */}
       <section className="section section-alt" id="video-testimonial">
         <div className="container">
-          <h2 className="section-title">See Why 25,000+ Families Trust Vedayu</h2>
-          <p className="section-sub">Real customers, real stories — hear it in their own words</p>
+          <h2 className="section-title">{t('section.video_reviews')}</h2>
+          <p className="section-sub">{t('section.video_reviews_sub')}</p>
           <div className="divider" />
           <div className="video-duo-wrap">
             <div className="video-duo-item">
@@ -1250,7 +1256,7 @@ export default function Home() {
               <div className="video-duo-caption">
                 <div className="video-stars">★★★★★</div>
                 <p className="video-pull-quote">&ldquo;Maine pehle kai products try kiye — kuch kaam aaya, kuch nahi. Vijaysar glass ne meri subah ki routine change kar di.&rdquo;</p>
-                <div className="video-author-line">Verified Customer &nbsp;·&nbsp; Vedayu Order</div>
+                <div className="video-author-line">{t('video.t1.author')}</div>
               </div>
             </div>
             <div className="video-duo-item">
@@ -1268,18 +1274,18 @@ export default function Home() {
               <div className="video-duo-caption">
                 <div className="video-stars">★★★★★</div>
                 <p className="video-pull-quote">&ldquo;Vijaysar wood — 2,000 years of Ayurvedic tradition, one simple morning habit. Pure, natural, and genuinely effective.&rdquo;</p>
-                <div className="video-author-line">Vedayu &nbsp;·&nbsp; Official</div>
+                <div className="video-author-line">{t('video.t2.author')}</div>
               </div>
             </div>
           </div>
           <div className="video-section-cta">
             <div className="video-badges">
-              <span className="video-badge">✅ Real Customers</span>
-              <span className="video-badge">📦 25,000+ Orders</span>
-              <span className="video-badge">🇮🇳 Made in India</span>
+              <span className="video-badge">{t('video.badge.customers')}</span>
+              <span className="video-badge">{t('video.badge.orders')}</span>
+              <span className="video-badge">{t('video.badge.india')}</span>
             </div>
             <a href="#checkout" className="btn btn-brown btn-lg" style={{ marginTop: 20, display: 'inline-block' }}>
-              Order Now — Free Delivery →
+              {t('hero.cta_order')}
             </a>
           </div>
         </div>
@@ -1290,26 +1296,29 @@ export default function Home() {
           ══════════════════════════════════════════ */}
       <section className="section section-alt" id="benefits">
         <div className="container">
-          <h2 className="section-title">Why Choose Vedayu Vijaysar Wooden Glass?</h2>
-          <p className="section-sub">Everything you need. Nothing you don&apos;t.</p>
+          <h2 className="section-title">{t('section.benefits')}</h2>
+          <p className="section-sub">{t('section.benefits_sub')}</p>
           <div className="divider" />
           <div className="benefits-grid">
             {[
-              { icon: '🌿', title: 'Supports Sugar-Conscious Lifestyle',  body: 'Build a daily habit of Vijaysar wood infused water as part of a mindful, natural morning wellness routine.' },
-              { icon: '🏺', title: 'Inspired by Traditional Ayurveda',    body: 'Vijaysar wood has been part of Indian wellness traditions for centuries. This tumbler honours that living heritage.' },
-              { icon: '🪵', title: '100% Natural Vijaysar Wood',           body: 'No plastic, no coatings, no chemicals. Pure, naturally harvested Vijaysar wood — exactly as nature intended.' },
-              { icon: '💧', title: 'Simple Overnight Infusion',            body: 'Fill before bed. Drink in the morning. A complete daily wellness ritual in just 30 seconds of effort.' },
-              { icon: '🔄', title: 'Reusable & Eco-Friendly',             body: 'A one-time purchase that lasts. No disposable packets or wasteful packaging. Good for you and the planet.' },
-              { icon: '✋', title: 'Premium Handcrafted Finish',           body: 'Each tumbler is shaped by skilled artisans. Unique natural grain patterns make every piece one-of-a-kind.' },
-              { icon: '🎁', title: 'Perfect Gift for Parents',             body: 'A thoughtful gift for parents, in-laws, and elders — something they\'ll use and value every single day.' },
-              { icon: '☀️', title: 'Builds a Purposeful Morning Habit',    body: 'Replace empty morning habits with a grounding wellness ritual. Start each day with intention.' },
-            ].map(({ icon, title, body }) => (
-              <div className="benefit-card" key={title}>
+              { icon: '🌿', key: 'b1' },
+              { icon: '🏺', key: 'b2' },
+              { icon: '🪵', key: 'b3' },
+              { icon: '💧', key: 'b4' },
+              { icon: '🔄', key: 'b5' },
+              { icon: '✋', key: 'b6' },
+              { icon: '🎁', key: 'b7' },
+              { icon: '☀️', key: 'b8' },
+            ].map(({ icon, key }) => {
+              const title = t(`benefits.${key}.title`);
+              const body = t(`benefits.${key}.body`);
+              return (
+              <div className="benefit-card" key={key}>
                 <div className="benefit-icon">{icon}</div>
                 <h3>{title}</h3>
                 <p>{body}</p>
               </div>
-            ))}
+            );})}
           </div>
         </div>
       </section>
@@ -1319,8 +1328,8 @@ export default function Home() {
           ══════════════════════════════════════════ */}
       <section className="section" id="how-it-works">
         <div className="container">
-          <h2 className="section-title">How to Use Your Vijaysar Wooden Glass</h2>
-          <p className="section-sub">4 simple steps. One powerful daily wellness habit.</p>
+          <h2 className="section-title">{t('section.how_it_works')}</h2>
+          <p className="section-sub">{t('section.how_it_works_sub')}</p>
           <div className="divider" />
           {/* Two-column layout: image left, steps right on desktop */}
           <div className="how-to-grid">
@@ -1335,7 +1344,7 @@ export default function Home() {
                   height={480}
                   style={{ width: '100%', maxWidth: 480, height: 'auto', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,.12)', display: 'block', margin: '0 auto' }}
                 />
-                <span style={{ position:'absolute', bottom:10, right:10, background:'rgba(0,0,0,.45)', color:'#fff', fontSize:'.65rem', padding:'3px 8px', borderRadius:20 }}>🔍 Tap to zoom</span>
+                <span style={{ position:'absolute', bottom:10, right:10, background:'rgba(0,0,0,.45)', color:'#fff', fontSize:'.65rem', padding:'3px 8px', borderRadius:20 }}>{t('spec.zoom')}</span>
               </button>
             </div>
 
@@ -1343,11 +1352,14 @@ export default function Home() {
             <div className="how-to-steps-col">
               <div className="steps-vertical">
                 {[
-                  { icon: '💧', title: 'Step 1 — Fill',           body: 'Fill the tumbler with normal room temperature drinking water. Do not use hot water.' },
-                  { icon: '🌙', title: 'Step 2 — Rest',           body: 'Cover and keep overnight for 6–8 hours. Let the Vijaysar wood naturally infuse into the water.' },
-                  { icon: '☀️', title: 'Step 3 — Drink',          body: 'First thing in the morning, drink the Vijaysar wood infused water — ideally on an empty stomach.' },
-                  { icon: '♻️', title: 'Step 4 — Rinse & Repeat', body: 'Rinse gently with plain water. Dry thoroughly. Refill tonight. Build your daily ritual.' },
-                ].map(({ icon, title, body }) => (
+                  { icon: '💧', key: 's1' },
+                  { icon: '🌙', key: 's2' },
+                  { icon: '☀️', key: 's3' },
+                  { icon: '♻️', key: 's4' },
+                ].map(({ icon, key }) => {
+                  const title = t(`steps.${key}.title`);
+                  const body = t(`steps.${key}.body`);
+                  return (
                   <div className="step-v" key={title}>
                     <div className="step-v-icon">{icon}</div>
                     <div>
@@ -1355,21 +1367,21 @@ export default function Home() {
                       <p style={{ margin: 0, fontSize: '.9rem', color: 'var(--vd-text-light)', lineHeight: 1.6 }}>{body}</p>
                     </div>
                   </div>
-                ))}
+                );})}
               </div>
 
               <div className="usage-tips" style={{ marginTop: 24 }}>
-                <h3>📋 Care Tips</h3>
+                <h3>{t('care.heading')}</h3>
                 <ul>
-                  <li>Use only <strong>room temperature water</strong> — never hot</li>
-                  <li>Rinse with plain water only — <strong>no soap or chemicals</strong></li>
-                  <li><strong>Dry completely</strong> after each use</li>
-                  <li>Do not soak for more than 8–10 hours</li>
+                  <li>{t('care.tip1')}</li>
+                  <li>{t('care.tip2')}</li>
+                  <li>{t('care.tip3')}</li>
+                  <li>{t('care.tip4')}</li>
                 </ul>
               </div>
 
               <button className="btn btn-brown btn-lg" style={{ marginTop: 28, width: '100%' }} onClick={() => scrollToCheckout()}>
-                Order Now — Starting ₹499 →
+                {t('cta.order_starting')}
               </button>
             </div>
 
@@ -1382,24 +1394,20 @@ export default function Home() {
           ══════════════════════════════════════════ */}
       <section className="section section-dark" id="making">
         <div className="container">
-          <h2 className="section-title" style={{ color: '#fff' }}>Crafted with Care. Inspected Before Dispatch.</h2>
-          <p className="section-sub" style={{ color: 'rgba(255,255,255,.72)' }}>Every Vedayu tumbler goes through a 6-step quality process before it reaches you</p>
+          <h2 className="section-title" style={{ color: '#fff' }}>{t('section.quality')}</h2>
+          <p className="section-sub" style={{ color: 'rgba(255,255,255,.72)' }}>{t('section.quality_sub')}</p>
           <div className="divider" />
           <div className="process-grid">
-            {[
-              { n:1, title:'Wood Selection',    body:'Only mature, high-quality Vijaysar wood is selected. Each piece checked for purity and integrity.' },
-              { n:2, title:'Cutting & Sizing',  body:'Precisely cut to 6 inch height and 2 inch diameter for the perfect handheld size.' },
-              { n:3, title:'Hollowing',         body:'Skilled artisans carefully hollow the tumbler to an 80 ml capacity — smooth inside for clean water infusion.' },
-              { n:4, title:'Natural Finishing', body:'No chemical varnishes or synthetic paints. Naturally sanded for a premium, safe finish.' },
-              { n:5, title:'Quality Check',     body:'Every tumbler individually inspected — checked for cracks, smoothness, and correct dimensions.' },
-              { n:6, title:'Safe Packaging',    body:'Each tumbler carefully packed to ensure safe delivery to your door anywhere in India.' },
-            ].map(({ n, title, body }) => (
+            {[1,2,3,4,5,6].map(n => {
+              const title = t(`making.m${n}.title`);
+              const body = t(`making.m${n}.body`);
+              return (
               <div className="process-item" key={n}>
                 <div className="process-num">{n}</div>
                 <h4>{title}</h4>
                 <p>{body}</p>
               </div>
-            ))}
+            );})}
           </div>
         </div>
       </section>
@@ -1409,9 +1417,9 @@ export default function Home() {
           ══════════════════════════════════════════ */}
       <section className="section" id="lab-certified">
         <div className="container">
-          <p className="eyebrow" style={{ textAlign:'center' }}>Third-Party Verified</p>
-          <h2 className="section-title">Lab Tested. Scientifically Certified.</h2>
-          <p className="section-sub">Every Vedayu Vijaysar glass is tested by an ISO-certified independent laboratory — not just our word, but proof.</p>
+          <p className="eyebrow" style={{ textAlign:'center' }}>{t('section.lab_eyebrow')}</p>
+          <h2 className="section-title">{t('section.lab_title')}</h2>
+          <p className="section-sub">{t('section.lab_sub')}</p>
           <div className="divider" />
           <div style={{ display:'flex', flexWrap:'wrap', gap:32, alignItems:'center', justifyContent:'center', marginTop:32 }}>
             {/* Certificate thumbnail */}
@@ -1422,31 +1430,34 @@ export default function Home() {
                 aria-label="View lab certificate"
               >
                 <img src="/lab-cert-1.jpg" alt="Hydel Laboratories test report for Vijaysar Herbal Wood Tumbler" style={{ width:'100%', display:'block' }} />
-                <div style={{ background:'#5C3D1E', color:'#fff', fontSize:'.78rem', fontWeight:700, padding:'8px 12px', textAlign:'center', letterSpacing:.5 }}>🔍 Tap to View Full Certificate</div>
+                <div style={{ background:'#5C3D1E', color:'#fff', fontSize:'.78rem', fontWeight:700, padding:'8px 12px', textAlign:'center', letterSpacing:.5 }}>{t('lab.tap_view')}</div>
               </button>
-              <a href="/lab-certificate.pdf" download style={{ display:'block', textAlign:'center', marginTop:10, fontSize:'.78rem', color:'var(--vd-brown)', fontWeight:600, textDecoration:'underline' }}>⬇ Download PDF</a>
+              <a href="/lab-certificate.pdf" download style={{ display:'block', textAlign:'center', marginTop:10, fontSize:'.78rem', color:'var(--vd-brown)', fontWeight:600, textDecoration:'underline' }}>{t('lab.download')}</a>
             </div>
             {/* Key findings */}
             <div style={{ flex:'1 1 280px', maxWidth:480 }}>
               <p style={{ fontSize:'.8rem', fontWeight:700, color:'#888', letterSpacing:1, textTransform:'uppercase', marginBottom:16 }}>Hydel Laboratories (P) Ltd. — Report No. HLPL20-260420-01</p>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
                 {[
-                  { icon:'✅', label:'Toxicity', value:'Non-Toxic' },
-                  { icon:'♻️', label:'Biodegradable', value:'Yes' },
-                  { icon:'🌿', label:'Cellulose Content', value:'44%' },
-                  { icon:'🔬', label:'pH Level', value:'5.79 (Safe)' },
-                  { icon:'🪵', label:'Organic Matter', value:'Natural — Original Value' },
-                  { icon:'💧', label:'Colour Change', value:'Confirmed in 6–8 hrs' },
-                ].map(({ icon, label, value }) => (
-                  <div key={label} style={{ background:'#fdf6ec', border:'1px solid #e8d5b0', borderRadius:10, padding:'12px 14px' }}>
+                  { icon:'✅', n:1 },
+                  { icon:'♻️', n:2 },
+                  { icon:'🌿', n:3 },
+                  { icon:'🔬', n:4 },
+                  { icon:'🪵', n:5 },
+                  { icon:'💧', n:6 },
+                ].map(({ icon, n }) => {
+                  const label = t(`lab.finding${n}.label`);
+                  const value = t(`lab.finding${n}.value`);
+                  return (
+                  <div key={n} style={{ background:'#fdf6ec', border:'1px solid #e8d5b0', borderRadius:10, padding:'12px 14px' }}>
                     <div style={{ fontSize:'1.3rem', marginBottom:4 }}>{icon}</div>
                     <div style={{ fontSize:'.7rem', color:'#888', fontWeight:600, textTransform:'uppercase', letterSpacing:.5 }}>{label}</div>
                     <div style={{ fontSize:'.92rem', fontWeight:800, color:'#5C3D1E', marginTop:2 }}>{value}</div>
                   </div>
-                ))}
+                );})}
               </div>
               <div style={{ marginTop:18, background:'#eaf4ee', border:'1px solid #b2d8be', borderRadius:10, padding:'12px 16px', fontSize:'.82rem', color:'#2d6a4f', lineHeight:1.6 }}>
-                <strong>Lab Note:</strong> When filled with water, genuine Vijaysar wood turns the water a light reddish-brown colour after 6–8 hours — a natural marker of authenticity confirmed by this report.
+                <strong>Lab Note:</strong> {t('lab.note')}
               </div>
               <p style={{ fontSize:'.72rem', color:'#aaa', marginTop:10 }}>Tested by Hydel Laboratories (P) Ltd. · ISO:9001:2015 · ISO:14001:2015 · ISO:45001:2018 Certified</p>
             </div>
@@ -1459,8 +1470,8 @@ export default function Home() {
           ══════════════════════════════════════════ */}
       <section className="section section-alt" id="product-details">
         <div className="container">
-          <h2 className="section-title">Product Specifications</h2>
-          <p className="section-sub">Everything you need to know about the Vedayu Vijaysar Wooden Glass</p>
+          <h2 className="section-title">{t('section.specs_title')}</h2>
+          <p className="section-sub">{t('section.specs_sub')}</p>
           <div className="divider" />
 
           {/* Product infographics */}
@@ -1473,7 +1484,7 @@ export default function Home() {
                 style={{ background:'none', border:'none', padding:0, cursor:'zoom-in', width:'100%', maxWidth:380, position:'relative' }}>
                 <Image src={src} alt={alt} width={380} height={380}
                   style={{ width:'100%', height:'auto', borderRadius:12, boxShadow:'0 4px 20px rgba(0,0,0,.10)', display:'block' }} />
-                <span style={{ position:'absolute', bottom:10, right:10, background:'rgba(0,0,0,.45)', color:'#fff', fontSize:'.65rem', padding:'3px 8px', borderRadius:20 }}>🔍 Tap to zoom</span>
+                <span style={{ position:'absolute', bottom:10, right:10, background:'rgba(0,0,0,.45)', color:'#fff', fontSize:'.65rem', padding:'3px 8px', borderRadius:20 }}>{t('spec.zoom')}</span>
               </button>
             ))}
           </div>
@@ -1591,25 +1602,10 @@ export default function Home() {
           })()}
 
           <div className="specs-table">
-            {[
-              ['Product Name',       'Vedayu Vijaysar Wooden Herbal Glass / Tumbler'],
-              ['Material',           '100% Natural Vijaysar Wood (Pterocarpus marsupium)'],
-              ['Height',             '6 inches (approx. 15 cm)'],
-              ['Diameter',           '2 inches (approx. 5 cm)'],
-              ['Capacity',           '80 ml'],
-              ['Finish',             'Natural wood finish — no chemical coating or paint'],
-              ['Usage',              'Water infusion only (room temperature water only)'],
-              ['Available Packs',    'Pack of 1 | Pack of 2 (Couple) | Pack of 5 (Family)'],
-              ['Delivery',           'Free delivery all over India'],
-              ['Return/Replacement', '7 days from date of delivery'],
-              ['Payment',            'Razorpay (Prepaid) + Cash on Delivery (COD)'],
-              ['Country of Origin',  'India'],
-              ['Care',               'Rinse with plain water only. Dry thoroughly after use.'],
-              ['Note',               'Natural grain, colour & texture vary — each piece is unique.'],
-            ].map(([label, value]) => (
-              <div className="spec-row" key={label}>
-                <div className="spec-label">{label}</div>
-                <div className="spec-value">{value}</div>
+            {[1,2,3,4,5,6,7,8,9,10,11,12,13,14].map(n => (
+              <div className="spec-row" key={n}>
+                <div className="spec-label">{t(`specs.row${n}.label`)}</div>
+                <div className="spec-value">{t(`specs.row${n}.value`)}</div>
               </div>
             ))}
           </div>
@@ -1621,56 +1617,56 @@ export default function Home() {
           ══════════════════════════════════════════ */}
       <section className="section" id="pricing">
         <div className="container">
-          <h2 className="section-title">Choose Your Pack</h2>
-          <p className="section-sub">Free delivery on all orders &nbsp;·&nbsp; Razorpay Secure &nbsp;·&nbsp; COD Available</p>
+          <h2 className="section-title">{t('section.pricing')}</h2>
+          <p className="section-sub">{t('section.pricing_sub')}</p>
           <div className="divider" />
           <div className="pricing-grid">
 
             {/* Pack of 1 */}
             <div className="pricing-card">
-              <h3>Pack of 1</h3>
-              <span className="pricing-tag">Try It Pack</span>
+              <h3>{t('pricing.pack1.title')}</h3>
+              <span className="pricing-tag">{t('pack.try_it')}</span>
               <div className="pricing-price">₹499</div>
               <div className="pricing-original">₹699</div>
-              <div className="pricing-saving">You save ₹200</div>
+              <div className="pricing-saving">{t('pricing.pack1.save')}</div>
               <ul className="pricing-features">
-                {['1 Vijaysar Wooden Glass','Free delivery all over India','7-day replacement guarantee','Razorpay Prepaid + COD','Usage guide included'].map(f => (
+                {t('pricing.features.p1').split('|').map(f => (
                   <li key={f}><span className="check" />{f}</li>
                 ))}
               </ul>
-              <button className="btn btn-brown btn-full" onClick={() => scrollToCheckout(1)}>Buy Pack of 1</button>
+              <button className="btn btn-brown btn-full" onClick={() => scrollToCheckout(1)}>{t('pricing.pack1.cta')}</button>
             </div>
 
             {/* Pack of 2 — Most Popular */}
             <div className="pricing-card pricing-card-popular">
-              <div className="pricing-badge">⭐ Most Popular</div>
-              <h3>Pack of 2</h3>
-              <span className="pricing-tag">Couple Pack</span>
+              <div className="pricing-badge">{t('pack.most_popular_badge')}</div>
+              <h3>{t('pricing.pack2.title')}</h3>
+              <span className="pricing-tag">{t('pack.couple')}</span>
               <div className="pricing-price">₹899</div>
               <div className="pricing-original">₹1,398</div>
-              <div className="pricing-saving">You save ₹499 — ₹449.50 per glass</div>
+              <div className="pricing-saving">{t('pricing.pack2.save')}</div>
               <ul className="pricing-features">
-                {['2 Vijaysar Wooden Glasses','Ideal for couples & parents','Free delivery all over India','7-day replacement guarantee','Razorpay Prepaid + COD'].map(f => (
+                {t('pricing.features.p2').split('|').map(f => (
                   <li key={f}><span className="check" />{f}</li>
                 ))}
               </ul>
-              <button className="btn btn-green btn-full" onClick={() => scrollToCheckout(2)}>Buy Couple Pack</button>
+              <button className="btn btn-green btn-full" onClick={() => scrollToCheckout(2)}>{t('pricing.pack2.cta')}</button>
             </div>
 
             {/* Pack of 5 — Best Value */}
             <div className="pricing-card pricing-card-family">
-              <div className="pricing-badge pricing-badge-gold">🏆 Best Value Family Pack</div>
-              <h3>Pack of 5</h3>
-              <span className="pricing-tag">Family Pack</span>
+              <div className="pricing-badge pricing-badge-gold">{t('pricing.pack5.badge')}</div>
+              <h3>{t('pricing.pack5.title')}</h3>
+              <span className="pricing-tag">{t('pack.family')}</span>
               <div className="pricing-price">₹1,999</div>
               <div className="pricing-original">₹3,495</div>
-              <div className="pricing-saving">You save ₹1,496 — only ₹399.80 per glass!</div>
+              <div className="pricing-saving">{t('pricing.pack5.save')}</div>
               <ul className="pricing-features">
-                {['5 Vijaysar Wooden Glasses','Ideal for family & gifting','Free delivery all over India','7-day replacement guarantee','Razorpay Prepaid + COD','Best price per piece'].map(f => (
+                {t('pricing.features.p5').split('|').map(f => (
                   <li key={f}><span className="check" />{f}</li>
                 ))}
               </ul>
-              <button className="btn btn-gold btn-full" onClick={() => scrollToCheckout(5)}>Buy Family Pack</button>
+              <button className="btn btn-gold btn-full" onClick={() => scrollToCheckout(5)}>{t('pricing.pack5.cta')}</button>
             </div>
 
           </div>
@@ -1682,8 +1678,8 @@ export default function Home() {
           ══════════════════════════════════════════ */}
       <section className="section section-alt" id="checkout">
         <div className="container">
-          <h2 className="section-title">Complete Your Order</h2>
-          <p className="section-sub">Free delivery &nbsp;·&nbsp; Secure payment &nbsp;·&nbsp; 7-day replacement</p>
+          <h2 className="section-title">{t('section.checkout')}</h2>
+          <p className="section-sub">{t('section.checkout_sub')}</p>
           <div className="divider" />
 
           {/* ── Referral discount banner ── */}
@@ -1707,27 +1703,27 @@ export default function Home() {
 
           <div className="checkout-wrap">
             <div className="checkout-head">
-              <h3>Order Vedayu Vijaysar Wooden Glass</h3>
-              <p>🔒 Secure checkout &nbsp;·&nbsp; Razorpay Prepaid &nbsp;·&nbsp; Cash on Delivery</p>
+              <h3>{t('checkout.heading_order')}</h3>
+              <p>{t('checkout.secure')}</p>
             </div>
 
             <div className="checkout-body">
 
               {/* Pack selector */}
-              <label className="field-label" style={{ marginBottom: 8 }}>Select Your Pack:</label>
+              <label className="field-label" style={{ marginBottom: 8 }}>{t('checkout.select_pack')}</label>
               <div className="pack-selector">
                 {[1, 2, 5].map(p => (
                   <div key={p} className={`pack-option${pack === p ? ' active' : ''}`} onClick={() => setPack(p)} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setPack(p)}>
-                    {p === 2 && <span className="pack-popular-tag">⭐ Most Popular</span>}
-                    {p === 5 && <span className="pack-popular-tag" style={{background:'var(--vd-gold)'}}>🏆 Best Value</span>}
+                    {p === 2 && <span className="pack-popular-tag">{t('pack.most_popular_badge')}</span>}
+                    {p === 5 && <span className="pack-popular-tag" style={{background:'var(--vd-gold)'}}>🏆 {t('pack.best_value')}</span>}
                     {p === 1 && <span style={{ display:'block', height:18, marginBottom:2 }} />}
-                    <span className="pack-name">{PACKS[p].name}</span>
+                    <span className="pack-name">{p === 1 ? t('pricing.pack1.title') : p === 2 ? t('pricing.pack2.title') : t('pricing.pack5.title')}</span>
                     <span className="pack-price">{fmt(PACKS[p].price)}</span>
                     <span style={{ fontSize:'.68rem', color:'var(--vd-text-light)', fontWeight:600, display:'block', marginTop:2 }}>
-                      {p === 1 ? '₹499/glass' : p === 2 ? '₹449/glass' : '₹400/glass'}
+                      {t(`pack.per_glass_${p}`)}
                     </span>
                     {p > 1 && <span style={{ fontSize:'.62rem', background:'var(--vd-off-white)', color:'var(--vd-green)', padding:'1px 5px', borderRadius:8, marginTop:3, display:'inline-block', fontWeight:700 }}>
-                      Save {fmt(PACKS[p].original - PACKS[p].price)}
+                      {t('pack.save_prefix')} {fmt(PACKS[p].original - PACKS[p].price)}
                     </span>}
                   </div>
                 ))}
@@ -1735,15 +1731,15 @@ export default function Home() {
 
               {/* Order summary */}
               <div className="order-summary">
-                <div className="order-row"><span>{currentPack.label}</span><span>{fmt(currentPack.price)}</span></div>
+                <div className="order-row"><span>{t('checkout.item_glass')} × {currentPack.qty}</span><span>{fmt(currentPack.price)}</span></div>
                 {payment === 'prepaid' && (
                   <div className="order-row" style={{ color: '#4A7C59', fontWeight: 600 }}>
-                    <span>🎉 Prepaid Discount (10% off)</span>
+                    <span>{t('checkout.prepaid_discount_label')}</span>
                     <span>− {fmt(discountAmt(pack))}</span>
                   </div>
                 )}
-                <div className="order-row order-row-free"><span>🚚 Delivery</span><span>FREE</span></div>
-                <div className="order-row order-row-total"><span>Total</span><span>{fmt(currentPrice)}</span></div>
+                <div className="order-row order-row-free"><span>{t('checkout.delivery_label')}</span><span>{t('delivery.free')}</span></div>
+                <div className="order-row order-row-total"><span>{t('checkout.total_label')}</span><span>{fmt(currentPrice)}</span></div>
               </div>
 
               {/* Welcome back — cookie or server KV lookup restored details */}
@@ -1754,15 +1750,15 @@ export default function Home() {
               )}
 
               {/* Customer details */}
-              <label className="field-label" style={{ marginBottom: 8 }}>Your Delivery Details:</label>
+              <label className="field-label" style={{ marginBottom: 8 }}>{t('checkout.your_details')}</label>
               <div className="field-row">
                 <div className="field-group">
                   <label className="field-label" htmlFor="name">{t('checkout.name_label')}{vIcon('name')}</label>
-                  <input id="name" type="text" placeholder="Your full name" autoComplete="name" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} onBlur={() => touch('name')} style={vStyle('name')} />
+                  <input id="name" type="text" placeholder={t('checkout.name_placeholder')} autoComplete="name" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} onBlur={() => touch('name')} style={vStyle('name')} />
                 </div>
                 <div className="field-group">
                   <label className="field-label" htmlFor="mobile">{t('checkout.mobile_label')}{vIcon('mobile')}</label>
-                  <input id="mobile" type="tel" placeholder="10-digit number" maxLength={10} inputMode="numeric" value={form.mobile} onChange={e => { const v = e.target.value.replace(/\D/g,''); setForm(f => ({ ...f, mobile: v })); tryLookup(v, form.email); }} onBlur={async () => { touch('mobile'); if (referrerId && /^[6-9]\d{9}$/.test(form.mobile)) { try { const r = await fetch(`/api/referral-validate?mobile=${form.mobile}`); const d = await r.json(); if (!d.valid) { setReferralDiscount(0); setReferrerId(''); showToast('Referral discount is for new customers only.', 'info'); } } catch {} } }} style={vStyle('mobile')} />
+                  <input id="mobile" type="tel" placeholder={t('checkout.mobile_placeholder')} maxLength={10} inputMode="numeric" value={form.mobile} onChange={e => { const v = e.target.value.replace(/\D/g,''); setForm(f => ({ ...f, mobile: v })); tryLookup(v, form.email); }} onBlur={async () => { touch('mobile'); if (referrerId && /^[6-9]\d{9}$/.test(form.mobile)) { try { const r = await fetch(`/api/referral-validate?mobile=${form.mobile}`); const d = await r.json(); if (!d.valid) { setReferralDiscount(0); setReferrerId(''); showToast('Referral discount is for new customers only.', 'info'); } } catch {} } }} style={vStyle('mobile')} />
                 </div>
               </div>
 
@@ -1770,31 +1766,31 @@ export default function Home() {
                 <label className="field-label" htmlFor="email">
                   {t('checkout.email_label')}{vIcon('email')}
                 </label>
-                <input id="email" type="email" placeholder="yourname@gmail.com" autoComplete="email" required value={form.email} onChange={e => { const v = e.target.value; setForm(f => ({ ...f, email: v })); tryLookup(form.mobile, v); }} onBlur={() => touch('email')} style={vStyle('email')} />
+                <input id="email" type="email" placeholder={t('checkout.email_placeholder')} autoComplete="email" required value={form.email} onChange={e => { const v = e.target.value; setForm(f => ({ ...f, email: v })); tryLookup(form.mobile, v); }} onBlur={() => touch('email')} style={vStyle('email')} />
               </div>
 
               <div className="field-group">
                 <label className="field-label" htmlFor="address">{t('checkout.address_label')}{vIcon('address')}</label>
-                <textarea id="address" rows={2} placeholder="House no., Street, Area, Landmark" value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} onBlur={() => touch('address')} style={{ resize: 'vertical', ...vStyle('address') }} />
+                <textarea id="address" rows={2} placeholder={t('checkout.address_placeholder')} value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} onBlur={() => touch('address')} style={{ resize: 'vertical', ...vStyle('address') }} />
               </div>
 
               <div className="field-row">
                 <div className="field-group">
                   <label className="field-label" htmlFor="pincode">
-                    {t('checkout.pincode_label')}{vIcon('pincode')}{pincodeLoading && <span style={{ fontWeight:400, color:'#4A7C59', fontSize:'.76rem', marginLeft:6 }}>🔍 detecting…</span>}
+                    {t('checkout.pincode_label')}{vIcon('pincode')}{pincodeLoading && <span style={{ fontWeight:400, color:'#4A7C59', fontSize:'.76rem', marginLeft:6 }}>🔍 {t('checkout.detecting')}</span>}
                   </label>
-                  <input id="pincode" type="text" placeholder="6-digit pincode" maxLength={6} inputMode="numeric" value={form.pincode} onChange={e => handlePincode(e.target.value.replace(/\D/g,''))} onBlur={() => touch('pincode')} style={vStyle('pincode')} />
+                  <input id="pincode" type="text" placeholder={t('checkout.pincode_placeholder')} maxLength={6} inputMode="numeric" value={form.pincode} onChange={e => handlePincode(e.target.value.replace(/\D/g,''))} onBlur={() => touch('pincode')} style={vStyle('pincode')} />
                 </div>
                 <div className="field-group">
                   <label className="field-label" htmlFor="city">{t('checkout.city_label')}{vIcon('city')}</label>
-                  <input id="city" type="text" placeholder={pincodeLoading ? 'Detecting city…' : 'City / Town'} value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} onBlur={() => touch('city')} style={vStyle('city')} />
+                  <input id="city" type="text" placeholder={pincodeLoading ? t('checkout.detecting') : t('checkout.city_placeholder')} value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} onBlur={() => touch('city')} style={vStyle('city')} />
                 </div>
               </div>
 
               <div className="field-group">
                 <label className="field-label" htmlFor="state">{t('checkout.state_label')}{vIcon('state')}</label>
                 <select id="state" value={form.state} onChange={e => setForm(f => ({ ...f, state: e.target.value }))} onBlur={() => touch('state')} style={vStyle('state')}>
-                  <option value="">{pincodeLoading ? 'Detecting state…' : t('checkout.state_placeholder')}</option>
+                  <option value="">{pincodeLoading ? t('checkout.detecting') : t('checkout.state_placeholder')}</option>
                   {STATES.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
@@ -1829,7 +1825,7 @@ export default function Home() {
                       onClick={() => {
                         if (scheduleBtnRef.current) {
                           const r = scheduleBtnRef.current.getBoundingClientRect();
-                          setSchedulePopupPos({ top: r.bottom + window.scrollY + 6, left: r.left + window.scrollX });
+                          setSchedulePopupPos({ top: r.bottom + 6, left: r.left });
                         }
                         setScheduleOpen(o => !o);
                       }}
@@ -1860,19 +1856,35 @@ export default function Home() {
                     {scheduleOpen && (
                       <div
                         ref={schedulePopupRef}
-                        style={{
-                          position:'fixed',
-                          zIndex:9999,
-                          top: schedulePopupPos.top,
-                          left: schedulePopupPos.left,
-                          background:'#fff',
-                          border:'1px solid #4A7C59',
-                          borderRadius:10,
-                          boxShadow:'0 4px 24px rgba(0,0,0,.18)',
-                          padding:'12px 14px 10px',
-                          minWidth:280,
-                          maxWidth: 'calc(100vw - 32px)',
-                        }}
+                        style={(() => {
+                          const isMobile = typeof window !== 'undefined' && window.innerWidth < 500;
+                          if (isMobile) return {
+                            position: 'fixed',
+                            zIndex: 9999,
+                            left: 8,
+                            right: 8,
+                            bottom: 80,
+                            background: '#fff',
+                            border: '1px solid #4A7C59',
+                            borderRadius: 14,
+                            boxShadow: '0 -4px 32px rgba(0,0,0,.18)',
+                            padding: '14px 10px 10px',
+                            overflowX: 'hidden',
+                          };
+                          return {
+                            position: 'fixed',
+                            zIndex: 9999,
+                            top: schedulePopupPos.top,
+                            left: Math.min(schedulePopupPos.left, window.innerWidth - 310),
+                            background: '#fff',
+                            border: '1px solid #4A7C59',
+                            borderRadius: 10,
+                            boxShadow: '0 4px 24px rgba(0,0,0,.18)',
+                            padding: '12px 14px 10px',
+                            minWidth: 280,
+                            maxWidth: 'calc(100vw - 32px)',
+                          };
+                        })()}
                       >
                         <div style={{ fontSize:'.78rem', fontWeight:600, color:'#2d6b40', marginBottom:6 }}>{t('delivery.schedule_choose')}</div>
                         <DayPicker
@@ -1888,7 +1900,8 @@ export default function Home() {
                             { dayOfWeek: [0] },
                             ...holidayDates,
                           ]}
-                          style={{ margin: 0 }}
+                          locale={dayPickerLocale}
+                          style={{ margin: 0, width: '100%' }}
                         />
                         {scheduledDate && (
                           <button
@@ -1942,9 +1955,9 @@ export default function Home() {
               </div>
 
               <button className="btn btn-brown btn-full" style={{ padding: '17px', fontSize: '1.05rem' }} onClick={placeOrder} disabled={loading}>
-                {loading ? <><span className="spinner" />{t('checkout.processing')}</> : t('checkout.place_order_cod')}
+                {loading ? <><span className="spinner" />{t('checkout.processing')}</> : payment === 'prepaid' ? t('checkout.place_order_prepaid') : t('checkout.place_order_cod')}
               </button>
-              <p className="form-footer">🔒 100% Secure &nbsp;·&nbsp; Your details are safe &nbsp;·&nbsp; No spam</p>
+              <p className="form-footer">{t('checkout.free_delivery_note')}</p>
             </div>
           </div>
 
@@ -1956,25 +1969,22 @@ export default function Home() {
           ══════════════════════════════════════════ */}
       <section className="section section-green" id="trust">
         <div className="container">
-          <h2 className="section-title" style={{ color: '#fff' }}>Why Thousands of Indian Families Trust Vedayu</h2>
+          <h2 className="section-title" style={{ color: '#fff' }}>{t('section.trust')}</h2>
           <div className="divider" />
           <div className="trust-grid">
             {[
-              { icon:'🔒', title:'Razorpay Secure',       body:'India\'s most trusted payment gateway. UPI, cards, wallets — all accepted safely.' },
-              { icon:'💵', title:'COD Available',         body:'Pay cash when your order is delivered. No advance payment required.' },
-              { icon:'🚚', title:'Free Delivery',         body:'Free shipping to every pincode across India. No minimum order value.' },
-              { icon:'↩️', title:'7-Day Replacement',     body:'Not satisfied with quality? Get a replacement within 7 days of delivery.' },
-              { icon:'📦', title:'Careful Packaging',     body:'Every tumbler individually packed and quality checked before dispatch.' },
-              { icon:'🌿', title:'Indian Wellness Brand', body:'Proudly Indian — rooted in Ayurvedic tradition, made for Indian families.' },
-              { icon:'💬', title:'WhatsApp Support',      body:'Questions? Chat with us on WhatsApp anytime. We respond fast.' },
-              { icon:'✅', title:'Quality Checked',       body:'Every tumbler inspected before dispatch. You receive only the best.' },
-            ].map(({ icon, title, body }) => (
-              <div className="trust-item" key={title}>
+              { icon:'🔒', key:'t1' }, { icon:'💵', key:'t2' }, { icon:'🚚', key:'t3' }, { icon:'↩️', key:'t4' },
+              { icon:'📦', key:'t5' }, { icon:'🌿', key:'t6' }, { icon:'💬', key:'t7' }, { icon:'✅', key:'t8' },
+            ].map(({ icon, key }) => {
+              const title = t(`trust.${key}.title`);
+              const body = t(`trust.${key}.body`);
+              return (
+              <div className="trust-item" key={key}>
                 <div className="trust-icon">{icon}</div>
                 <h4>{title}</h4>
                 <p>{body}</p>
               </div>
-            ))}
+            );})}
           </div>
         </div>
       </section>
@@ -1982,13 +1992,13 @@ export default function Home() {
       {/* CTA strip 2 */}
       <div style={{ background: 'var(--vd-off-white)', padding: '48px 20px', textAlign: 'center', borderTop: '1px solid var(--vd-border)' }}>
         <div className="container">
-          <h2 style={{ color: 'var(--vd-dark-brown)', marginBottom: 10 }}>Ready to Start Your Daily Wellness Ritual?</h2>
-          <p style={{ color: 'var(--vd-text-light)', marginBottom: 26 }}>Join Indian families building healthier morning habits — naturally, simply, daily.</p>
+          <h2 style={{ color: 'var(--vd-dark-brown)', marginBottom: 10 }}>{t('cta2.heading')}</h2>
+          <p style={{ color: 'var(--vd-text-light)', marginBottom: 26 }}>{t('cta2.sub')}</p>
           <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button className="btn btn-brown btn-lg" onClick={() => scrollToCheckout()}>Order Now — Starting ₹499 →</button>
-            <a href="#pricing" className="btn btn-outline">View All Packs →</a>
+            <button className="btn btn-brown btn-lg" onClick={() => scrollToCheckout()}>{t('cta.order_starting')}</button>
+            <a href="#pricing" className="btn btn-outline">{t('cta.view_packs')}</a>
           </div>
-          <p style={{ marginTop: 14, fontSize: '.76rem', color: 'var(--vd-text-light)' }}>Free delivery · 7-day replacement · Razorpay + COD</p>
+          <p style={{ marginTop: 14, fontSize: '.76rem', color: 'var(--vd-text-light)' }}>{t('cta2.note')}</p>
         </div>
       </div>
 
@@ -1997,13 +2007,13 @@ export default function Home() {
           ══════════════════════════════════════════ */}
       <section className="section" id="reviews">
         <div className="container">
-          <h2 className="section-title">What Our Customers Are Saying</h2>
-          <p className="section-sub">Real experiences from real Indian families across the country</p>
+          <h2 className="section-title">{t('section.reviews')}</h2>
+          <p className="section-sub">{t('section.reviews_sub')}</p>
           <div className="divider" />
           <div style={{ textAlign: 'center', marginBottom: 32 }}>
             <div style={{ fontSize: '2.4rem', fontWeight: 800, color: 'var(--vd-brown)', lineHeight: 1 }}>4.8 / 5</div>
             <div style={{ color: 'var(--vd-gold)', fontSize: '1.4rem', letterSpacing: 4, margin: '5px 0' }}>★★★★★</div>
-            <div style={{ fontSize: '.82rem', color: 'var(--vd-text-light)' }}>Based on 25,000+ verified orders across India</div>
+            <div style={{ fontSize: '.82rem', color: 'var(--vd-text-light)' }}>{t('review.rating_summary')}</div>
           </div>
           <div className="reviews-grid">
             {[
@@ -2022,7 +2032,7 @@ export default function Home() {
                   <div>
                     <div className="review-name">{name}</div>
                     <div className="review-meta">{loc} · {ago}</div>
-                    <div className="review-verified">✅ Verified Purchase</div>
+                    <div className="review-verified">{t('review.verified')}</div>
                   </div>
                 </div>
               </div>
@@ -2037,7 +2047,7 @@ export default function Home() {
       <section className="section section-alt" id="faq">
         <div className="container">
           <h2 className="section-title">{t('faq.title')}</h2>
-          <p className="section-sub">Everything you need to know before ordering</p>
+          <p className="section-sub">{t('section.faq_sub')}</p>
           <div className="divider" />
           <div className="faq-wrap">
             {FAQS.map((item, i) => (
@@ -2057,10 +2067,10 @@ export default function Home() {
           ══════════════════════════════════════════ */}
       <section style={{ background: 'linear-gradient(135deg,#5C3D1E,#3D2610)', padding: '60px 20px', textAlign: 'center' }} id="final-cta">
         <div className="container">
-          <h2 style={{ color: '#fff', marginBottom: 10 }}>Your Daily Wellness Ritual Starts Today</h2>
-          <p style={{ color: 'rgba(255,255,255,.82)', marginBottom: 30 }}>Natural Vijaysar wood infused water. Simple routine. Ayurvedic tradition. Starting at just ₹499.</p>
-          <button className="btn btn-gold btn-lg" onClick={() => scrollToCheckout()}>Order Now — Free Delivery →</button>
-          <p style={{ color: 'rgba(255,255,255,.5)', fontSize: '.76rem', marginTop: 18 }}>✅ Free delivery &nbsp;·&nbsp; ✅ 7-day replacement &nbsp;·&nbsp; ✅ Razorpay + COD &nbsp;·&nbsp; ✅ Made in India</p>
+          <h2 style={{ color: '#fff', marginBottom: 10 }}>{t('finalcta.heading')}</h2>
+          <p style={{ color: 'rgba(255,255,255,.82)', marginBottom: 30 }}>{t('finalcta.sub')}</p>
+          <button className="btn btn-gold btn-lg" onClick={() => scrollToCheckout()}>{t('hero.cta_order')}</button>
+          <p style={{ color: 'rgba(255,255,255,.5)', fontSize: '.76rem', marginTop: 18 }}>{t('finalcta.note')}</p>
         </div>
       </section>
 
@@ -2072,8 +2082,8 @@ export default function Home() {
             <div className="sticky-cta-inner">
               <div className="sticky-text">
                 {formReady
-                  ? <><strong>Ready to order!</strong> {fmt(PACKS[pack].price)} · {PACKS[pack].tag}</>
-                  : <><strong>{PACKS[pack].tag}</strong> {fmt(PACKS[pack].price)} · Free Delivery</>
+                  ? <><strong>{t('sticky.ready')}</strong> {fmt(PACKS[pack].price)} · {pack === 1 ? t('pack.try_it') : pack === 2 ? t('pack.couple') : t('pack.family')}</>
+                  : <><strong>{pack === 1 ? t('pack.try_it') : pack === 2 ? t('pack.couple') : t('pack.family')}</strong> {fmt(PACKS[pack].price)} · {t('sticky.free_delivery')}</>
                 }
               </div>
               <button
@@ -2081,7 +2091,7 @@ export default function Home() {
                 disabled={loading}
                 style={{ background: formReady ? '#4A7C59' : 'var(--vd-gold)', color: '#fff', fontWeight: 700, padding: '11px 22px', borderRadius: 6, fontSize: '.88rem', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'background .3s' }}
               >
-                {loading ? '⏳' : formReady ? '✅ Place Order' : 'Buy Now →'}
+                {loading ? '⏳' : formReady ? t('sticky.place_order') : t('sticky.buy_now')}
               </button>
             </div>
           </div>
@@ -2111,15 +2121,15 @@ export default function Home() {
         <div className="exit-overlay" onClick={() => setExitIntent(false)}>
           <div className="exit-modal" onClick={e => e.stopPropagation()}>
             <button className="exit-close" onClick={() => setExitIntent(false)} aria-label="Close">✕</button>
-            <div className="exit-badge">Limited Offer 🎁</div>
-            <h2 className="exit-title">Wait! Before You Go…</h2>
-            <p className="exit-sub">Pay online &amp; get <strong>10% OFF</strong> your order instantly — no coupon needed!</p>
-            <p className="exit-perks">🎁 Free gift on every order &nbsp;·&nbsp; 🚚 Fast delivery across India</p>
+            <div className="exit-badge">{t('exit.badge')}</div>
+            <h2 className="exit-title">{t('exit.title')}</h2>
+            <p className="exit-sub" dangerouslySetInnerHTML={{ __html: t('exit.sub') }} />
+            <p className="exit-perks">{t('exit.perks')}</p>
             <div className="exit-discount-box">
               <div className="exit-pack-row">
                 {[1,2,5].map(p => (
                   <div key={p} className="exit-pack-item">
-                    <span className="exit-pack-name">{PACKS[p].name}</span>
+                    <span className="exit-pack-name">{p === 1 ? t('pricing.pack1.title') : p === 2 ? t('pricing.pack2.title') : t('pricing.pack5.title')}</span>
                     <span className="exit-pack-old">{fmt(PACKS[p].price)}</span>
                     <span className="exit-pack-new">{fmt(effectivePrice(p,'prepaid'))}</span>
                   </div>
@@ -2131,14 +2141,14 @@ export default function Home() {
               style={{ marginTop: 20, fontSize: '1rem', padding: '14px' }}
               onClick={() => { setExitIntent(false); scrollToCheckout(null, 'prepaid'); }}
             >
-              🎉 Claim 10% Off — Pay Online
+              {t('exit.cta')}
             </button>
-            <p className="exit-referral">👥 Refer a friend &amp; they get <strong>₹50 off</strong> their first order!</p>
+            <p className="exit-referral" dangerouslySetInnerHTML={{ __html: t('exit.referral') }} />
             <button
               className="exit-skip"
               onClick={() => setExitIntent(false)}
             >
-              No thanks, I'll pay full price on delivery
+              {t('exit.decline')}
             </button>
           </div>
         </div>

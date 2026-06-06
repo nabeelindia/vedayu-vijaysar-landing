@@ -70,10 +70,10 @@ export default function LanguageSwitcher() {
           minWidth: 140,
           overflow: 'hidden',
           top: ref.current
-            ? ref.current.getBoundingClientRect().bottom + window.scrollY + 4
+            ? ref.current.getBoundingClientRect().bottom + 4
             : 50,
           left: ref.current
-            ? Math.max(8, ref.current.getBoundingClientRect().left + window.scrollX - 40)
+            ? Math.max(8, ref.current.getBoundingClientRect().left - 40)
             : 'auto',
           right: ref.current
             ? 'auto'
