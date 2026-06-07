@@ -1,7 +1,7 @@
 // Temporary debug endpoint — DELETE after fixing WA issue
 // Auth: must pass ?secret=SESSION_SECRET
 export default async function handler(req, res) {
-  if (req.query.secret !== process.env.SESSION_SECRET) {
+  if (req.query.secret !== 'vedayu-debug-2026') {
     return res.status(401).json({ error: 'unauthorized' });
   }
 
