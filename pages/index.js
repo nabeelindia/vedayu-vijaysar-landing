@@ -926,7 +926,7 @@ export default function Home() {
                 {/* Logo / brand */}
                 <a href="#hero" onClick={e => navClick(e, '#hero')} style={{ fontWeight:800, fontSize:'1rem', color:'#5C3D1E', textDecoration:'none', letterSpacing:-.3, flexShrink:0 }}>🌿 Vedayu</a>
                 {/* Desktop links */}
-                <div style={{ display:'flex', gap:0, alignItems:'center', flexWrap:'nowrap', minWidth:0, overflow:'hidden' }} className="nav-desktop">
+                <div style={{ display:'flex', gap:0, alignItems:'center', flexWrap:'nowrap', minWidth:0, overflow:'visible' }} className="nav-desktop">
                   {NAV.filter(n => !n.desktopHide).map(({ label, href }) => (
                     <a key={href} href={href} onClick={e => navClick(e, href)}
                       className="nav-link"
