@@ -47,6 +47,22 @@ function App({ Component, pageProps }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Track language usage — fires once per locale per session (sessionStorage dedup)
+  useEffect(() => {
+    try {
+      const locale = router.locale || 'en';
+      const key = `lang_tracked_${locale}`;
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, '1');
+        fetch('/api/track-lang', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ locale }),
+        }).catch(() => {});
+      }
+    } catch (_) {}
+  }, [router.locale]);
+
   // Register service worker + request push permission for admin notifications
   useEffect(() => {
     if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) return;
@@ -80,16 +96,21 @@ function App({ Component, pageProps }) {
 
   return (
     <>
-      {/* Meta Pixel — deferred so it doesn't block FCP */}
+      {/* Meta Pixel — afterInteractive so stub is ready before events fire */}
       <Script
         id="fb-pixel"
-        strategy="lazyOnload"
+        strategy="afterInteractive"
         dangerouslySetInnerHTML={{ __html: `
-          (function(b,e,v,n,t,s){
-            t=b.createElement(e);t.async=!0;t.src=v;
-            s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s);
-          })(document,'script','https://connect.facebook.net/en_US/fbevents.js');
-          if(window.fbq) { fbq('track','PageView'); }
+          !function(f,b,e,v,n,t,s){
+            if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+            n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+            if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+            n.queue=[];t=b.createElement(e);t.async=!0;
+            t.src=v;s=b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t,s)
+          }(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+          fbq('init','4274415046037928');
+          fbq('track','PageView');
         ` }}
       />
 

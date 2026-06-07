@@ -214,7 +214,6 @@ export default function Home() {
       const y = window.scrollY;
       setShowSticky(y > 500);
       setScrolled(y > 80);
-      setNavVisible(y < 80 || y < lastScrollY.current);
       lastScrollY.current = y;
       setScheduleOpen(false);
     };
@@ -903,38 +902,43 @@ export default function Home() {
         };
         return (
           <>
-            <div style={{ height: 'var(--nav-h, 56px)' }} aria-hidden="true" />
-            <nav style={{ position:'fixed', top:0, left:0, right:0, zIndex:200, background:'#fff', boxShadow: scrolled ? '0 4px 20px rgba(92,61,30,.18)' : '0 1px 4px rgba(92,61,30,.08)', transform: navVisible ? 'translateY(0)' : 'translateY(-110%)', transition:'transform .28s cubic-bezier(.4,0,.2,1), box-shadow .25s' }}>
-              {/* Top micro trust bar — desktop only */}
+            <div className="nav-spacer" aria-hidden="true" />
+            <nav style={{ position:'fixed', top:0, left:0, right:0, zIndex:200, background:'#fff', boxShadow: scrolled ? '0 4px 20px rgba(92,61,30,.18)' : '0 1px 4px rgba(92,61,30,.08)', transition:'box-shadow .25s' }}>
+              {/* Brown trust bar — inside fixed nav, desktop only */}
               <div className="nav-trust-bar">
-                <div style={{ maxWidth:1280, margin:'0 auto', padding:'0 20px', display:'flex', alignItems:'center', justifyContent:'center', gap:24, flexWrap:'nowrap' }}>
+                <div style={{ maxWidth:1280, margin:'0 auto', padding:'0 16px', display:'flex', alignItems:'center', justifyContent:'center', gap:0, flexWrap:'nowrap', overflow:'hidden' }}>
                   {[
                     t('nav.trust.delivery'),
                     t('nav.trust.replacement'),
                     t('nav.trust.payment'),
                     t('nav.trust.natural'),
                     t('nav.trust.brand'),
-                  ].map(label => (
-                    <span key={label} style={{ fontSize:'.80rem', fontWeight:600, color:'rgba(255,255,255,.9)', whiteSpace:'nowrap' }}>{label}</span>
+                  ].map((label, i, arr) => (
+                    <span key={label} className="trust-item">
+                      {label}
+                      {i < arr.length - 1 && <span className="trust-sep" aria-hidden="true"> · </span>}
+                    </span>
                   ))}
                 </div>
               </div>
               {/* Main nav row */}
-              <div style={{ maxWidth:1280, margin:'0 auto', padding:'0 20px', display:'flex', alignItems:'center', justifyContent:'space-between', height:46, borderTop:'1px solid #e8d5b0' }}>
+              <div style={{ maxWidth:1280, margin:'0 auto', padding:'0 16px', display:'flex', alignItems:'center', justifyContent:'space-between', height:46 }}>
                 {/* Logo / brand */}
                 <a href="#hero" onClick={e => navClick(e, '#hero')} style={{ fontWeight:800, fontSize:'1rem', color:'#5C3D1E', textDecoration:'none', letterSpacing:-.3, flexShrink:0 }}>🌿 Vedayu</a>
                 {/* Desktop links */}
-                <div style={{ display:'flex', gap:0, alignItems:'center', flexWrap:'nowrap' }} className="nav-desktop">
+                <div style={{ display:'flex', gap:0, alignItems:'center', flexWrap:'nowrap', minWidth:0, overflow:'hidden' }} className="nav-desktop">
                   {NAV.filter(n => !n.desktopHide).map(({ label, href }) => (
                     <a key={href} href={href} onClick={e => navClick(e, href)}
-                      style={{ fontSize:'.90rem', fontWeight:600, color:'#5C3D1E', textDecoration:'none', padding:'5px 10px', borderRadius:6, whiteSpace:'nowrap', transition:'background .15s' }}
+                      className="nav-link"
+                      style={{ color:'#5C3D1E', textDecoration:'none', borderRadius:6, whiteSpace:'nowrap', transition:'background .15s' }}
                       onMouseEnter={e => e.currentTarget.style.background='#fdf6ec'}
                       onMouseLeave={e => e.currentTarget.style.background='transparent'}
                     >{label}</a>
                   ))}
                   <LanguageSwitcher />
                   <a href="#checkout" onClick={e => navClick(e, '#checkout')}
-                    style={{ fontSize:'.90rem', fontWeight:800, color:'#fff', background:'#5C3D1E', padding:'6px 16px', borderRadius:20, textDecoration:'none', whiteSpace:'nowrap', marginLeft:8, flexShrink:0 }}>
+                    className="nav-cta"
+                    style={{ color:'#fff', background:'#5C3D1E', borderRadius:20, textDecoration:'none', whiteSpace:'nowrap', marginLeft:6, flexShrink:0 }}>
                     {t('nav.order_now')}
                   </a>
                 </div>
@@ -986,18 +990,47 @@ export default function Home() {
               </a>
             </div>
             <style>{`
-              :root { --nav-h: 56px; }
-              .nav-trust-bar {
-                background: #5C3D1E;
-                padding: 5px 0;
-              }
+              /* mobile base */
+              .nav-spacer    { height: 46px; }
+              .nav-trust-bar { display: none; }
+              .nav-desktop   { display: none !important; }
+              .nav-hamburger { display: block !important; }
+
+              /* desktop 769px+ — trust bar (30px) + nav row (46px) = 76px */
               @media (min-width: 769px) {
-                :root { --nav-h: 81px; } /* trust bar (~25px) + nav row (~46px) + border (1px) */
+                .nav-spacer { height: 76px; }
+                .nav-trust-bar {
+                  display: block;
+                  background: #5C3D1E;
+                  padding: 5px 0;
+                  overflow: hidden;
+                }
+                .trust-item {
+                  font-size: .75rem;
+                  font-weight: 600;
+                  color: rgba(255,255,255,.92);
+                  white-space: nowrap;
+                  padding: 0 8px;
+                }
+                .trust-sep { color: rgba(255,255,255,.4); }
+                .nav-desktop   { display: flex !important; }
+                .nav-hamburger { display: none !important; }
+                .nav-link { font-size: .82rem; font-weight: 600; padding: 4px 6px; }
+                .nav-cta  { font-size: .82rem; font-weight: 800; padding: 5px 12px; }
               }
-              @media (max-width: 768px) {
-                .nav-trust-bar { display: none; }
-                .nav-desktop { display: none !important; }
-                .nav-hamburger { display: block !important; }
+
+              /* mid desktop 769–1050px */
+              @media (min-width: 769px) and (max-width: 1050px) {
+                .trust-item { font-size: .68rem; padding: 0 5px; }
+                .nav-link   { font-size: .75rem; padding: 4px 4px; }
+                .nav-cta    { font-size: .75rem; padding: 5px 9px; }
+              }
+
+              /* large desktop 1051px+ */
+              @media (min-width: 1051px) {
+                .trust-item { font-size: .80rem; padding: 0 14px; }
+                .nav-link   { font-size: .88rem; padding: 5px 10px; }
+                .nav-cta    { font-size: .88rem; padding: 6px 18px; }
               }
             `}</style>
           </>

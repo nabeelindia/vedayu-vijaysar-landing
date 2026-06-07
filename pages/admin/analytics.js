@@ -301,11 +301,105 @@ function ClarityTab() {
   );
 }
 
+// ── Language Analytics tab ────────────────────────────────────────────────────
+const LOCALE_COLORS = { en:'#4A7C59', hi:'#e07b39', ta:'#7c4a7c', te:'#1565C0' };
+const LOCALE_FLAGS  = { en:'🇬🇧', hi:'🇮🇳', ta:'🌿', te:'🌸' };
+
+function LangTab() {
+  const [data,    setData]    = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error,   setError]   = useState(null);
+
+  useEffect(() => {
+    fetch('/api/admin/lang-analytics')
+      .then(r => r.ok ? r.json() : r.json().then(j => { throw new Error(j.error || 'Failed'); }))
+      .then(d => { setData(d); setLoading(false); })
+      .catch(e => { setError(e.message); setLoading(false); });
+  }, []);
+
+  if (loading) return <p style={{ color:'#888', padding:'20px 0' }}>Loading language data…</p>;
+  if (error)   return <div style={{ background:'#fff8e1', borderRadius:8, padding:'12px 16px', color:'#6D4C00', fontSize:'.85rem' }}>⚠️ {error}</div>;
+
+  const total     = data?.total   || [];
+  const daily     = data?.daily   || [];
+  const grandTotal = total.reduce((s, r) => s + r.count, 0) || 1;
+  const maxCount  = Math.max(...total.map(r => r.count), 1);
+
+  // Build stacked daily chart data
+  const locales = ['en','hi','ta','te'];
+
+  return (
+    <div style={{ display:'grid', gap:12 }}>
+      {/* All-time summary cards */}
+      <div className="admin-stat-grid">
+        {total.map(r => (
+          <StatCard key={r.locale}
+            label={`${LOCALE_FLAGS[r.locale] || ''} ${r.label}`}
+            value={fmtN(r.count)}
+            sub={`${((r.count / grandTotal) * 100).toFixed(1)}% of total`}
+            color={LOCALE_COLORS[r.locale]} />
+        ))}
+      </div>
+
+      {/* Bar chart — all-time */}
+      <Card title="All-time Language Distribution" badge={`${fmtN(grandTotal)} total sessions`}>
+        {total.map(r => (
+          <Bar key={r.locale}
+            label={`${LOCALE_FLAGS[r.locale] || ''} ${r.label}`}
+            count={r.count} max={maxCount}
+            color={LOCALE_COLORS[r.locale]}
+            sub={`${((r.count / grandTotal) * 100).toFixed(1)}%`} />
+        ))}
+      </Card>
+
+      {/* Last 14 days daily line */}
+      <Card title="Daily Language Sessions — Last 14 Days">
+        <div style={{ overflowX:'auto' }}>
+          <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'.75rem' }}>
+            <thead>
+              <tr>
+                <th style={{ textAlign:'left', padding:'4px 8px', color:'#888', fontWeight:600 }}>Date</th>
+                {locales.map(loc => (
+                  <th key={loc} style={{ textAlign:'center', padding:'4px 8px',
+                    color:LOCALE_COLORS[loc], fontWeight:700 }}>
+                    {LOCALE_FLAGS[loc]} {loc.toUpperCase()}
+                  </th>
+                ))}
+                <th style={{ textAlign:'right', padding:'4px 8px', color:'#888', fontWeight:600 }}>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {daily.map(({ day, counts }) => {
+                const rowTotal = locales.reduce((s, l) => s + Number(counts[l] || 0), 0);
+                return (
+                  <tr key={day} style={{ borderTop:'1px solid #f0f0f0' }}>
+                    <td style={{ padding:'5px 8px', color:'#555' }}>{day.slice(5)}</td>
+                    {locales.map(loc => (
+                      <td key={loc} style={{ textAlign:'center', padding:'5px 8px',
+                        color: counts[loc] ? LOCALE_COLORS[loc] : '#ccc', fontWeight: counts[loc] ? 700 : 400 }}>
+                        {counts[loc] ? fmtN(counts[loc]) : '–'}
+                      </td>
+                    ))}
+                    <td style={{ textAlign:'right', padding:'5px 8px', color:'#333', fontWeight:700 }}>
+                      {rowTotal || '–'}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 const TABS = [
   { key:'orders',  label:'📦 Orders'  },
   { key:'ga',      label:'📈 Google Analytics' },
   { key:'clarity', label:'🖱 Clarity' },
+  { key:'lang',    label:'🌐 Languages' },
 ];
 
 export default function AdminAnalytics() {
@@ -331,6 +425,7 @@ export default function AdminAnalytics() {
       {tab === 'orders'  && <OrdersTab />}
       {tab === 'ga'      && <GATab />}
       {tab === 'clarity' && <ClarityTab />}
+      {tab === 'lang'    && <LangTab />}
     </AdminLayout>
   );
 }
