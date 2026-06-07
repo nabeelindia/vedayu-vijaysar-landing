@@ -252,6 +252,28 @@ export default function OrderConfirmed() {
         <meta name="robots" content="noindex,nofollow" />
       </Head>
 
+      {/* ── STICKY HEADER ── */}
+      <header style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 300,
+        background: '#fff', borderBottom: '1px solid #e8d5b0',
+        boxShadow: '0 2px 8px rgba(92,61,30,.08)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '0 20px', height: 52,
+      }}>
+        <a href="/" style={{ fontWeight: 800, fontSize: '1rem', color: '#5C3D1E', textDecoration: 'none', letterSpacing: -.3 }}>
+          🌿 Vedayu
+        </a>
+        {orderId && (
+          <span style={{ fontSize: '.78rem', color: '#8a7060', fontFamily: 'monospace', fontWeight: 600 }}>
+            {orderId}
+          </span>
+        )}
+        <a href="/" style={{ fontSize: '.82rem', fontWeight: 700, color: '#5C3D1E', textDecoration: 'none', background: '#fdf6ec', border: '1px solid #e8d5b0', borderRadius: 20, padding: '5px 14px' }}>
+          {t('order_confirmed.back_home')}
+        </a>
+      </header>
+      <div style={{ height: 52 }} aria-hidden="true" />
+
       {/* ── SUCCESS BANNER ── */}
       <div className="oc-banner" style={{ opacity: visible ? 1 : 0, transition: 'opacity .4s' }}>
         <div className="oc-banner-icon">{isCOD ? '📦' : '🎉'}</div>

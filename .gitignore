@@ -9,3 +9,5 @@ out/
 public/videos/*.mp4
 .env.prod
 .env.test
+.env*.local
+.superpowers/
