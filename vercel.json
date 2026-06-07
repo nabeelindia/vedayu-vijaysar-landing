@@ -3,7 +3,9 @@
     { "path": "/api/cron/generate-posts",   "schedule": "30 0 * * 1" },
     { "path": "/api/cron/send-followups",   "schedule": "30 2 * * *" },
     { "path": "/api/sync-audiences",        "schedule": "0 3 * * *"  },
-    { "path": "/api/cron/cod-nudge",        "schedule": "30 4 * * *"  },
-    { "path": "/api/cron/cod-auto-confirm", "schedule": "30 0 * * *"  }
+    { "path": "/api/cron/cod-nudge",          "schedule": "30 4 * * *"  },
+    { "path": "/api/cron/cod-hold-reminder", "schedule": "0 */3 * * *" },
+    { "path": "/api/cron/cod-auto-confirm",  "schedule": "30 0 * * *"  },
+    { "path": "/api/cron/cart-recover",      "schedule": "0 5 * * *"   }
   ]
 }

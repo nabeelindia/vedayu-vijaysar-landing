@@ -6,7 +6,7 @@ import { supabase } from '../../lib/supabase';
 import { sendPush } from '../../lib/push';
 import { Resend } from 'resend';
 import { kv } from '@vercel/kv';
-import { waCodPrepaidOffer } from '../../lib/whatsapp';
+import { waCodPrepaidOffer, waCodVerify } from '../../lib/whatsapp';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -60,6 +60,20 @@ export default async function handler(req, res) {
 
           if (!record || record.status !== 'pending') continue;
 
+          if (buttonId === 'CHANGE_ADDRESS') {
+            // Set awaiting_address state — next free-text from this phone = new address
+            await kv.set(`cod_addr_change:${phone}`, {
+              orderId: record.orderId,
+              name:    record.name,
+              pack:    record.pack,
+              price:   record.price,
+            }, { ex: 3600 }).catch(() => {}); // 1hr window to reply
+            await sendWAMessage(phone,
+              `Namaste ${record.name} ji 🙏\n\nPlease type your *complete new delivery address* — house/flat number, area, city, and pincode.\n\n_Example: 42, Green Park, New Delhi - 110016_`
+            );
+            continue;
+          }
+
           if (buttonId === 'CONFIRM_COD') {
             await kv.set(`cod_verify:${phone}`, { ...record, status: 'confirmed' }, { ex: 172800 }).catch(() => {});
             if (supabase) {
@@ -101,6 +115,53 @@ export default async function handler(req, res) {
         const phone   = msg.from;
         const text    = msg.text?.body || '';
         const contact = change?.contacts?.[0]?.profile?.name || phone;
+
+        // ── Address change flow — capture new address ────────────────────
+        const addrChange = await kv.get(`cod_addr_change:${phone}`).catch(() => null);
+        if (addrChange) {
+          const newAddress = text.trim();
+          if (newAddress.length < 10) {
+            // Too short — ask again
+            await sendWAMessage(phone,
+              `Yeh address thoda chhota lag raha hai 🙏 Please *poora address* likhein — house number, area, city aur pincode ke saath.\n\n_Example: 42, Green Park, New Delhi - 110016_`
+            );
+            continue;
+          }
+
+          // Update KV record with new address
+          const codRecord = await kv.get(`cod_verify:${phone}`).catch(() => null);
+          if (codRecord) {
+            await kv.set(`cod_verify:${phone}`, { ...codRecord, address: newAddress }, { ex: 172800 }).catch(() => {});
+          }
+
+          // Update Supabase orders table
+          if (supabase) {
+            await supabase.from('orders')
+              .update({ address: newAddress, updated_at: new Date().toISOString() })
+              .eq('order_id', addrChange.orderId).catch(() => {});
+            await supabase.from('cod_verifications')
+              .update({ address_updated_at: new Date().toISOString() })
+              .eq('order_id', addrChange.orderId).catch(() => {});
+          }
+
+          // Clear the awaiting state
+          await kv.del(`cod_addr_change:${phone}`).catch(() => {});
+
+          // Resend address confirm template with the updated address
+          await waCodVerify({
+            mobile: phone,
+            name:   addrChange.name,
+            orderId: addrChange.orderId,
+            pack:   addrChange.pack,
+            price:  addrChange.price,
+            address: newAddress,
+          }).catch(() => {});
+
+          // Notify owner of address change
+          notifyOwnerAddressChange({ orderId: addrChange.orderId, name: addrChange.name, newAddress }).catch(() => {});
+          console.log(`[WA] Address updated for ${addrChange.orderId}: ${newAddress}`);
+          continue;
+        }
 
         const botReply   = getBotReply(text) ?? FALLBACK_REPLY;
         const isFallback = botReply === FALLBACK_REPLY;
@@ -204,6 +265,17 @@ async function notifyAdmin({ phone, contact, text, isFallback }) {
   await sendPush({
     title: isFallback ? `⚠️ Needs reply — ${contact}` : `💬 WA — ${contact}`,
     body:  text,
+  });
+}
+
+async function notifyOwnerAddressChange({ orderId, name, newAddress }) {
+  if (!process.env.RESEND_API_KEY || !process.env.ORDERS_EMAIL) return;
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  await resend.emails.send({
+    from:    'Vedayu Orders <orders@vedayulife.com>',
+    to:      process.env.ORDERS_EMAIL,
+    subject: `📍 Address Updated — ${orderId} | ${name}`,
+    html:    `<p style="font-family:sans-serif">Customer <b>${name}</b> updated their delivery address for order <b>${orderId}</b>.</p><p style="font-family:sans-serif"><b>New address:</b> ${newAddress}</p><p style="font-family:sans-serif;color:#888;font-size:13px;">Address has been updated in Supabase. Please use this address for dispatch.</p>`,
   });
 }
 

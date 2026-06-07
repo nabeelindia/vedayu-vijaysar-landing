@@ -274,7 +274,7 @@ export default async function handler(req, res) {
   }
 
   await kv.set(`cod_verify:${normalised}`, {
-    orderId, name, pack, price: safePrice, status: 'pending', createdAt: Date.now(),
+    orderId, name, pack, price: safePrice, address: fullAddr, status: 'pending', createdAt: Date.now(),
   }, { ex: 172800 }).catch(() => {});
 
   await waCodVerify({

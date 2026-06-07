@@ -9,6 +9,7 @@
  */
 import { Resend } from 'resend';
 import { waCartAbandon } from '../../lib/whatsapp';
+import { supabase } from '../../lib/supabase';
 
 export const config = {
   api: { bodyParser: false },
@@ -81,9 +82,21 @@ export default async function handler(req, res) {
   }
 
   // ── WhatsApp cart abandon (fires ~immediately, within seconds of leaving) ──
+  const packLabel = pack === 5 ? 'Pack of 5' : pack === 2 ? 'Pack of 2' : 'Pack of 1';
   if (mobile) {
-    const packLabel = pack === 5 ? 'Pack of 5' : pack === 2 ? 'Pack of 2' : 'Pack of 1';
     await waCartAbandon({ mobile, name: name || 'there', pack: packLabel }).catch(() => {});
+  }
+
+  // ── Persist to Supabase for 24hr recovery cron ──────────────────────────
+  if (supabase && mobile) {
+    await supabase.from('cart_abandons').upsert({
+      mobile,
+      name:         name || null,
+      pack:         packLabel,
+      abandoned_at: new Date().toISOString(),
+      wa_sent_at:   new Date().toISOString(),
+      recovered:    false,
+    }, { onConflict: 'mobile' }).catch(() => {});
   }
 
   return res.status(200).end();
