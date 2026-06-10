@@ -5,4 +5,7 @@ Allow: /
 Disallow: /order-confirmed
 Disallow: /api/
 
+# Disallow locale-prefixed default-locale paths (Next.js i18n redirects /en/* → /*)
+Disallow: /en/
+
 Sitemap: https://vedayulife.com/sitemap.xml

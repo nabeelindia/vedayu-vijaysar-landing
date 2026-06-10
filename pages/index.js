@@ -696,8 +696,13 @@ export default function Home() {
         <meta name="twitter:description" content="Fill overnight, drink infused water each morning. From ₹499 · Free delivery · COD available." />
         <meta name="twitter:image"       content="https://vedayulife.com/images/og-image.jpg" />
 
-        {/* ── Canonical ── */}
+        {/* ── Canonical + hreflang ── */}
         <link rel="canonical" href="https://vedayulife.com/" />
+        <link rel="alternate" hrefLang="en" href="https://vedayulife.com/" />
+        <link rel="alternate" hrefLang="hi" href="https://vedayulife.com/hi/" />
+        <link rel="alternate" hrefLang="ta" href="https://vedayulife.com/ta/" />
+        <link rel="alternate" hrefLang="te" href="https://vedayulife.com/te/" />
+        <link rel="alternate" hrefLang="x-default" href="https://vedayulife.com/" />
 
         {/* ── JSON-LD Structured Data ── */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({

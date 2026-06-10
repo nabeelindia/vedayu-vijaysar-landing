@@ -14,6 +14,11 @@ export default function BlogIndex({ posts }) {
         <title>Ayurvedic Wellness Blog — Vedayu</title>
         <meta name="description" content="Explore Vedayu's Ayurvedic wellness blog — guides on Vijaysar wood, blood sugar wellness, morning rituals, and the ancient wisdom of Ayurveda." />
         <link rel="canonical" href="https://vedayulife.com/blog" />
+        <link rel="alternate" hrefLang="en" href="https://vedayulife.com/blog" />
+        <link rel="alternate" hrefLang="hi" href="https://vedayulife.com/hi/blog" />
+        <link rel="alternate" hrefLang="ta" href="https://vedayulife.com/ta/blog" />
+        <link rel="alternate" hrefLang="te" href="https://vedayulife.com/te/blog" />
+        <link rel="alternate" hrefLang="x-default" href="https://vedayulife.com/blog" />
         <meta property="og:title" content="Ayurvedic Wellness Blog — Vedayu" />
         <meta property="og:description" content="Explore Vedayu's Ayurvedic wellness blog — guides on Vijaysar wood, blood sugar wellness, morning rituals, and the ancient wisdom of Ayurveda." />
         <meta property="og:url" content="https://vedayulife.com/blog" />
