@@ -42,6 +42,15 @@ export default function OrderCard({ order, onClick }) {
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5, flexShrink: 0 }}>
         <StatusBadge status={order.status} small />
         {order.scheduled_ship_date && <StatusBadge status="scheduled" small />}
+        {order.address_changed && (
+          <span style={{
+            fontSize: '.65rem', fontWeight: 700,
+            color: '#E65100', background: '#FFF3E0',
+            padding: '2px 7px', borderRadius: 20, whiteSpace: 'nowrap',
+          }}>
+            📍 Address updated
+          </span>
+        )}
         <span style={{ fontSize: '.65rem', fontWeight: 700,
           color: order.method === 'cod' ? '#6D4C00' : '#2E7D32',
           background: order.method === 'cod' ? '#FFF8E1' : '#E8F5E9',
