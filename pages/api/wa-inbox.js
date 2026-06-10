@@ -46,6 +46,16 @@ export default async function handler(req, res) {
     if (msg.created_at > convMap[msg.from_phone].lastAt) {
       convMap[msg.from_phone].lastAt = msg.created_at;
     }
+    // Inject bot reply as a synthetic outbound message so it appears in the thread
+    if (msg.bot_replied) {
+      convMap[msg.from_phone].messages.push({
+        id:         `bot_${msg.id}`,
+        message:    msg.bot_replied,
+        direction:  'out',
+        created_at: msg.created_at, // same timestamp — sort puts it right after inbound
+        bot:        true,
+      });
+    }
   }
 
   // Merge outbound replies into matching conversations
