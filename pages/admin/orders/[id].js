@@ -14,7 +14,8 @@ export default function OrderDetail() {
   const { id } = router.query;
   const [data,   setData]   = useState(null);
   const [saving, setSaving] = useState(false);
-  const [awb,    setAwb]    = useState('');
+  const [awb,     setAwb]     = useState('');
+  const [carrier, setCarrier] = useState('Delhivery');
   const [notes,     setNotes]     = useState([]);
   const [refunds,   setRefunds]   = useState([]);
   const [newNote,   setNewNote]   = useState('');
@@ -104,7 +105,7 @@ export default function OrderDetail() {
 
   const markSent = async () => {
     if (!awb.trim()) return alert('Please enter a tracking number.');
-    await patch({ status:'sent', awb: awb.trim(), sent_at: new Date().toISOString() });
+    await patch({ status:'sent', awb: awb.trim(), courier: carrier, sent_at: new Date().toISOString() });
     setAwb('');
   };
 
@@ -210,16 +211,31 @@ export default function OrderDetail() {
               </button>
             )}
             {(order.status === 'confirmed' || order.status === 'auto_confirmed') && (
-              <div style={{ display:'flex', gap:8 }}>
-                <input value={awb} onChange={e => setAwb(e.target.value)}
-                  placeholder="Enter tracking number"
-                  style={{ flex:1, padding:'9px 12px', borderRadius:8,
-                    border:'1.5px solid #d0c8bc', fontSize:'.82rem', outline:'none' }} />
-                <button onClick={markSent} disabled={saving}
-                  style={{ padding:'9px 14px', background:'#5C3D1E', color:'#fff',
-                    border:'none', borderRadius:8, fontSize:'.82rem', fontWeight:700, cursor:'pointer' }}>
-                  {saving ? '…' : 'Order Sent'}
-                </button>
+              <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                <select value={carrier} onChange={e => setCarrier(e.target.value)}
+                  style={{ padding:'9px 12px', borderRadius:8, border:'1.5px solid #d0c8bc',
+                    fontSize:'.82rem', outline:'none', background:'#fff', color:'#1a1a1a' }}>
+                  <option>Delhivery</option>
+                  <option>DTDC</option>
+                  <option>Bluedart</option>
+                  <option>Ecom Express</option>
+                  <option>XpressBees</option>
+                  <option>Shadowfax</option>
+                  <option>NimbusPost</option>
+                  <option>India Post</option>
+                  <option>Other</option>
+                </select>
+                <div style={{ display:'flex', gap:8 }}>
+                  <input value={awb} onChange={e => setAwb(e.target.value)}
+                    placeholder="Enter tracking number"
+                    style={{ flex:1, padding:'9px 12px', borderRadius:8,
+                      border:'1.5px solid #d0c8bc', fontSize:'.82rem', outline:'none' }} />
+                  <button onClick={markSent} disabled={saving}
+                    style={{ padding:'9px 14px', background:'#5C3D1E', color:'#fff',
+                      border:'none', borderRadius:8, fontSize:'.82rem', fontWeight:700, cursor:'pointer' }}>
+                    {saving ? '…' : 'Order Sent'}
+                  </button>
+                </div>
               </div>
             )}
             {order.status === 'sent' && (

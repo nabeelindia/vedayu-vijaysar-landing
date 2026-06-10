@@ -136,7 +136,22 @@ function GATab() {
   }, []);
 
   if (loading) return <p style={{ color:'#888', padding:'20px 0' }}>Loading Google Analytics…</p>;
-  if (error)   return <div style={{ background:'#fff8e1', borderRadius:8, padding:'12px 16px', color:'#6D4C00', fontSize:'.85rem' }}>⚠️ {error}</div>;
+  if (error) return (
+    <div style={{ background:'#fff8e1', borderRadius:8, padding:'16px 18px', color:'#6D4C00', fontSize:'.85rem', lineHeight:1.6 }}>
+      <strong>⚠️ Google Analytics error: {error}</strong>
+      {error.includes('invalid_grant') && (
+        <div style={{ marginTop:10 }}>
+          <p style={{ margin:'0 0 6px' }}>The OAuth refresh token has expired or been revoked by Google. To fix:</p>
+          <ol style={{ margin:0, paddingLeft:20 }}>
+            <li>Go to <a href="https://console.cloud.google.com" target="_blank" rel="noreferrer" style={{ color:'#5C3D1E' }}>Google Cloud Console</a> → your OAuth app → run the auth flow again</li>
+            <li>Get a new <code>refresh_token</code> from the OAuth response</li>
+            <li>Update <code>GA_REFRESH_TOKEN</code> in your Vercel project environment variables</li>
+            <li>Redeploy</li>
+          </ol>
+        </div>
+      )}
+    </div>
+  );
 
   const ov          = ga?.overview    || {};
   const topPages    = ga?.topPages    || [];
