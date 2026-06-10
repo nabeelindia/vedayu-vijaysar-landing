@@ -1,4 +1,7 @@
-export const config = { maxDuration: 10 }; // Vercel hobby plan max
+export const config = {
+  maxDuration: 10, // Vercel hobby plan max
+  api: { bodyParser: false }, // need raw body for HMAC verification
+};
 
 import crypto from 'crypto';
 import { getBotReply, FALLBACK_REPLY } from '../../lib/wa-knowledge';
@@ -13,6 +16,14 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 // In-memory dedup: prevents replying twice if Meta sends the same webhook twice
 const recentIds = new Set();
 
+async function getRawBody(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    req.on('data', chunk => chunks.push(chunk));
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', reject);
+  });
+}
 
 export default async function handler(req, res) {
   // ── Webhook verification (GET) ───────────────────────────────────────────
@@ -28,21 +39,39 @@ export default async function handler(req, res) {
 
   if (req.method !== 'POST') return res.status(405).end();
 
+  // Read raw body once (needed for both signature check and parsing)
+  const rawBody = await getRawBody(req);
+
   // ── Signature validation ─────────────────────────────────────────────────
-  // Meta signs every POST with X-Hub-Signature-256 using the app secret.
+  // Meta signs the raw request body bytes — must validate before JSON.parse.
   if (process.env.WA_APP_SECRET) {
     const sig      = req.headers['x-hub-signature-256'] || '';
-    const expected = 'sha256=' + crypto
+    const expectedBuf = Buffer.from('sha256=' + crypto
       .createHmac('sha256', process.env.WA_APP_SECRET)
-      .update(JSON.stringify(req.body))
-      .digest('hex');
-    if (sig !== expected) return res.status(403).json({ error: 'Invalid signature' });
+      .update(rawBody)
+      .digest('hex'));
+    const sigBuf = Buffer.from(sig);
+    // timingSafeEqual requires equal lengths; different length = definitely wrong
+    const valid = sigBuf.length === expectedBuf.length &&
+      crypto.timingSafeEqual(sigBuf, expectedBuf);
+    if (!valid) {
+      console.error('[WA] Signature mismatch — possible replay/tamper. sig:', sig.slice(0, 20));
+      return res.status(403).json({ error: 'Invalid signature' });
+    }
+  }
+
+  // Parse body now that signature is verified
+  let body;
+  try {
+    body = JSON.parse(rawBody.toString('utf8'));
+  } catch {
+    return res.status(400).json({ error: 'Invalid JSON' });
   }
 
   // Process FIRST, then ACK — this ensures Vercel doesn't kill the function
   // before the reply is sent. Meta allows up to 20s; Vercel hobby allows 10s.
   try {
-    const entry  = req.body?.entry?.[0];
+    const entry  = body?.entry?.[0];
     const change = entry?.changes?.[0]?.value;
     const msgArr = change?.messages;
 
@@ -75,14 +104,18 @@ export default async function handler(req, res) {
           }
 
           if (buttonId === 'CONFIRM_COD') {
-            await kv.set(`cod_verify:${phone}`, { ...record, status: 'confirmed' }, { ex: 172800 }).catch(() => {});
+            await kv.set(`cod_verify:${phone}`, { ...record, status: 'confirmed' }, { ex: 172800 }).catch(e => console.error('[WA] KV update failed:', e));
             if (supabase) {
-              await supabase.from('cod_verifications')
+              const { error: cvErr } = await supabase.from('cod_verifications')
                 .update({ status: 'confirmed', verified_at: new Date().toISOString() })
-                .eq('order_id', record.orderId).catch(() => {});
-              await supabase.from('orders')
-                .update({ status: 'confirmed', updated_at: new Date().toISOString() })
-                .eq('order_id', record.orderId).catch(() => {});
+                .eq('order_id', record.orderId);
+              if (cvErr) console.error('[WA] cod_verifications update failed:', cvErr.message);
+              const now = new Date().toISOString();
+              const { error: ordErr } = await supabase.from('orders')
+                .update({ status: 'confirmed', confirmed_at: now, updated_at: now })
+                .eq('order_id', record.orderId);
+              if (ordErr) console.error('[WA] orders update failed:', ordErr.message);
+              else console.log(`[WA] Order ${record.orderId} confirmed by customer`);
             }
             await sendWAMessage(phone,
               `Namaste ${record.name} ji 🙏 Thank you! Your order ${record.orderId} is confirmed. We will send your order to you — please keep ₹${record.price} ready to give the delivery person.`
@@ -90,14 +123,17 @@ export default async function handler(req, res) {
             notifyOwnerCodAction({ orderId: record.orderId, name: record.name, action: 'confirmed' }).catch(() => {});
 
           } else if (buttonId === 'CANCEL_COD') {
-            await kv.set(`cod_verify:${phone}`, { ...record, status: 'cancelled' }, { ex: 172800 }).catch(() => {});
+            await kv.set(`cod_verify:${phone}`, { ...record, status: 'cancelled' }, { ex: 172800 }).catch(e => console.error('[WA] KV update failed:', e));
             if (supabase) {
-              await supabase.from('cod_verifications')
+              const { error: cvErr } = await supabase.from('cod_verifications')
                 .update({ status: 'cancelled', cancelled_at: new Date().toISOString() })
-                .eq('order_id', record.orderId).catch(() => {});
-              await supabase.from('orders')
+                .eq('order_id', record.orderId);
+              if (cvErr) console.error('[WA] cod_verifications cancel failed:', cvErr.message);
+              const { error: ordErr } = await supabase.from('orders')
                 .update({ status: 'cancelled', updated_at: new Date().toISOString() })
-                .eq('order_id', record.orderId).catch(() => {});
+                .eq('order_id', record.orderId);
+              if (ordErr) console.error('[WA] orders cancel failed:', ordErr.message);
+              else console.log(`[WA] Order ${record.orderId} cancelled by customer`);
             }
             await waCodPrepaidOffer({ mobile: phone, name: record.name, orderId: record.orderId });
             notifyOwnerCodAction({ orderId: record.orderId, name: record.name, action: 'cancelled' }).catch(() => {});
@@ -136,12 +172,15 @@ export default async function handler(req, res) {
 
           // Update Supabase orders table
           if (supabase) {
-            await supabase.from('orders')
-              .update({ address: newAddress, updated_at: new Date().toISOString() })
-              .eq('order_id', addrChange.orderId).catch(() => {});
-            await supabase.from('cod_verifications')
-              .update({ address_updated_at: new Date().toISOString() })
-              .eq('order_id', addrChange.orderId).catch(() => {});
+            const now = new Date().toISOString();
+            const { error: aOrdErr } = await supabase.from('orders')
+              .update({ address: newAddress, address_changed: true, updated_at: now })
+              .eq('order_id', addrChange.orderId);
+            if (aOrdErr) console.error('[WA] orders address update failed:', aOrdErr.message);
+            const { error: aVerfErr } = await supabase.from('cod_verifications')
+              .update({ address_updated_at: now })
+              .eq('order_id', addrChange.orderId);
+            if (aVerfErr) console.error('[WA] cod_verifications address_updated_at failed:', aVerfErr.message);
           }
 
           // Clear the awaiting state
