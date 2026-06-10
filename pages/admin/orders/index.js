@@ -4,7 +4,40 @@ import AdminLayout from '../../../components/admin/Layout';
 import OrderCard from '../../../components/admin/OrderCard';
 import PageHeader from '../../../components/admin/PageHeader';
 
-const FILTERS = ['all','cod','prepaid','pending','confirmed','auto_confirmed','sent','delivered','cancelled'];
+function getDateParams(range) {
+  if (!range) return {};
+  const toIST = (d) => d.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+  const today = new Date();
+  const yyyymmdd = (d) => toIST(d);
+  const addDays = (d, n) => { const r = new Date(d); r.setDate(r.getDate() + n); return r; };
+
+  if (range === 'today') {
+    const d = yyyymmdd(today);
+    return { date_from: d, date_to: d };
+  }
+  if (range === 'yesterday') {
+    const d = yyyymmdd(addDays(today, -1));
+    return { date_from: d, date_to: d };
+  }
+  if (range === 'last7')  return { date_from: yyyymmdd(addDays(today, -6)),  date_to: yyyymmdd(today) };
+  if (range === 'last15') return { date_from: yyyymmdd(addDays(today, -14)), date_to: yyyymmdd(today) };
+  if (range === 'last30') return { date_from: yyyymmdd(addDays(today, -29)), date_to: yyyymmdd(today) };
+  if (range === 'thisMonth') {
+    const d = new Date(today.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+    const first = new Date(d.getFullYear(), d.getMonth(), 1);
+    return { date_from: yyyymmdd(first), date_to: yyyymmdd(today) };
+  }
+  if (range === 'lastMonth') {
+    const d = new Date(today.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+    const firstThisMonth = new Date(d.getFullYear(), d.getMonth(), 1);
+    const lastOfLastMonth = new Date(firstThisMonth - 1);
+    const firstOfLastMonth = new Date(lastOfLastMonth.getFullYear(), lastOfLastMonth.getMonth(), 1);
+    return { date_from: yyyymmdd(firstOfLastMonth), date_to: yyyymmdd(lastOfLastMonth) };
+  }
+  return {};
+}
+
+const FILTERS = ['all','cod','prepaid','pending','confirmed','auto_confirmed','sent','delivered','cancelled','archived'];
 
 export default function OrdersList() {
   const router = useRouter();
@@ -17,13 +50,22 @@ export default function OrdersList() {
   const [selected,    setSelected]    = useState(new Set());
   const [bulkStatus,  setBulkStatus]  = useState('confirmed');
   const [bulking,     setBulking]     = useState(false);
+  const [dateRange, setDateRange] = useState('');
 
-  const load = (f = filter, s = search, p = page) => {
+  const load = (f = filter, s = search, p = page, dr = dateRange) => {
     setLoading(true);
     const params = new URLSearchParams({ page: p });
-    if (['cod','prepaid'].includes(f)) params.set('method', f);
-    else if (f !== 'all') params.set('status', f);
+    if (f === 'archived') {
+      params.set('archived', 'true');
+    } else {
+      params.set('archived', 'false');
+      if (['cod', 'prepaid'].includes(f)) params.set('method', f);
+      else if (f !== 'all') params.set('status', f);
+    }
     if (s) params.set('search', s);
+    const { date_from, date_to } = getDateParams(dr);
+    if (date_from) params.set('date_from', date_from);
+    if (date_to)   params.set('date_to', date_to);
     fetch(`/api/admin/orders?${params}`).then(r => r.json()).then(d => {
       setOrders(d.data || []);
       setTotal(d.total || 0);
@@ -31,11 +73,12 @@ export default function OrdersList() {
     });
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(filter, search, page, dateRange); }, []);
 
-  const handleFilter = (f) => { setSelected(new Set()); setFilter(f); setPage(1); load(f, search, 1); };
+  const handleFilter = (f) => { setSelected(new Set()); setFilter(f); setPage(1); load(f, search, 1, dateRange); };
+  const handleDateRange = (dr) => { setSelected(new Set()); setDateRange(dr); setPage(1); load(filter, search, 1, dr); };
   const handleSearch = (e) => {
-    if (e.key === 'Enter') { setSelected(new Set()); setPage(1); load(filter, e.target.value, 1); }
+    if (e.key === 'Enter') { setSelected(new Set()); setPage(1); load(filter, e.target.value, 1, dateRange); }
   };
 
   const toggleSelect  = (id) => setSelected(prev => {
@@ -46,11 +89,17 @@ export default function OrdersList() {
 
   const bulkUpdate = async () => {
     if (!selected.size) return;
-    if (!confirm(`Update ${selected.size} order(s) to "${bulkStatus}"?`)) return;
+    if (!confirm(`Update ${selected.size} order(s)?`)) return;
     setBulking(true);
+
+    const body = { orderIds: [...selected] };
+    if (bulkStatus === '__archive__')        { body.action = 'archive'; }
+    else if (bulkStatus === '__unarchive__') { body.action = 'unarchive'; }
+    else { body.status = bulkStatus; }
+
     await fetch('/api/admin/orders/bulk', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ orderIds: [...selected], status: bulkStatus }),
+      body: JSON.stringify(body),
     });
     setSelected(new Set());
     load();
@@ -80,10 +129,25 @@ export default function OrdersList() {
   return (
     <AdminLayout title="Orders">
       <PageHeader title={`Orders (${total})`} />
-      <input type="search" placeholder="Search by name, mobile, order ID, pincode…"
-        value={search} onChange={e => setSearch(e.target.value)} onKeyDown={handleSearch}
-        style={{ width:'100%', boxSizing:'border-box', padding:'10px 14px', borderRadius:10,
-          border:'1.5px solid #e0d8cc', fontSize:'.88rem', marginBottom:12, outline:'none' }} />
+      <div style={{ display:'flex', gap:8, alignItems:'center', marginBottom:12 }}>
+        <input type="search" placeholder="Search by name, mobile, order ID, pincode…"
+          value={search} onChange={e => setSearch(e.target.value)} onKeyDown={handleSearch}
+          style={{ flex:1, padding:'10px 14px', borderRadius:10,
+            border:'1.5px solid #e0d8cc', fontSize:'.88rem', outline:'none' }} />
+        <select value={dateRange} onChange={e => handleDateRange(e.target.value)}
+          style={{ padding:'10px 12px', borderRadius:10, border:'1.5px solid #e0d8cc',
+            fontSize:'.82rem', background:'#fff', color: dateRange ? '#5C3D1E' : '#888',
+            fontWeight: dateRange ? 700 : 400, cursor:'pointer', outline:'none', flexShrink:0 }}>
+          <option value="">All time</option>
+          <option value="today">Today</option>
+          <option value="yesterday">Yesterday</option>
+          <option value="last7">Last 7 days</option>
+          <option value="last15">Last 15 days</option>
+          <option value="last30">Last 30 days</option>
+          <option value="thisMonth">This month</option>
+          <option value="lastMonth">Last month</option>
+        </select>
+      </div>
       {/* Bulk action bar */}
       <div style={{ display:'flex', gap:8, alignItems:'center', marginBottom:8, flexWrap:'wrap' }}>
         <button onClick={selected.size === orders.length ? deselectAll : selectAll}
@@ -100,6 +164,8 @@ export default function OrdersList() {
               <option value="sent">Sent</option>
               <option value="delivered">Delivered</option>
               <option value="cancelled">Cancelled</option>
+              <option value="__archive__">🗂 Archive</option>
+              <option value="__unarchive__">📤 Unarchive</option>
             </select>
             <button onClick={bulkUpdate} disabled={bulking}
               style={{ padding:'5px 12px', background:'#5C3D1E', color:'#fff',
@@ -118,11 +184,14 @@ export default function OrdersList() {
       <div className="admin-filter-bar" style={{ marginBottom:16 }}>
         {FILTERS.map(f => (
           <button key={f} onClick={() => handleFilter(f)}
-            style={{ padding:'5px 12px', borderRadius:20, border:'none', cursor:'pointer',
-              fontSize:'.72rem', fontWeight:700,
+            style={{ padding:'6px 14px', borderRadius:20, border:'none', cursor:'pointer',
+              fontSize:'.75rem', fontWeight:700,
               background: filter === f ? '#5C3D1E' : '#f0ede8',
               color: filter === f ? '#fff' : '#555' }}>
-            {f === 'all' ? 'All' : f === 'auto_confirmed' ? 'Auto-confirmed' : f.charAt(0).toUpperCase()+f.slice(1)}
+            {f === 'all' ? 'All'
+              : f === 'auto_confirmed' ? 'Auto-confirmed'
+              : f === 'archived' ? '🗂 Archived'
+              : f.charAt(0).toUpperCase() + f.slice(1)}
           </button>
         ))}
       </div>
@@ -143,7 +212,7 @@ export default function OrdersList() {
           </div>
           <div style={{ display:'flex', gap:10, justifyContent:'center', marginTop:20 }}>
             {page > 1 && (
-              <button onClick={() => { const p = page-1; setPage(p); load(filter,search,p); }}
+              <button onClick={() => { const p = page-1; setPage(p); load(filter,search,p,dateRange); }}
                 style={{ padding:'8px 16px', borderRadius:8, border:'1.5px solid #d0c8bc',
                   background:'#fff', cursor:'pointer', fontSize:'.82rem' }}>← Prev</button>
             )}
@@ -151,7 +220,7 @@ export default function OrdersList() {
               Page {page} · {total} orders
             </span>
             {orders.length === 50 && (
-              <button onClick={() => { const p = page+1; setPage(p); load(filter,search,p); }}
+              <button onClick={() => { const p = page+1; setPage(p); load(filter,search,p,dateRange); }}
                 style={{ padding:'8px 16px', borderRadius:8, border:'1.5px solid #d0c8bc',
                   background:'#fff', cursor:'pointer', fontSize:'.82rem' }}>Next →</button>
             )}
