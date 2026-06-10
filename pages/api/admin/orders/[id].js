@@ -15,11 +15,21 @@ export default async function handler(req, res) {
       supabase.from('refunds').select('*').eq('order_id', id).order('created_at', { ascending: false }),
     ]);
     if (orderRes.error) return res.status(404).json({ error: 'Order not found' });
+
+    // Fetch shipment tracking if order has an AWB
+    let shipment = null;
+    if (orderRes.data?.awb) {
+      const { data: s } = await supabase
+        .from('shipments').select('*').eq('awb', orderRes.data.awb).maybeSingle();
+      shipment = s || null;
+    }
+
     return res.json({
       order:        orderRes.data,
       verification: verifRes.data,
       notes:        notesRes.data   || [],
       refunds:      refundsRes.data || [],
+      shipment,
     });
   }
 

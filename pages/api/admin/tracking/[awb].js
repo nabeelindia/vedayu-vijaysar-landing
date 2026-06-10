@@ -1,4 +1,4 @@
-import { checkAdminAuth } from '../../_auth';
+import { checkAdminAuth } from '../_auth';
 import { supabase }        from '../../../../lib/supabase';
 import { trackShipment }   from '../../../../lib/nimbuspost';
 

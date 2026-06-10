@@ -24,7 +24,9 @@ export default function OrderDetail() {
   const [refNote,   setRefNote]   = useState('');
   const [rtoReason, setRtoReason] = useState('');
   const [showRTO,   setShowRTO]   = useState(false);
-  const [saving2,   setSaving2]   = useState(false);
+  const [saving2,     setSaving2]     = useState(false);
+  const [shipment,    setShipment]    = useState(null);
+  const [refreshing,  setRefreshing]  = useState(false);
   const [waText,    setWaText]    = useState('');
   const [waSending, setWaSending] = useState(false);
   const [waMsg,     setWaMsg]     = useState('');
@@ -35,8 +37,9 @@ export default function OrderDetail() {
     if (!id) return;
     fetch(`/api/admin/orders/${id}`).then(r => r.json()).then(d => {
       setData(d);
-      setNotes(d.notes   || []);
+      setNotes(d.notes     || []);
       setRefunds(d.refunds || []);
+      setShipment(d.shipment || null);
     });
   }, [id]);
 
@@ -107,6 +110,17 @@ export default function OrderDetail() {
     if (!awb.trim()) return alert('Please enter a tracking number.');
     await patch({ status:'sent', awb: awb.trim(), courier: carrier, sent_at: new Date().toISOString() });
     setAwb('');
+  };
+
+  const refreshTracking = async () => {
+    if (!order?.awb) return;
+    setRefreshing(true);
+    try {
+      const r = await fetch(`/api/admin/tracking/${encodeURIComponent(order.awb)}`);
+      const d = await r.json();
+      if (d.ok && d.data) setShipment(d.data);
+    } catch (_) {}
+    setRefreshing(false);
   };
 
   if (!data) return <AdminLayout title="Order"><p style={{ color:'#888', padding:20 }}>Loading…</p></AdminLayout>;
@@ -313,6 +327,86 @@ export default function OrderDetail() {
           </div>
         )}
       </div>
+
+      {/* Tracking Timeline */}
+      {order.awb && (
+        <div style={{ background:'#fff', borderRadius:12, padding:'18px 20px',
+          boxShadow:'0 1px 3px rgba(0,0,0,.07)', marginTop:16 }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
+            <h2 style={{ margin:0, fontSize:'.85rem', fontWeight:700,
+              textTransform:'uppercase', letterSpacing:'.7px', color:'#888' }}>📦 Shipment Tracking</h2>
+            <button onClick={refreshTracking} disabled={refreshing}
+              style={{ fontSize:'.75rem', padding:'4px 10px', borderRadius:6,
+                border:'1px solid #d0c8bc', background:'#fff', cursor:'pointer',
+                color:'#5C3D1E', fontWeight:600 }}>
+              {refreshing ? '…' : '↻ Refresh'}
+            </button>
+          </div>
+
+          {!shipment && (
+            <p style={{ fontSize:'.82rem', color:'#aaa', margin:0 }}>
+              No tracking data yet — click Refresh to fetch from NimbusPost.
+            </p>
+          )}
+
+          {shipment && (
+            <>
+              <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginBottom:14 }}>
+                {shipment.status && (
+                  <span style={{ fontSize:'.75rem', fontWeight:700, padding:'3px 10px',
+                    borderRadius:20, background:'#FFF8EE', border:'1px solid #e8ddd0', color:'#5C3D1E' }}>
+                    {shipment.status}
+                  </span>
+                )}
+                {shipment.rto_status && (
+                  <span style={{ fontSize:'.75rem', fontWeight:700, padding:'3px 10px',
+                    borderRadius:20, background:'#FFF3E0', border:'1px solid #FFB74D', color:'#E65100' }}>
+                    RTO: {shipment.rto_status}
+                  </span>
+                )}
+                {shipment.edd && (
+                  <span style={{ fontSize:'.75rem', color:'#555', padding:'3px 10px',
+                    borderRadius:20, background:'#F5F5F5', border:'1px solid #e0e0e0' }}>
+                    EDD: {shipment.edd}
+                  </span>
+                )}
+              </div>
+
+              {Array.isArray(shipment.history) && shipment.history.length > 0 ? (
+                <div style={{ display:'flex', flexDirection:'column' }}>
+                  {shipment.history.map((evt, i) => (
+                    <div key={i} style={{ display:'flex', gap:12, paddingBottom:12,
+                      borderLeft:'2px solid #e8ddd0', marginLeft:6, paddingLeft:14,
+                      position:'relative' }}>
+                      <div style={{ position:'absolute', left:-5, top:3, width:8, height:8,
+                        borderRadius:'50%', background: i === 0 ? '#5C3D1E' : '#d0c8bc',
+                        border:'2px solid #fff' }} />
+                      <div>
+                        <div style={{ fontSize:'.8rem', fontWeight:600, color:'#1a1a1a' }}>
+                          {evt.message || evt.status_code || '—'}
+                        </div>
+                        <div style={{ fontSize:'.72rem', color:'#888', marginTop:2 }}>
+                          {evt.location && <span>{evt.location} · </span>}
+                          {evt.event_time}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p style={{ fontSize:'.82rem', color:'#aaa', margin:0 }}>No events yet.</p>
+              )}
+
+              {shipment.last_synced_at && (
+                <p style={{ fontSize:'.7rem', color:'#ccc', marginTop:10, marginBottom:0 }}>
+                  Last synced: {new Date(shipment.last_synced_at).toLocaleString('en-IN',
+                    { timeZone:'Asia/Kolkata', dateStyle:'medium', timeStyle:'short' })} IST
+                </p>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       {/* Notes */}
       <div style={{ background:'#fff', borderRadius:12, padding:'18px 20px',
