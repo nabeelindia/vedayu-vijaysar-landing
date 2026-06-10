@@ -50,9 +50,11 @@ export default function OrdersList() {
   const [selected,    setSelected]    = useState(new Set());
   const [bulkStatus,  setBulkStatus]  = useState('confirmed');
   const [bulking,     setBulking]     = useState(false);
-  const [dateRange, setDateRange] = useState('');
+  const [dateRange,   setDateRange]   = useState('');
+  const [customFrom,  setCustomFrom]  = useState('');
+  const [customTo,    setCustomTo]    = useState('');
 
-  const load = (f = filter, s = search, p = page, dr = dateRange) => {
+  const load = (f = filter, s = search, p = page, dr = dateRange, cf = customFrom, ct = customTo) => {
     setLoading(true);
     const params = new URLSearchParams({ page: p });
     if (f === 'archived') {
@@ -63,7 +65,9 @@ export default function OrdersList() {
       else if (f !== 'all') params.set('status', f);
     }
     if (s) params.set('search', s);
-    const { date_from, date_to } = getDateParams(dr);
+    const { date_from, date_to } = dr === 'custom'
+      ? { date_from: cf || undefined, date_to: ct || undefined }
+      : getDateParams(dr);
     if (date_from) params.set('date_from', date_from);
     if (date_to)   params.set('date_to', date_to);
     fetch(`/api/admin/orders?${params}`).then(r => r.json()).then(d => {
@@ -73,12 +77,13 @@ export default function OrdersList() {
     });
   };
 
-  useEffect(() => { load(filter, search, page, dateRange); }, []);
+  useEffect(() => { load(filter, search, page, dateRange, customFrom, customTo); }, []);
 
-  const handleFilter = (f) => { setSelected(new Set()); setFilter(f); setPage(1); load(f, search, 1, dateRange); };
-  const handleDateRange = (dr) => { setSelected(new Set()); setDateRange(dr); setPage(1); load(filter, search, 1, dr); };
+  const handleFilter = (f) => { setSelected(new Set()); setFilter(f); setPage(1); load(f, search, 1, dateRange, customFrom, customTo); };
+  const handleDateRange = (dr) => { setSelected(new Set()); setDateRange(dr); setPage(1); if (dr !== 'custom') load(filter, search, 1, dr); };
+  const applyCustomRange = () => { setSelected(new Set()); setPage(1); load(filter, search, 1, 'custom', customFrom, customTo); };
   const handleSearch = (e) => {
-    if (e.key === 'Enter') { setSelected(new Set()); setPage(1); load(filter, e.target.value, 1, dateRange); }
+    if (e.key === 'Enter') { setSelected(new Set()); setPage(1); load(filter, e.target.value, 1, dateRange, customFrom, customTo); }
   };
 
   const toggleSelect  = (id) => setSelected(prev => {
@@ -130,10 +135,10 @@ export default function OrdersList() {
   return (
     <AdminLayout title="Orders">
       <PageHeader title={`Orders (${total})`} />
-      <div style={{ display:'flex', gap:8, alignItems:'center', marginBottom:12 }}>
+      <div style={{ display:'flex', gap:8, alignItems:'center', marginBottom: dateRange === 'custom' ? 6 : 12, flexWrap:'wrap' }}>
         <input type="search" placeholder="Search by name, mobile, order ID, pincode…"
           value={search} onChange={e => setSearch(e.target.value)} onKeyDown={handleSearch}
-          style={{ flex:1, padding:'10px 14px', borderRadius:10,
+          style={{ flex:1, minWidth:180, padding:'10px 14px', borderRadius:10,
             border:'1.5px solid #e0d8cc', fontSize:'.88rem', outline:'none' }} />
         <select value={dateRange} onChange={e => handleDateRange(e.target.value)}
           style={{ padding:'10px 12px', borderRadius:10, border:'1.5px solid #e0d8cc',
@@ -147,8 +152,31 @@ export default function OrdersList() {
           <option value="last30">Last 30 days</option>
           <option value="thisMonth">This month</option>
           <option value="lastMonth">Last month</option>
+          <option value="custom">Custom range…</option>
         </select>
       </div>
+      {dateRange === 'custom' && (
+        <div style={{ display:'flex', gap:8, alignItems:'center', marginBottom:12, flexWrap:'wrap' }}>
+          <input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)}
+            style={{ padding:'8px 10px', borderRadius:8, border:'1.5px solid #e0d8cc',
+              fontSize:'.82rem', outline:'none', color: customFrom ? '#5C3D1E' : '#888' }} />
+          <span style={{ fontSize:'.8rem', color:'#888' }}>to</span>
+          <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
+            style={{ padding:'8px 10px', borderRadius:8, border:'1.5px solid #e0d8cc',
+              fontSize:'.82rem', outline:'none', color: customTo ? '#5C3D1E' : '#888' }} />
+          <button onClick={applyCustomRange} disabled={!customFrom && !customTo}
+            style={{ padding:'8px 16px', borderRadius:8, border:'none',
+              background: customFrom || customTo ? '#5C3D1E' : '#c4a882',
+              color:'#fff', fontSize:'.82rem', fontWeight:700, cursor: customFrom || customTo ? 'pointer' : 'not-allowed' }}>
+            Apply
+          </button>
+          <button onClick={() => { setCustomFrom(''); setCustomTo(''); handleDateRange(''); }}
+            style={{ padding:'8px 12px', borderRadius:8, border:'1.5px solid #e0d8cc',
+              background:'#fff', color:'#888', fontSize:'.82rem', cursor:'pointer' }}>
+            Clear
+          </button>
+        </div>
+      )}
       {/* Bulk action bar */}
       <div style={{ display:'flex', gap:8, alignItems:'center', marginBottom:8, flexWrap:'wrap' }}>
         <button onClick={selected.size === orders.length ? deselectAll : selectAll}
@@ -213,7 +241,7 @@ export default function OrdersList() {
           </div>
           <div style={{ display:'flex', gap:10, justifyContent:'center', marginTop:20 }}>
             {page > 1 && (
-              <button onClick={() => { const p = page-1; setPage(p); load(filter,search,p,dateRange); }}
+              <button onClick={() => { const p = page-1; setPage(p); load(filter,search,p,dateRange,customFrom,customTo); }}
                 style={{ padding:'8px 16px', borderRadius:8, border:'1.5px solid #d0c8bc',
                   background:'#fff', cursor:'pointer', fontSize:'.82rem' }}>← Prev</button>
             )}
@@ -221,7 +249,7 @@ export default function OrdersList() {
               Page {page} · {total} orders
             </span>
             {orders.length === 50 && (
-              <button onClick={() => { const p = page+1; setPage(p); load(filter,search,p,dateRange); }}
+              <button onClick={() => { const p = page+1; setPage(p); load(filter,search,p,dateRange,customFrom,customTo); }}
                 style={{ padding:'8px 16px', borderRadius:8, border:'1.5px solid #d0c8bc',
                   background:'#fff', cursor:'pointer', fontSize:'.82rem' }}>Next →</button>
             )}
