@@ -138,7 +138,15 @@ export default function OrderDetail() {
               <Row label="Customer"   value={order.name} />
               <Row label="Mobile"     value={<a href={`tel:+${order.mobile}`} style={{ color:'#5C3D1E' }}>{order.mobile}</a>} />
               <Row label="Email"      value={order.email || '—'} />
-              <Row label="Address"    value={`${order.address}, ${order.city}, ${order.state} — ${order.pincode}`} />
+              <Row label="Address"    value={<span>{`${order.address}, ${order.city}, ${order.state} — ${order.pincode}`}{order.address_changed && (
+                <span style={{
+                  marginLeft: 8, fontSize: '.72rem', fontWeight: 700,
+                  color: '#E65100', background: '#FFF3E0',
+                  padding: '2px 8px', borderRadius: 20,
+                }}>
+                  📍 Address updated
+                </span>
+              )}</span>} />
               <Row label="Pack"       value={`${order.pack} × ${order.qty}`} />
               <Row label="Amount"     value={fmt(order.price)} />
               <Row label="Payment"    value={order.method === 'cod' ? 'Cash on Delivery' : 'Prepaid (UPI/Card)'} />
@@ -231,6 +239,23 @@ export default function OrderDetail() {
                 Mark RTO
               </button>
             )}
+            <button
+              onClick={() => {
+                const next = !order.archived;
+                if (confirm(next ? 'Archive this order? It will be hidden from the main list.' : 'Unarchive this order?')) {
+                  patch({ archived: next });
+                }
+              }}
+              disabled={saving}
+              style={{
+                padding: '8px 16px', borderRadius: 8, border: '1.5px solid #d0c8bc',
+                background: order.archived ? '#fff' : '#f0ede8',
+                color: order.archived ? '#2E7D32' : '#888',
+                fontSize: '.8rem', fontWeight: 700, cursor: 'pointer',
+              }}
+            >
+              {order.archived ? '📤 Unarchive' : '🗂 Archive'}
+            </button>
             {showRTO && (
               <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                 <input value={rtoReason} onChange={e => setRtoReason(e.target.value)}
