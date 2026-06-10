@@ -89,7 +89,8 @@ export default function OrdersList() {
 
   const bulkUpdate = async () => {
     if (!selected.size) return;
-    if (!confirm(`Update ${selected.size} order(s)?`)) return;
+    const actionLabel = bulkStatus === '__archive__' ? 'archive' : bulkStatus === '__unarchive__' ? 'unarchive' : `mark as "${bulkStatus}"`;
+    if (!confirm(`${selected.size} order(s) will be ${actionLabel}. Continue?`)) return;
     setBulking(true);
 
     const body = { orderIds: [...selected] };

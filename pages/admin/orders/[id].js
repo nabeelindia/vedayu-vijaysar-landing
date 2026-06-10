@@ -139,12 +139,20 @@ export default function OrderDetail() {
               <Row label="Mobile"     value={<a href={`tel:+${order.mobile}`} style={{ color:'#5C3D1E' }}>{order.mobile}</a>} />
               <Row label="Email"      value={order.email || '—'} />
               <Row label="Address"    value={<span>{`${order.address}, ${order.city}, ${order.state} — ${order.pincode}`}{order.address_changed && (
-                <span style={{
-                  marginLeft: 8, fontSize: '.72rem', fontWeight: 700,
-                  color: '#E65100', background: '#FFF3E0',
-                  padding: '2px 8px', borderRadius: 20,
-                }}>
-                  📍 Address updated
+                <span style={{ display:'inline-flex', alignItems:'center', gap:6, marginLeft:8 }}>
+                  <span style={{
+                    fontSize: '.72rem', fontWeight: 700,
+                    color: '#E65100', background: '#FFF3E0',
+                    padding: '2px 8px', borderRadius: 20,
+                  }}>
+                    📍 Address updated
+                  </span>
+                  <button onClick={() => { if (confirm('Mark address flag as reviewed?')) patch({ address_changed: false }); }}
+                    disabled={saving}
+                    style={{ fontSize:'.65rem', padding:'1px 7px', borderRadius:20, border:'1px solid #E65100',
+                      background:'transparent', color:'#E65100', cursor:'pointer', fontWeight:700 }}>
+                    Clear
+                  </button>
                 </span>
               )}</span>} />
               <Row label="Pack"       value={`${order.pack} × ${order.qty}`} />

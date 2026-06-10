@@ -28,7 +28,7 @@ export default async function handler(req, res) {
   }
 
   if (date_from) query = query.gte('created_at', date_from + 'T00:00:00+05:30');
-  if (date_to)   query = query.lte('created_at', date_to   + 'T23:59:59+05:30');
+  if (date_to)   query = query.lte('created_at', date_to   + 'T23:59:59.999+05:30');
 
   const { data, count, error } = await query;
   if (error) return res.status(500).json({ error: error.message });
