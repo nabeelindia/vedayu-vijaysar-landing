@@ -174,6 +174,11 @@ export default function Home() {
     { q: t('faq.q19'), a: t('faq.a19') },
     { q: t('faq.q20'), a: t('faq.a20') },
     { q: t('faq.q21'), a: t('faq.a21') },
+    { q: t('faq.q22'), a: t('faq.a22') },
+    { q: t('faq.q23'), a: t('faq.a23') },
+    { q: t('faq.q24'), a: t('faq.a24') },
+    { q: t('faq.q25'), a: t('faq.a25') },
+    { q: t('faq.q26'), a: t('faq.a26') },
   ];
 
   /* form state */
@@ -676,12 +681,12 @@ export default function Home() {
         <title>Vijaysar Wooden Glass — Buy Online India | Vedayu | From ₹499</title>
 
         {/* ── Meta description — keyword-rich, emotional hook, under 155 chars ── */}
-        <meta name="description" content="Vijaysar Wooden Glass — fill overnight, drink infused water each morning. Ancient Ayurvedic wellness ritual. Starting ₹499 · Free delivery across India · COD available." />
+        <meta name="description" content="Vijaysar Wooden Glass (Pterocarpus marsupium) — fill overnight, drink infused water each morning. Traditional Ayurvedic blood sugar wellness ritual. From ₹499 · Free delivery · COD available." />
 
         {/* ── Open Graph — WhatsApp / Facebook / Twitter share preview ── */}
         <meta property="og:type"        content="product" />
         <meta property="og:title"       content="Vijaysar Wooden Glass — Ayurvedic Wellness | Vedayu" />
-        <meta property="og:description" content="Fill overnight, drink infused water each morning. Natural Vijaysar wood wellness ritual. From ₹499 · Free delivery · COD available." />
+        <meta property="og:description" content="Vijaysar Wooden Glass (Pterocarpus marsupium) — fill overnight, drink infused water each morning. Ayurvedic blood sugar wellness ritual. From ₹499 · Free delivery · COD available." />
         <meta property="og:image"       content="https://vedayulife.com/images/og-image.jpg" />
         <meta property="og:image:width"  content="1200" />
         <meta property="og:image:height" content="630" />
