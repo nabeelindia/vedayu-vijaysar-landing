@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   if (!supabase)             return res.status(503).json({ error: 'Supabase not configured' });
   if (req.method !== 'GET') return res.status(405).end();
 
-  const { method, status, search, page = '1' } = req.query;
+  const { method, status, search, page = '1', archived, date_from, date_to } = req.query;
   const pageSize = 50;
   const offset   = (parseInt(page) - 1) * pageSize;
 
@@ -16,6 +16,9 @@ export default async function handler(req, res) {
     .order('created_at', { ascending: false })
     .range(offset, offset + pageSize - 1);
 
+  // archived filter — default false so normal views never show archived orders
+  query = query.eq('archived', archived === 'true');
+
   if (method && method !== 'all') query = query.eq('method', method);
   if (status && status !== 'all') query = query.eq('status', status);
   if (search) {
@@ -23,6 +26,9 @@ export default async function handler(req, res) {
       `order_id.ilike.%${search}%,name.ilike.%${search}%,mobile.ilike.%${search}%,pincode.ilike.%${search}%`
     );
   }
+
+  if (date_from) query = query.gte('created_at', date_from + 'T00:00:00+05:30');
+  if (date_to)   query = query.lte('created_at', date_to   + 'T23:59:59+05:30');
 
   const { data, count, error } = await query;
   if (error) return res.status(500).json({ error: error.message });
