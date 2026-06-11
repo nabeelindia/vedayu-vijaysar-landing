@@ -44,7 +44,7 @@ export default function Document(props) {
         {/* Open Graph */}
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Vedayu" />
-        <meta property="og:image" content="/images/og-image.jpg" />
+        <meta property="og:image" content="https://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/vedayu/og-image" />
         <meta name="twitter:card" content="summary_large_image" />
       </Head>
       <body>

@@ -23,7 +23,7 @@ export default function BlogIndex({ posts }) {
         <meta property="og:description" content="Explore Vedayu's Ayurvedic wellness blog — guides on Vijaysar wood, blood sugar wellness, morning rituals, and the ancient wisdom of Ayurveda." />
         <meta property="og:url" content="https://vedayulife.com/blog" />
         <meta property="og:type" content="website" />
-        <meta property="og:image" content="https://vedayulife.com/images/og-image.jpg" />
+        <meta property="og:image" content="https://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/vedayu/og-image" />
       </Head>
 
       {/* Nav */}

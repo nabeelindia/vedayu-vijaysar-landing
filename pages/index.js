@@ -104,10 +104,10 @@ function getShipsBy(dtLocale) {
 
 /* ─── Product gallery images ────────────────────────────────── */
 const GALLERY = [
-  { src:'/images/product.jpg',   alt:'Vedayu Vijaysar Wooden Glass — front view' },
-  { src:'/images/lifestyle.jpg', alt:'Vijaysar Glass — morning wellness ritual' },
-  { src:'/images/authentic.jpg', alt:'100% authentic Vijaysar wood — how to identify' },
-  { src:'/images/specs.jpg',     alt:'Vijaysar Glass dimensions — 6 inch, 80ml' },
+  { src:'https://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/vedayu/product',   alt:'Vedayu Vijaysar Wooden Glass — front view' },
+  { src:'https://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/vedayu/lifestyle', alt:'Vijaysar Glass — morning wellness ritual' },
+  { src:'https://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/vedayu/authentic', alt:'100% authentic Vijaysar wood — how to identify' },
+  { src:'https://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/vedayu/specs',     alt:'Vijaysar Glass dimensions — 6 inch, 80ml' },
 ];
 
 /* ─── FAQ data ──────────────────────────────────────────── */
@@ -687,7 +687,7 @@ export default function Home() {
         <meta property="og:type"        content="product" />
         <meta property="og:title"       content="Vijaysar Wooden Glass — Ayurvedic Wellness | Vedayu" />
         <meta property="og:description" content="Vijaysar Wooden Glass (Pterocarpus marsupium) — fill overnight, drink infused water each morning. Ayurvedic blood sugar wellness ritual. From ₹499 · Free delivery · COD available." />
-        <meta property="og:image"       content="https://vedayulife.com/images/og-image.jpg" />
+        <meta property="og:image"       content="https://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/vedayu/og-image" />
         <meta property="og:image:width"  content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:url"         content="https://vedayulife.com/" />
@@ -699,7 +699,7 @@ export default function Home() {
         <meta name="twitter:card"        content="summary_large_image" />
         <meta name="twitter:title"       content="Vijaysar Wooden Glass — Ayurvedic Wellness | Vedayu" />
         <meta name="twitter:description" content="Fill overnight, drink infused water each morning. From ₹499 · Free delivery · COD available." />
-        <meta name="twitter:image"       content="https://vedayulife.com/images/og-image.jpg" />
+        <meta name="twitter:image"       content="https://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/vedayu/og-image" />
 
         {/* ── Canonical + hreflang ── */}
         <link rel="canonical" href="https://vedayulife.com/" />
@@ -754,11 +754,11 @@ export default function Home() {
               sku: 'VED-VWG-01',
               material: 'Vijaysar Wood (Pterocarpus marsupium)',
               image: [
-                'https://vedayulife.com/images/product.jpg',
-                'https://vedayulife.com/images/lifestyle.jpg',
-                'https://vedayulife.com/images/authentic.jpg',
-                'https://vedayulife.com/images/benefits.jpg',
-                'https://vedayulife.com/images/how-to-use.jpg',
+                'https://vedayulife.comhttps://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/vedayu/product',
+                'https://vedayulife.comhttps://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/vedayu/lifestyle',
+                'https://vedayulife.comhttps://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/vedayu/authentic',
+                'https://vedayulife.comhttps://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/vedayu/benefits',
+                'https://vedayulife.comhttps://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/vedayu/how-to-use',
               ],
               offers: [
                 {
@@ -1223,9 +1223,9 @@ export default function Home() {
         <div className="container">
           <div className="solution-grid">
             <div className="solution-img-wrap">
-              <div className="solution-circle" onClick={() => setLightbox({ imgs:['/images/lifestyle.jpg'], idx:0 })} style={{ cursor:'zoom-in', position:'relative' }}>
+              <div className="solution-circle" onClick={() => setLightbox({ imgs:['https://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/vedayu/lifestyle'], idx:0 })} style={{ cursor:'zoom-in', position:'relative' }}>
                 <Image
-                  src="/images/lifestyle.jpg"
+                  src="https://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/vedayu/lifestyle"
                   alt="Vedayu Vijaysar Wooden Glass — Premium Natural Wood"
                   width={400}
                   height={400}
@@ -1266,7 +1266,7 @@ export default function Home() {
                 controls
                 playsInline
                 preload="metadata"
-                poster="/images/thumb-celebrity.jpg"
+                poster="https://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/vedayu/thumb-celebrity"
               >
                 <source src={process.env.NEXT_PUBLIC_VIDEO_CELEBRITY || "/videos/celebrity.mp4"} type="video/mp4" />
               </video>
@@ -1304,7 +1304,7 @@ export default function Home() {
                   controls
                   playsInline
                   preload="metadata"
-                  poster="/images/thumb-testimonial.jpg"
+                  poster="https://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/vedayu/thumb-testimonial"
                 >
                   <source src={process.env.NEXT_PUBLIC_VIDEO_TESTIMONIAL || "/videos/testimonial.mp4"} type="video/mp4" />
                 </video>
@@ -1322,7 +1322,7 @@ export default function Home() {
                   controls
                   playsInline
                   preload="metadata"
-                  poster="/images/thumb-meta-ad.jpg"
+                  poster="https://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/vedayu/thumb-meta-ad"
                 >
                   <source src={process.env.NEXT_PUBLIC_VIDEO_METAAD || "/videos/meta-ad.mp4"} type="video/mp4" />
                 </video>
@@ -1392,9 +1392,9 @@ export default function Home() {
 
             {/* Left — infographic image */}
             <div className="how-to-img-col">
-              <button onClick={() => setLightbox({ imgs:['/images/how-to-use.jpg'], idx:0 })} style={{ background:'none', border:'none', padding:0, cursor:'zoom-in', width:'100%', position:'relative', display:'block' }}>
+              <button onClick={() => setLightbox({ imgs:['https://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/vedayu/how-to-use'], idx:0 })} style={{ background:'none', border:'none', padding:0, cursor:'zoom-in', width:'100%', position:'relative', display:'block' }}>
                 <Image
-                  src="/images/how-to-use.jpg"
+                  src="https://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/vedayu/how-to-use"
                   alt="How to use Vijaysar Wooden Glass — 4 steps infographic"
                   width={480}
                   height={480}
@@ -1533,8 +1533,8 @@ export default function Home() {
           {/* Product infographics */}
           <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 36 }}>
             {[
-              { src:'/images/specs.jpg',     alt:'Vijaysar Wood Tumbler dimensions — 6.1 inch height, 80ml capacity' },
-              { src:'/images/authentic.jpg', alt:'100% Authentic Vijaysar Wood vs Jamun Wood — how to identify' },
+              { src:'https://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/vedayu/specs',     alt:'Vijaysar Wood Tumbler dimensions — 6.1 inch height, 80ml capacity' },
+              { src:'https://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/vedayu/authentic', alt:'100% Authentic Vijaysar Wood vs Jamun Wood — how to identify' },
             ].map(({ src, alt }, i, arr) => (
               <button key={src} onClick={() => setLightbox({ imgs: arr.map(a => a.src), idx: i })} aria-label={`Zoom: ${alt}`}
                 style={{ background:'none', border:'none', padding:0, cursor:'zoom-in', width:'100%', maxWidth:380, position:'relative' }}>

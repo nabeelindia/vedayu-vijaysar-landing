@@ -5,7 +5,13 @@ const nextConfig = {
   i18n,
   reactStrictMode: true,
   images: {
-    domains: [],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+        pathname: '/ddmmfkvwb/**',
+      },
+    ],
     formats: ['image/webp', 'image/avif'],
   },
   // Security headers
