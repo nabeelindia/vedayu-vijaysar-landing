@@ -25,8 +25,11 @@ export default function OrderDetail() {
   const [rtoReason, setRtoReason] = useState('');
   const [showRTO,   setShowRTO]   = useState(false);
   const [saving2,     setSaving2]     = useState(false);
-  const [shipment,    setShipment]    = useState(null);
-  const [refreshing,  setRefreshing]  = useState(false);
+  const [shipment,       setShipment]       = useState(null);
+  const [refreshing,     setRefreshing]     = useState(false);
+  const [editingTracking, setEditingTracking] = useState(false);
+  const [trackingAwb,    setTrackingAwb]    = useState('');
+  const [trackingCarrier, setTrackingCarrier] = useState('Delhivery');
   const [waText,    setWaText]    = useState('');
   const [waSending, setWaSending] = useState(false);
   const [waMsg,     setWaMsg]     = useState('');
@@ -209,8 +212,52 @@ export default function OrderDetail() {
                   )}
                 </td>
               </tr>
-              {order.awb         && <Row label="Tracking No." value={order.awb} />}
-              {order.courier     && <Row label="Courier"      value={order.courier} />}
+              <tr style={{ borderBottom:'1px solid #f0ede8' }}>
+                <td style={{ padding:'9px 0', fontWeight:600, color:'#555', width:'40%', fontSize:'.85rem' }}>Tracking No.</td>
+                <td style={{ padding:'9px 0', fontSize:'.85rem', color:'#1a1a1a' }}>
+                  {editingTracking ? (
+                    <span style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                      <select value={trackingCarrier} onChange={e => setTrackingCarrier(e.target.value)}
+                        style={{ padding:'5px 8px', borderRadius:6, border:'1.5px solid #4A7C59', fontSize:'.8rem', background:'#fff' }}>
+                        <option>Delhivery</option>
+                        <option>DTDC</option>
+                        <option>Bluedart</option>
+                        <option>Ecom Express</option>
+                        <option>XpressBees</option>
+                        <option>Shadowfax</option>
+                        <option>NimbusPost</option>
+                        <option>India Post</option>
+                        <option>Other</option>
+                      </select>
+                      <span style={{ display:'flex', gap:6 }}>
+                        <input value={trackingAwb} onChange={e => setTrackingAwb(e.target.value)}
+                          placeholder="AWB / tracking number"
+                          style={{ flex:1, padding:'5px 8px', borderRadius:6, border:'1.5px solid #4A7C59', fontSize:'.8rem' }} />
+                        <button onClick={async () => {
+                            if (!trackingAwb.trim()) return;
+                            await patch({ awb: trackingAwb.trim(), courier: trackingCarrier });
+                            setEditingTracking(false);
+                          }} disabled={saving}
+                          style={{ padding:'5px 10px', background:'#4A7C59', color:'#fff', border:'none', borderRadius:6, fontSize:'.78rem', fontWeight:700, cursor:'pointer' }}>
+                          {saving ? '…' : 'Save'}
+                        </button>
+                        <button onClick={() => setEditingTracking(false)}
+                          style={{ padding:'5px 8px', background:'none', border:'none', color:'#888', fontSize:'.78rem', cursor:'pointer' }}>
+                          Cancel
+                        </button>
+                      </span>
+                    </span>
+                  ) : (
+                    <span style={{ display:'flex', alignItems:'center', gap:8 }}>
+                      <span>{order.awb || '—'}</span>
+                      <button onClick={() => { setTrackingAwb(order.awb || ''); setTrackingCarrier(order.courier || 'Delhivery'); setEditingTracking(true); }}
+                        style={{ background:'none', border:'none', cursor:'pointer', fontSize:'.8rem', color:'#4A7C59', padding:0 }}
+                        title="Edit tracking">✏️</button>
+                    </span>
+                  )}
+                </td>
+              </tr>
+              {!editingTracking && order.courier && <Row label="Courier" value={order.courier} />}
               {order.sent_at     && <Row label="Order sent"   value={fmtD(order.sent_at)} />}
               {order.delivered_at && <Row label="Delivered"   value={fmtD(order.delivered_at)} />}
             </tbody>
