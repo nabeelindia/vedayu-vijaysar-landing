@@ -2,11 +2,16 @@
  * POST /api/verify-payment
  * Called client-side after Razorpay payment succeeds.
  * 1. Verifies the Razorpay payment signature (server-side HMAC check).
- * 2. Sends order notification email to store owner.
- * 3. Sends order confirmation email to customer (if email provided).
- * 4. Fires a Meta CAPI Purchase event with full customer data.
- * 5. Returns { success, orderId } for the redirect.
+ * 2. Saves order to Supabase immediately (most critical — must not be lost).
+ * 3. Runs emails, CAPI, WhatsApp, push in parallel (best-effort).
+ * 4. Returns { success, orderId } for the redirect.
+ *
+ * Order of operations is intentional: DB write comes BEFORE any external
+ * API calls to survive Vercel's 10s Hobby timeout even if downstream
+ * services are slow.
  */
+export const config = { maxDuration: 10 }; // Vercel Hobby max
+
 import crypto   from 'crypto';
 import { Resend } from 'resend';
 import { sendCapiPurchase } from '../../lib/meta-capi';
@@ -88,7 +93,35 @@ export default async function handler(req, res) {
   });
   const WA_NUM = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '9999999999';
 
-  // ── 3. Send emails ─────────────────────────────────────────────────────────
+  // ── 3. Persist order to Supabase FIRST ───────────────────────────────────
+  // This must happen before any external API calls. If downstream services
+  // are slow and Vercel times out, the order record still exists.
+  const { error: ordErr } = await supabase.from('orders').insert({
+    order_id:    orderId,
+    method:      'prepaid',
+    status:      'confirmed',
+    name,
+    mobile:      mobile?.trim() || null,
+    email:       email?.trim()  || null,
+    address,
+    city,
+    state,
+    pincode,
+    pack,
+    qty:         Number(qty),
+    price:       Number(amount) / 100,
+    utm:         Object.keys(utm || {}).length ? utm : null,
+    referrer_id:         referrerId || null,
+    scheduled_ship_date: safeScheduledDate,
+  });
+  if (ordErr) {
+    console.error('orders insert (prepaid) FAILED:', ordErr.message);
+    // Still continue — we want to send emails even if DB had a transient error.
+    // The payment is real; log and alert via push so we can fix manually.
+    sendPush({ title: `🚨 DB insert failed — ${name}`, body: `${ordErr.message} | ${razorpay_payment_id}` }).catch(() => {});
+  }
+
+  // ── 4. Send emails ─────────────────────────────────────────────────────────
   if (process.env.RESEND_API_KEY && process.env.ORDERS_EMAIL) {
     const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -219,49 +252,23 @@ export default async function handler(req, res) {
     console.log('=== NEW PREPAID ORDER ===', { orderId, name, mobile, email, fullAddr, pack, price, razorpay_payment_id });
   }
 
-  // ── 4. Meta CAPI — server-side Purchase event ──────────────────────────────
-  await sendCapiPurchase({ orderId, price, pack, qty, email, mobile, name, city, pincode }).catch(() => {});
-
-  // ── 5. Post-purchase follow-up email queue ──────────────────────────────────
-  await enqueueFollowup({ orderId, email, name, pack, price, method: 'prepaid', mobile }).catch(() => {});
-  await saveCustomer({ mobile, email, name, address, city, state, pincode }).catch(() => {});
-
-  // ── WhatsApp — instant order confirmation ────────────────────────────────────
-  await waOrderConfirmed({ mobile, name, pack, orderId, price, scheduledShipDate: safeScheduledDate, method: 'prepaid' }).catch(() => {});
-  sendPush({ title: `💳 New prepaid order — ${name}`, body: `${pack} · ₹${price} · ${mobile?.trim()}` }).catch(() => {});
-
-  // ── Referral tracking ────────────────────────────────────────────────────
-  // Store this order's mobile as the referral owner so future self-referral checks work
-  supabase.from('referrals').insert({
-    order_id:     orderId,
-    owner_mobile: mobile?.trim() || '',
-    referrer_id:  referrerId || null,
-    discount:     referrerId ? 50 : null,
-    method:       'prepaid',
-  }).then(() => {}, () => {});
-
-  // ── Persist order to Supabase ────────────────────────────────────────────
-  if (supabase) {
-    const { error: ordErr } = await supabase.from('orders').insert({
-      order_id:    orderId,
-      method:      'prepaid',
-      status:      'confirmed',
-      name,
-      mobile:      mobile?.trim() || null,
-      email:       email?.trim()  || null,
-      address,
-      city,
-      state,
-      pincode,
-      pack,
-      qty:         Number(qty),
-      price:       Number(amount) / 100,
-      utm:         Object.keys(utm || {}).length ? utm : null,
-      referrer_id:         referrerId || null,
-      scheduled_ship_date: safeScheduledDate,
-    });
-    if (ordErr) console.error('orders insert (prepaid) failed:', ordErr.message);
-  }
+  // ── 5. Secondary operations — run in parallel, best-effort ───────────────
+  // These are all non-critical for the order record (already saved above).
+  // Promise.allSettled so one slow/failing service doesn't block the others.
+  await Promise.allSettled([
+    sendCapiPurchase({ orderId, price, pack, qty, email, mobile, name, city, pincode }),
+    enqueueFollowup({ orderId, email, name, pack, price, method: 'prepaid', mobile }),
+    saveCustomer({ mobile, email, name, address, city, state, pincode }),
+    waOrderConfirmed({ mobile, name, pack, orderId, price, scheduledShipDate: safeScheduledDate, method: 'prepaid' }),
+    sendPush({ title: `💳 New prepaid order — ${name}`, body: `${pack} · ₹${price} · ${mobile?.trim()}` }),
+    supabase.from('referrals').insert({
+      order_id:     orderId,
+      owner_mobile: mobile?.trim() || '',
+      referrer_id:  referrerId || null,
+      discount:     referrerId ? 50 : null,
+      method:       'prepaid',
+    }),
+  ]);
 
   return res.status(200).json({ success: true, orderId });
 }
