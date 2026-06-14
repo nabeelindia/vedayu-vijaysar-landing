@@ -73,6 +73,22 @@ export default function TrackPage() {
       <Head>
         <title>{t('track.page_title')}</title>
         <meta name="description" content="Track your Vedayu Vijaysar Wooden Glass order by Order ID, AWB number, phone, or email." />
+        <meta name="robots" content="noindex, follow" />
+        <link rel="canonical" href="https://vedayulife.com/track" />
+
+        {/* Open Graph — for WhatsApp/social previews even though noindex */}
+        <meta property="og:type"        content="website" />
+        <meta property="og:title"       content="Track Your Vedayu Order" />
+        <meta property="og:description" content="Enter your Order ID, AWB, phone, or email to track your Vijaysar Wooden Glass shipment." />
+        <meta property="og:image"       content="https://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/og-image_tswkyu" />
+        <meta property="og:url"         content="https://vedayulife.com/track" />
+        <meta property="og:site_name"   content="Vedayu" />
+
+        {/* Twitter */}
+        <meta name="twitter:card"        content="summary_large_image" />
+        <meta name="twitter:title"       content="Track Your Vedayu Order" />
+        <meta name="twitter:description" content="Enter your Order ID, AWB, phone, or email to track your shipment." />
+        <meta name="twitter:image"       content="https://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/og-image_tswkyu" />
       </Head>
 
       <div className="track-page">
