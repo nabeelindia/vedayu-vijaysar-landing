@@ -129,13 +129,13 @@ export async function trackShipment(awb) {
 - [ ] **Step 2: Add env vars to Vercel dashboard**
 
 Go to Vercel → your project → Settings → Environment Variables and add:
-- `NIMBUSPOST_EMAIL` = `india+4183@hashcart.com`
-- `NIMBUSPOST_PASSWORD` = `tXa2GX3y9P`
+- `NIMBUSPOST_EMAIL` = your NimbusPost login email
+- `NIMBUSPOST_PASSWORD` = your NimbusPost login password
 
 Also add them to your local `.env.local` for development:
 ```
-NIMBUSPOST_EMAIL=india+4183@hashcart.com
-NIMBUSPOST_PASSWORD=tXa2GX3y9P
+NIMBUSPOST_EMAIL=your-nimbuspost-email
+NIMBUSPOST_PASSWORD=your-nimbuspost-password
 ```
 
 - [ ] **Step 3: Smoke-test the client locally**
