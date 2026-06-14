@@ -12,6 +12,31 @@ export default function Contact() {
         <title>{t('contact.page_title')}</title>
         <meta name="robots" content="noindex,follow" />
         <meta name="description" content="Get in touch with Vedayu for order queries, support, or feedback." />
+        <link rel="canonical" href="https://vedayulife.com/contact" />
+
+        {/* Open Graph */}
+        <meta property="og:type"        content="website" />
+        <meta property="og:title"       content="Contact Vedayu — We're Here to Help" />
+        <meta property="og:description" content="Reach out for order support, product questions, or feedback. We respond within 24 hours." />
+        <meta property="og:image"       content="https://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/og-image_tswkyu" />
+        <meta property="og:url"         content="https://vedayulife.com/contact" />
+        <meta property="og:site_name"   content="Vedayu" />
+
+        {/* Twitter */}
+        <meta name="twitter:card"        content="summary_large_image" />
+        <meta name="twitter:title"       content="Contact Vedayu — We're Here to Help" />
+        <meta name="twitter:description" content="Reach out for order support, product questions, or feedback." />
+        <meta name="twitter:image"       content="https://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/og-image_tswkyu" />
+
+        {/* JSON-LD */}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'WebPage',
+          name: 'Contact Vedayu',
+          description: 'Get in touch with Vedayu for order queries, support, or feedback.',
+          url: 'https://vedayulife.com/contact',
+          publisher: { '@type': 'Organization', name: 'Vedayu', url: 'https://vedayulife.com' },
+        }) }} />
       </Head>
 
       <header className="policy-header">
