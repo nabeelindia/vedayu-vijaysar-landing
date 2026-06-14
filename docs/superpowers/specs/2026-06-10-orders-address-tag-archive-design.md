@@ -139,3 +139,12 @@ if (date_to)   query = query.lte('created_at', date_to   + 'T23:59:59+05:30');
 - No email/WA notification when an order is archived.
 - No "auto-archive" of old orders.
 - Archived orders are not excluded from CSV export (exporting the current view includes whatever is visible, so exporting from Archived tab exports archived orders).
+
+---
+
+## 7. Pagination
+
+The orders list already has Prev/Next pagination with a page indicator ("Page N · X orders"). No changes needed to the existing mechanism except:
+
+- Reset `page` to `1` whenever the date filter or archived tab changes (same pattern as the existing `handleFilter`).
+- The date filter `handleDateRange` function follows the same `load(filter, search, 1, dateRange)` call pattern.

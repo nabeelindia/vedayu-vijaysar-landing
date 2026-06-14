@@ -106,4 +106,11 @@ Customer submits order
 ## Out of Scope
 - Auto-dispatch triggering on the scheduled date (no cron automation)
 - Customer ability to modify the scheduled date post-order
-- Admin ability to change the scheduled date from the UI
+
+## Admin — Edit Scheduled Date
+
+On the order detail page (`pages/admin/orders/[id].js`), the **Scheduled Ship Date** field is editable:
+- An edit icon (pencil) next to the date opens an inline date input
+- Admin can pick any future date (no 14-day cap, no holiday restriction — admin override)
+- Save calls `PATCH /api/admin/orders/[id]` with `{ scheduled_ship_date }` — existing endpoint, new field support
+- On success: field updates in place, timeline badge refreshes
