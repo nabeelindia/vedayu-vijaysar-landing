@@ -24,6 +24,26 @@ export default function BlogIndex({ posts }) {
         <meta property="og:url" content="https://vedayulife.com/blog" />
         <meta property="og:type" content="website" />
         <meta property="og:image" content="https://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/og-image_tswkyu" />
+
+        {/* Twitter */}
+        <meta name="twitter:card"        content="summary_large_image" />
+        <meta name="twitter:title"       content="Ayurvedic Wellness Blog — Vedayu" />
+        <meta name="twitter:description" content="Guides on Vijaysar wood, blood sugar wellness, morning rituals, and the ancient wisdom of Ayurveda." />
+        <meta name="twitter:image"       content="https://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/og-image_tswkyu" />
+
+        {/* JSON-LD */}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'CollectionPage',
+          name: 'Ayurvedic Wellness Blog — Vedayu',
+          description: "Explore Vedayu's Ayurvedic wellness blog — guides on Vijaysar wood, blood sugar wellness, morning rituals, and the ancient wisdom of Ayurveda.",
+          url: 'https://vedayulife.com/blog',
+          publisher: {
+            '@type': 'Organization',
+            name: 'Vedayu',
+            logo: { '@type': 'ImageObject', url: 'https://vedayulife.com/favicon.svg' },
+          },
+        }) }} />
       </Head>
 
       {/* Nav */}
