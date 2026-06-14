@@ -754,11 +754,11 @@ export default function Home() {
               sku: 'VED-VWG-01',
               material: 'Vijaysar Wood (Pterocarpus marsupium)',
               image: [
-                'https://vedayulife.comhttps://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/product_rsek8j',
-                'https://vedayulife.comhttps://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/lifestyle_ehmoyv',
-                'https://vedayulife.comhttps://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/authentic_k9fg3q',
-                'https://vedayulife.comhttps://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/benefits_fnxzdh',
-                'https://vedayulife.comhttps://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/how-to-use_lycjln',
+                'https://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/product_rsek8j',
+                'https://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/lifestyle_ehmoyv',
+                'https://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/authentic_k9fg3q',
+                'https://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/benefits_fnxzdh',
+                'https://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/how-to-use_lycjln',
               ],
               offers: [
                 {
