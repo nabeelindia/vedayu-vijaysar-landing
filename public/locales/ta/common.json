@@ -474,5 +474,19 @@
   "order_confirmed.miswak_claim_btn": "கோர ↓",
   "order_confirmed.pack_of_1": "1 பேக்",
   "order_confirmed.pack_of_2": "2 பேக்",
-  "order_confirmed.pack_of_5": "5 பேக்"
+  "order_confirmed.pack_of_5": "5 பேக்",
+  "chat.title": "வேதாயு உதவியாளர்",
+  "chat.placeholder": "உங்கள் செய்தியை தட்டச்சு செய்யுங்கள்...",
+  "chat.send": "அனுப்பு",
+  "chat.close": "மூடு",
+  "chat.chip.track": "என் ஆர்டரை கண்காணி",
+  "chat.chip.return": "திரும்பப் பெறும் கொள்கை",
+  "chat.chip.faq": "தயாரிப்பு கேள்விகள்",
+  "chat.chip.order": "ஆர்டர் எப்படி செய்வது",
+  "chat.contact.prompt": "உங்கள் விவரங்களை விடுங்கள், நாங்கள் விரைவில் தொடர்பு கொள்கிறோம்.",
+  "chat.contact.name": "உங்கள் பெயர்",
+  "chat.contact.phone": "மொபைல் எண்",
+  "chat.contact.submit": "சமர்ப்பி",
+  "chat.contact.thanks": "நன்றி! நாங்கள் விரைவில் உங்களை தொடர்பு கொள்கிறோம்.",
+  "chat.error": "மன்னிக்கவும், ஏதோ தவறு நடந்தது. மீண்டும் முயற்சிக்கவும்."
 }

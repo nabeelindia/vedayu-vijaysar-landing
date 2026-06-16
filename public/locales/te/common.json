@@ -474,5 +474,19 @@
   "order_confirmed.miswak_claim_btn": "క్లెయిమ్ చేయండి ↓",
   "order_confirmed.pack_of_1": "1 ప్యాక్",
   "order_confirmed.pack_of_2": "2 ప్యాక్",
-  "order_confirmed.pack_of_5": "5 ప్యాక్"
+  "order_confirmed.pack_of_5": "5 ప్యాక్",
+  "chat.title": "వేదాయు అసిస్టెంట్",
+  "chat.placeholder": "మీ సందేశం టైప్ చేయండి...",
+  "chat.send": "పంపు",
+  "chat.close": "మూసివేయి",
+  "chat.chip.track": "నా ఆర్డర్ ట్రాక్ చేయి",
+  "chat.chip.return": "రిటర్న్ పాలసీ",
+  "chat.chip.faq": "ఉత్పత్తి FAQలు",
+  "chat.chip.order": "ఆర్డర్ ఎలా చేయాలి",
+  "chat.contact.prompt": "మీ వివరాలు వదిలిపెట్టండి, మేము త్వరలో మీకు తిరిగి వస్తాము.",
+  "chat.contact.name": "మీ పేరు",
+  "chat.contact.phone": "మొబైల్ నంబర్",
+  "chat.contact.submit": "సమర్పించు",
+  "chat.contact.thanks": "ధన్యవాదాలు! మేము త్వరలో మీకు తిరిగి వస్తాము.",
+  "chat.error": "క్షమించండి, ఏదో తప్పు జరిగింది. దయచేసి మళ్ళీ ప్రయత్నించండి."
 }

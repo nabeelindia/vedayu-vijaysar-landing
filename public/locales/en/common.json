@@ -474,5 +474,19 @@
   "order_confirmed.miswak_claim_btn": "Claim ↓",
   "order_confirmed.pack_of_1": "Pack of 1",
   "order_confirmed.pack_of_2": "Pack of 2",
-  "order_confirmed.pack_of_5": "Pack of 5"
+  "order_confirmed.pack_of_5": "Pack of 5",
+  "chat.title": "Vedayu Assistant",
+  "chat.placeholder": "Type your message...",
+  "chat.send": "Send",
+  "chat.close": "Close",
+  "chat.chip.track": "Track my order",
+  "chat.chip.return": "Return policy",
+  "chat.chip.faq": "Product FAQs",
+  "chat.chip.order": "How to order",
+  "chat.contact.prompt": "Leave your details and we'll get back to you shortly.",
+  "chat.contact.name": "Your name",
+  "chat.contact.phone": "Mobile number",
+  "chat.contact.submit": "Submit",
+  "chat.contact.thanks": "Thank you! We'll reach out to you soon.",
+  "chat.error": "Sorry, something went wrong. Please try again."
 }

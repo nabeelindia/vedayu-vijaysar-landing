@@ -474,5 +474,19 @@
   "order_confirmed.miswak_claim_btn": "क्लेम करें ↓",
   "order_confirmed.pack_of_1": "1 का पैक",
   "order_confirmed.pack_of_2": "2 का पैक",
-  "order_confirmed.pack_of_5": "5 का पैक"
+  "order_confirmed.pack_of_5": "5 का पैक",
+  "chat.title": "वेदायु असिस्टेंट",
+  "chat.placeholder": "अपना संदेश लिखें...",
+  "chat.send": "भेजें",
+  "chat.close": "बंद करें",
+  "chat.chip.track": "मेरा ऑर्डर ट्रैक करें",
+  "chat.chip.return": "वापसी नीति",
+  "chat.chip.faq": "उत्पाद FAQ",
+  "chat.chip.order": "ऑर्डर कैसे करें",
+  "chat.contact.prompt": "अपना विवरण छोड़ें, हम जल्द ही आपसे संपर्क करेंगे।",
+  "chat.contact.name": "आपका नाम",
+  "chat.contact.phone": "मोबाइल नंबर",
+  "chat.contact.submit": "सबमिट करें",
+  "chat.contact.thanks": "धन्यवाद! हम जल्द ही आपसे संपर्क करेंगे।",
+  "chat.error": "माफ़ करें, कुछ गलत हो गया। कृपया दोबारा कोशिश करें।"
 }
