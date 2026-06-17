@@ -75,7 +75,7 @@ function ContactForm({ sessionId, onSuccess, thankYouText }) {
         body: JSON.stringify({ sessionId, name, phone }),
       });
       if (!res.ok) throw new Error('Failed');
-      onSuccess();
+      onSuccess(name, phone);
     } catch (err) {
       console.error('Contact form error:', err);
       setError('Could not submit. Please try again.');
@@ -119,10 +119,15 @@ export default function ChatWidget() {
   const [loading, setLoading] = useState(false);
   const [contactCaptureRequested, setContactCaptureRequested] = useState(false);
   const [contactSubmitted, setContactSubmitted] = useState(false);
+  const [captureForOrderRequested, setCaptureForOrderRequested] = useState(false);
+  const [captureForOrderSubmitted, setCaptureForOrderSubmitted] = useState(false);
   const [scrollToOrderIndex, setScrollToOrderIndex] = useState(null);
   const [packSelectionIndex, setPackSelectionIndex] = useState(null);
   const [selectedPackId, setSelectedPackId] = useState(null);
   const [sessionId, setSessionId] = useState('');
+  const [csatShown, setCsatShown] = useState(false);
+  const [csatSubmitted, setCsatSubmitted] = useState(false);
+  const [humanHandoffRequested, setHumanHandoffRequested] = useState(false);
 
   const messagesEndRef = useRef(null);
 
@@ -137,7 +142,7 @@ export default function ChatWidget() {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages, loading, contactCaptureRequested]);
+  }, [messages, loading, contactCaptureRequested, captureForOrderRequested]);
 
   async function sendMessage(text) {
     if (loading || !text.trim()) return;
@@ -147,6 +152,7 @@ export default function ChatWidget() {
     setInput('');
     setLoading(true);
     setContactCaptureRequested(false);
+    setCaptureForOrderRequested(false);
 
     try {
       const res = await fetch('/api/chat', {
@@ -159,11 +165,20 @@ export default function ChatWidget() {
       if (data.contactCaptureRequested) {
         setContactCaptureRequested(true);
       }
+      if (data.captureForOrderRequested) {
+        setCaptureForOrderRequested(true);
+      }
       if (data.scrollToOrderRequested) {
         setScrollToOrderIndex(updatedMessages.length);
+        if (!csatShown) {
+          setCsatShown(true);
+        }
       }
       if (data.packSelectionRequested) {
         setPackSelectionIndex(updatedMessages.length);
+      }
+      if (data.humanHandoffRequested) {
+        setHumanHandoffRequested(true);
       }
     } catch (err) {
       setMessages(prev => [
@@ -175,17 +190,38 @@ export default function ChatWidget() {
     }
   }
 
-  function handleContactSuccess() {
+  function handleContactSuccess(name, phone) {  // receives but ignores args
     setContactSubmitted(true);
     setContactCaptureRequested(false);
     setMessages(prev => [...prev, { role: 'assistant', content: t('chat.contact.thanks') }]);
   }
 
+  function handleCaptureForOrderSuccess(name, phone) {
+    setCaptureForOrderSubmitted(true);
+    setCaptureForOrderRequested(false);
+    sendMessage(`My name is ${name} and my phone is ${phone}`);
+  }
+
+  async function handleCsatRate(rating) {
+    setCsatSubmitted(true);
+    try {
+      await fetch('/api/chat/csat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, rating }),
+      });
+    } catch (err) {
+      console.error('CSAT submit error:', err);
+    }
+  }
+
   const chips = [
-    t('chat.chip.track'),
-    t('chat.chip.return'),
-    t('chat.chip.faq'),
-    t('chat.chip.order'),
+    { label: t('chat.chip.track'),  message: 'Track my order' },
+    { label: t('chat.chip.order'),  message: 'I want to place an order' },
+    { label: t('chat.chip.return'), message: 'I want to return or replace my product' },
+    { label: t('chat.chip.late'),   message: 'My delivery is late' },
+    { label: t('chat.chip.faq'),    message: 'Tell me about the product' },
+    { label: t('chat.chip.human'),  message: 'I want to speak to a human agent' },
   ];
 
   return (
@@ -228,8 +264,8 @@ export default function ChatWidget() {
                 <div className="chat-msg-bot">👋 Hi! How can I help you today? 🌿</div>
                 <div className="chat-chips">
                   {chips.map(chip => (
-                    <button key={chip} className="chat-chip" onClick={() => sendMessage(chip)}>
-                      {chip}
+                    <button key={chip.label} className="chat-chip" onClick={() => sendMessage(chip.message)}>
+                      {chip.label}
                     </button>
                   ))}
                 </div>
@@ -323,10 +359,32 @@ export default function ChatWidget() {
                 )}
               </div>
             ))}
+            {csatShown && (
+              <div className="chat-csat">
+                {csatSubmitted ? (
+                  <span>{t('chat.csat.thanks')}</span>
+                ) : (
+                  <>
+                    <span>{t('chat.csat.prompt')}</span>
+                    <div className="chat-csat-buttons">
+                      <button onClick={() => handleCsatRate('up')}>👍</button>
+                      <button onClick={() => handleCsatRate('down')}>👎</button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
             {contactCaptureRequested && !contactSubmitted && (
               <ContactForm
                 sessionId={sessionId}
                 onSuccess={handleContactSuccess}
+                thankYouText={t('chat.contact.thanks')}
+              />
+            )}
+            {captureForOrderRequested && !captureForOrderSubmitted && (
+              <ContactForm
+                sessionId={sessionId}
+                onSuccess={handleCaptureForOrderSuccess}
                 thankYouText={t('chat.contact.thanks')}
               />
             )}
@@ -352,12 +410,12 @@ export default function ChatWidget() {
                   sendMessage(input);
                 }
               }}
-              disabled={loading}
+              disabled={loading || humanHandoffRequested}
             />
             <button
               className="chat-send-btn"
               onClick={() => sendMessage(input)}
-              disabled={loading || !input.trim()}
+              disabled={loading || humanHandoffRequested || !input.trim()}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
