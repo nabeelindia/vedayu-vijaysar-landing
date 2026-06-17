@@ -359,6 +359,11 @@ export default function ChatWidget() {
                 )}
               </div>
             ))}
+            {humanHandoffRequested && (
+              <div className="chat-msg-bot" style={{ fontStyle: 'italic', opacity: 0.85 }}>
+                {t('chat.handoff.message')}
+              </div>
+            )}
             {csatShown && (
               <div className="chat-csat">
                 {csatSubmitted ? (
