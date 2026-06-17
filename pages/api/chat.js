@@ -324,14 +324,15 @@ async function runTrackOrder(query, queryType) {
 
     if (queryType === 'order_id') {
       let record = await getAwbByOrderId(query.trim().toUpperCase());
-      // Fallback: look up AWB from Supabase orders table
+      // Fallback: look up AWB directly from Supabase orders table
       if (!record?.awb) {
-        const { data: row } = await supabase
+        const { data: rows } = await supabase
           .from('orders')
-          .select('awb, name')
+          .select('order_id, awb, name')
           .eq('order_id', query.trim().toUpperCase())
-          .maybeSingle();
-        if (row?.awb) record = { awb: row.awb, orderId: query.trim().toUpperCase(), name: row.name || '' };
+          .limit(1);
+        const row = rows?.[0];
+        if (row?.awb) record = { awb: row.awb, orderId: row.order_id, name: row.name || '' };
       }
       if (!record?.awb) return `No shipment found for Order ID: ${query}. It may not have been dispatched yet.`;
       const trackMap  = await getTracking(record.awb);
@@ -343,13 +344,35 @@ async function runTrackOrder(query, queryType) {
     if (queryType === 'phone') {
       const cleaned = query.replace(/\D/g, '').slice(-10);
       if (!/^[6-9][0-9]{9}$/.test(cleaned)) return 'Invalid mobile number provided.';
-      const orderIds = await getOrdersByPhone(cleaned);
+      let orderIds = await getOrdersByPhone(cleaned);
+      // Fallback: query Supabase directly
+      if (!orderIds.length) {
+        const { data: rows } = await supabase
+          .from('orders')
+          .select('order_id, awb, name')
+          .eq('mobile', cleaned)
+          .not('awb', 'is', null)
+          .order('created_at', { ascending: false })
+          .limit(3);
+        if (rows?.length) return resolveFromSupabaseRows(rows);
+      }
       if (!orderIds.length) return 'No orders found for this phone number.';
       return await resolveMultipleOrders(orderIds);
     }
 
     if (queryType === 'email') {
-      const orderIds = await getOrdersByEmail(query);
+      let orderIds = await getOrdersByEmail(query);
+      // Fallback: query Supabase directly
+      if (!orderIds.length) {
+        const { data: rows } = await supabase
+          .from('orders')
+          .select('order_id, awb, name')
+          .eq('email', query.toLowerCase().trim())
+          .not('awb', 'is', null)
+          .order('created_at', { ascending: false })
+          .limit(3);
+        if (rows?.length) return resolveFromSupabaseRows(rows);
+      }
       if (!orderIds.length) return 'No orders found for this email address.';
       return await resolveMultipleOrders(orderIds);
     }
@@ -374,6 +397,16 @@ async function resolveMultipleOrders(orderIds) {
     return formatTrackingResult(normalizeTracking(record.awb, trackData, record));
   });
 
+  return summaries.join('\n\n');
+}
+
+async function resolveFromSupabaseRows(rows) {
+  const awbs     = rows.map(r => r.awb);
+  const trackMap = await getTracking(awbs);
+  const summaries = rows.map(row => {
+    const trackData = trackMap[row.awb]?.tracking_data || null;
+    return formatTrackingResult(normalizeTracking(row.awb, trackData, { orderId: row.order_id, name: row.name || '' }));
+  });
   return summaries.join('\n\n');
 }
 
