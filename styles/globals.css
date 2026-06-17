@@ -1518,7 +1518,7 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
   gap: 7px;
   margin-bottom: 2px;
 }
-.chat-row-user { flex-direction: row-reverse; }
+.chat-row-user { flex-direction: row; justify-content: flex-end; }
 .chat-bubble-wrap { display: flex; flex-direction: column; max-width: 82%; }
 .chat-avatar-bot {
   width: 32px;
