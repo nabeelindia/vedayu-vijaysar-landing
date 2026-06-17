@@ -138,8 +138,11 @@ export default function ChatWidget() {
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
         ) : (
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="white">
+            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+            <circle cx="8" cy="11" r="1.3" fill="#7C5C3E"/>
+            <circle cx="12" cy="11" r="1.3" fill="#7C5C3E"/>
+            <circle cx="16" cy="11" r="1.3" fill="#7C5C3E"/>
           </svg>
         )}
       </button>
