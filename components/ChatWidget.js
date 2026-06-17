@@ -117,6 +117,7 @@ export default function ChatWidget() {
   const [loading, setLoading] = useState(false);
   const [contactCaptureRequested, setContactCaptureRequested] = useState(false);
   const [contactSubmitted, setContactSubmitted] = useState(false);
+  const [scrollToOrderIndex, setScrollToOrderIndex] = useState(null);
   const [sessionId, setSessionId] = useState('');
 
   const messagesEndRef = useRef(null);
@@ -153,6 +154,9 @@ export default function ChatWidget() {
       setMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
       if (data.contactCaptureRequested) {
         setContactCaptureRequested(true);
+      }
+      if (data.scrollToOrderRequested) {
+        setScrollToOrderIndex(updatedMessages.length);
       }
     } catch (err) {
       setMessages(prev => [
@@ -225,14 +229,26 @@ export default function ChatWidget() {
               </div>
             )}
             {messages.map((m, i) => (
-              <div
-                key={i}
-                className={m.role === 'user' ? 'chat-msg-user' : 'chat-msg-bot'}
-                {...(m.role === 'assistant'
-                  ? { dangerouslySetInnerHTML: { __html: renderMarkdown(m.content) } }
-                  : {})}
-              >
-                {m.role === 'user' ? m.content : null}
+              <div key={i}>
+                <div
+                  className={m.role === 'user' ? 'chat-msg-user' : 'chat-msg-bot'}
+                  {...(m.role === 'assistant'
+                    ? { dangerouslySetInnerHTML: { __html: renderMarkdown(m.content) } }
+                    : {})}
+                >
+                  {m.role === 'user' ? m.content : null}
+                </div>
+                {m.role === 'assistant' && scrollToOrderIndex === i && (
+                  <button
+                    className="chat-scroll-to-order"
+                    onClick={() => {
+                      document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
+                      setOpen(false);
+                    }}
+                  >
+                    👆 Tap here to select your pack →
+                  </button>
+                )}
               </div>
             ))}
             {contactCaptureRequested && !contactSubmitted && (

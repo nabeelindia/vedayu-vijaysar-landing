@@ -405,7 +405,11 @@ export default async function handler(req, res) {
 
   // ── 6. Contact capture detection ───────────────────────────────────────────
   const contactCaptureRequested = claudeReply.includes('[CONTACT_CAPTURE]');
-  const cleanReply = claudeReply.replace(/\[CONTACT_CAPTURE\]/g, '').trim();
+  const scrollToOrderRequested = claudeReply.includes('[SCROLL_TO_ORDER]');
+  const cleanReply = claudeReply
+    .replace(/\[CONTACT_CAPTURE\]/g, '')
+    .replace(/\[SCROLL_TO_ORDER\]/g, '')
+    .trim();
 
   // ── 7. Save to Supabase ────────────────────────────────────────────────────
   // Build simplified messages array for storage (no tool_use blocks)
@@ -432,5 +436,6 @@ export default async function handler(req, res) {
   return res.status(200).json({
     reply: cleanReply,
     contactCaptureRequested,
+    scrollToOrderRequested,
   });
 }

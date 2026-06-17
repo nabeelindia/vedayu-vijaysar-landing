@@ -1644,3 +1644,22 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
   font-weight: 600;
 }
 .chat-contact-submit:hover { background: #5c3d1e; }
+
+.chat-scroll-to-order {
+  display: block;
+  width: 100%;
+  margin: 6px 0 2px;
+  padding: 10px 14px;
+  background: #7C5C3E;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  letter-spacing: 0.01em;
+}
+.chat-scroll-to-order:hover {
+  background: #6a4e33;
+}
