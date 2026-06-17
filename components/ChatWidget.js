@@ -129,6 +129,25 @@ export default function ChatWidget() {
   const [csatSubmitted, setCsatSubmitted] = useState(false);
   const [humanHandoffRequested, setHumanHandoffRequested] = useState(false);
 
+  function resetChat() {
+    const newId = crypto.randomUUID();
+    sessionStorage.setItem('chat_session_id', newId);
+    setSessionId(newId);
+    setMessages([]);
+    setInput('');
+    setLoading(false);
+    setContactCaptureRequested(false);
+    setContactSubmitted(false);
+    setCaptureForOrderRequested(false);
+    setCaptureForOrderSubmitted(false);
+    setScrollToOrderIndex(null);
+    setPackSelectionIndex(null);
+    setSelectedPackId(null);
+    setCsatShown(false);
+    setCsatSubmitted(false);
+    setHumanHandoffRequested(false);
+  }
+
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -254,7 +273,17 @@ export default function ChatWidget() {
           <div className="chat-header">
             <span>🌿</span>
             <span className="chat-header-title">{t('chat.title')}</span>
-            <button className="chat-header-close" onClick={() => setOpen(false)}>✕</button>
+            <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+              {messages.length > 0 && (
+                <button className="chat-header-close" onClick={resetChat} aria-label="Restart chat" title="Start over">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="1 4 1 10 7 10" />
+                    <path d="M3.51 15a9 9 0 1 0 .49-3.96" />
+                  </svg>
+                </button>
+              )}
+              <button className="chat-header-close" onClick={() => setOpen(false)}>✕</button>
+            </div>
           </div>
 
           {/* Messages */}
