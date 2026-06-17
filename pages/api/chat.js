@@ -122,7 +122,7 @@ MEMORY RULE: Within this conversation, never ask for information the customer ha
 ESCALATION — for issues you cannot resolve (upset customer, unusual complaint, no order found after tracking):
 Output [CONTACT_CAPTURE] at the end of your reply.
 
-HUMAN HANDOFF: If the customer explicitly says "talk to a person", "human agent", "real person", "speak to someone", or expresses frustration for the second consecutive time without resolution, output the marker [HUMAN_HANDOFF] at the end of your reply (in addition to or instead of [CONTACT_CAPTURE]). Format: "I completely understand. I've alerted our support team and they'll reach out to you shortly. [HUMAN_HANDOFF]"
+HUMAN HANDOFF: If the customer explicitly says "talk to a person", "human agent", "real person", "speak to someone", or expresses frustration for the second consecutive time without resolution, output the marker [HUMAN_HANDOFF] at the end of your reply. Format: "Of course! Please share your name and phone number using the form below and our team will get back to you shortly. [HUMAN_HANDOFF]"
 
 TONE: Warm, helpful, concise. Respond in the same language the customer uses.`,
 
@@ -184,7 +184,7 @@ MEMORY RULE: Within this conversation, never ask for information the customer ha
 
 ESCALATION — output [CONTACT_CAPTURE] for unresolvable issues.
 
-HUMAN HANDOFF: If the customer explicitly asks for a human agent or expresses frustration for the second consecutive time without resolution, output [HUMAN_HANDOFF] at the end of your reply. Respond in Hindi: "मैं समझता/समझती हूं। हमारी सपोर्ट टीम को अलर्ट कर दिया है, वे जल्द आपसे संपर्क करेंगे। [HUMAN_HANDOFF]"
+HUMAN HANDOFF: If the customer explicitly asks for a human agent or expresses frustration for the second consecutive time without resolution, output [HUMAN_HANDOFF] at the end of your reply. Respond in Hindi: "बिल्कुल! नीचे दिए फॉर्म में अपना नाम और फोन नंबर दें, हमारी टीम जल्द आपसे संपर्क करेगी। [HUMAN_HANDOFF]"
 
 टोन: गर्मजोशी से, सहायक, संक्षिप्त। हिंदी में जवाब दें।`,
 
@@ -243,7 +243,7 @@ MEMORY RULE: Within this conversation, never ask for information the customer ha
 
 ESCALATION — output [CONTACT_CAPTURE] for unresolvable issues.
 
-HUMAN HANDOFF: If the customer explicitly asks for a human agent or expresses frustration for the second consecutive time without resolution, output [HUMAN_HANDOFF] at the end of your reply in Tamil.
+HUMAN HANDOFF: If the customer explicitly asks for a human agent or expresses frustration for the second consecutive time without resolution, output [HUMAN_HANDOFF] at the end of your reply in Tamil: "நிச்சயமாக! கீழே உள்ள படிவத்தில் உங்கள் பெயரும் தொலைபேசி எண்ணும் கொடுங்கள், எங்கள் குழு விரைவில் தொடர்பு கொள்ளும். [HUMAN_HANDOFF]"
 
 தொனி: அன்புடன், உதவியாக, சுருக்கமாக. தமிழில் பதில் அளிக்கவும்.`,
 
@@ -302,7 +302,7 @@ MEMORY RULE: Within this conversation, never ask for information the customer ha
 
 ESCALATION — output [CONTACT_CAPTURE] for unresolvable issues.
 
-HUMAN HANDOFF: If the customer explicitly asks for a human agent or expresses frustration for the second consecutive time without resolution, output [HUMAN_HANDOFF] at the end of your reply in Telugu.
+HUMAN HANDOFF: If the customer explicitly asks for a human agent or expresses frustration for the second consecutive time without resolution, output [HUMAN_HANDOFF] at the end of your reply in Telugu: "తప్పకుండా! దిగువ ఫారమ్‌లో మీ పేరు మరియు ఫోన్ నంబర్ ఇవ్వండి, మా టీమ్ త్వరలో సంప్రదిస్తుంది. [HUMAN_HANDOFF]"
 
 టోన్: స్నేహపూర్వకంగా, సహాయకరంగా, సంక్షిప్తంగా. తెలుగులో సమాధానం ఇవ్వండి.`,
 };

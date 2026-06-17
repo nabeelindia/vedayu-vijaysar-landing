@@ -1501,6 +1501,19 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
 }
 .chat-header-close:hover { color: #fff; }
 
+.chat-header-reset {
+  background: rgba(255,255,255,.15);
+  border: 1px solid rgba(255,255,255,.3);
+  border-radius: 6px;
+  color: rgba(255,255,255,.9);
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: .03em;
+  padding: 2px 8px;
+}
+.chat-header-reset:hover { background: rgba(255,255,255,.25); color: #fff; }
+
 .chat-messages {
   flex: 1;
   overflow-y: auto;

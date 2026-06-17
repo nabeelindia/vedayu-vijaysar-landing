@@ -128,6 +128,7 @@ export default function ChatWidget() {
   const [csatShown, setCsatShown] = useState(false);
   const [csatSubmitted, setCsatSubmitted] = useState(false);
   const [humanHandoffRequested, setHumanHandoffRequested] = useState(false);
+  const [humanHandoffSubmitted, setHumanHandoffSubmitted] = useState(false);
 
   function resetChat() {
     const newId = crypto.randomUUID();
@@ -146,6 +147,20 @@ export default function ChatWidget() {
     setCsatShown(false);
     setCsatSubmitted(false);
     setHumanHandoffRequested(false);
+    setHumanHandoffSubmitted(false);
+  }
+
+  async function handleHumanHandoffSuccess(name, phone) {
+    setHumanHandoffSubmitted(true);
+    try {
+      await fetch('/api/chat/handoff', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, name, phone }),
+      });
+    } catch (err) {
+      console.error('Handoff submit error:', err);
+    }
   }
 
   const messagesEndRef = useRef(null);
@@ -275,11 +290,8 @@ export default function ChatWidget() {
             <span className="chat-header-title">{t('chat.title')}</span>
             <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
               {messages.length > 0 && (
-                <button className="chat-header-close" onClick={resetChat} aria-label="Restart chat" title="Start over">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="1 4 1 10 7 10" />
-                    <path d="M3.51 15a9 9 0 1 0 .49-3.96" />
-                  </svg>
+                <button className="chat-header-reset" onClick={resetChat} aria-label="Restart chat">
+                  Reset
                 </button>
               )}
               <button className="chat-header-close" onClick={() => setOpen(false)}>✕</button>
@@ -389,9 +401,15 @@ export default function ChatWidget() {
               </div>
             ))}
             {humanHandoffRequested && (
-              <div className="chat-msg-bot" style={{ fontStyle: 'italic', opacity: 0.85 }}>
-                {t('chat.handoff.message')}
-              </div>
+              humanHandoffSubmitted ? (
+                <div className="chat-msg-bot">{t('chat.handoff.message')}</div>
+              ) : (
+                <ContactForm
+                  sessionId={sessionId}
+                  onSuccess={handleHumanHandoffSuccess}
+                  thankYouText={t('chat.handoff.message')}
+                />
+              )
             )}
             {csatShown && (
               <div className="chat-csat">
