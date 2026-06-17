@@ -6,12 +6,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import { kv } from '@vercel/kv';
-import {
-  getTracking,
-  getAwbByOrderId,
-  getOrdersByPhone,
-  getOrdersByEmail,
-} from '../../lib/velocity';
+import { trackShipment } from '../../lib/nimbuspost';
 import { supabase } from '../../lib/supabase';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -291,90 +286,66 @@ const TRACK_ORDER_TOOL = {
   },
 };
 
-// ─── Tracking helpers (copied from track-order.js) ────────────────────────────
+// ─── Tracking helpers ─────────────────────────────────────────────────────────
 
-function normalizeTracking(awb, trackData, record = {}) {
-  const activities = trackData?.shipment_track_activities || [];
-  const shipment   = trackData?.shipment_track?.[0] || {};
-  const status     = trackData?.shipment_status || shipment.current_status || 'Processing';
+async function lookupOrdersFromSupabase(field, value) {
+  const { data: rows } = await supabase
+    .from('orders')
+    .select('order_id, awb, name, status')
+    .eq(field, value)
+    .not('awb', 'is', null)
+    .order('created_at', { ascending: false })
+    .limit(3);
+  return rows || [];
+}
 
-  return {
-    orderId:     record.orderId     || null,
-    awb,
-    courierName: record.courierName || shipment.courier_name || '',
-    status,
-    eta:         shipment.delivered_date || null,
-    scans: activities.map(a => ({
-      status:    a.activity  || '',
-      location:  a.location  || '',
-      timestamp: a.date      || '',
-    })),
-  };
+async function trackAndFormat(orderId, awb, name) {
+  const data = await trackShipment(awb);
+  const status  = data?.status || 'Processing';
+  const edd     = data?.edd    || null;
+  const history = data?.history || [];
+  const latest  = history[0];
+
+  const parts = [`Order **${orderId}**`, `Status: **${status}**`];
+  if (edd) parts.push(`EDD: ${edd}`);
+  if (latest) {
+    const loc = latest.location ? ` at ${latest.location}` : '';
+    const ts  = latest.timestamp ? ` (${latest.timestamp})` : '';
+    parts.push(`Last update: ${latest.activity || latest.status || ''}${loc}${ts}`);
+  }
+  return parts.join(' | ');
 }
 
 async function runTrackOrder(query, queryType) {
   try {
     if (queryType === 'awb') {
-      const trackMap  = await getTracking(query);
-      const trackData = trackMap[query]?.tracking_data || null;
-      if (!trackData) return `No shipment found for AWB: ${query}. Please verify the tracking number.`;
-      const info = normalizeTracking(query, trackData);
-      return formatTrackingResult(info);
+      const data = await trackShipment(query.trim());
+      const status = data?.status || 'Unknown';
+      return `AWB **${query}** — Status: **${status}**${data?.edd ? ` | EDD: ${data.edd}` : ''}`;
     }
 
     if (queryType === 'order_id') {
-      let record = await getAwbByOrderId(query.trim().toUpperCase());
-      // Fallback: look up AWB directly from Supabase orders table
-      if (!record?.awb) {
-        const { data: rows } = await supabase
-          .from('orders')
-          .select('order_id, awb, name')
-          .eq('order_id', query.trim().toUpperCase())
-          .limit(1);
-        const row = rows?.[0];
-        if (row?.awb) record = { awb: row.awb, orderId: row.order_id, name: row.name || '' };
-      }
-      if (!record?.awb) return `No shipment found for Order ID: ${query}. It may not have been dispatched yet.`;
-      const trackMap  = await getTracking(record.awb);
-      const trackData = trackMap[record.awb]?.tracking_data || null;
-      const info = normalizeTracking(record.awb, trackData, record);
-      return formatTrackingResult(info);
+      const orderId = query.trim().toUpperCase();
+      const rows = await lookupOrdersFromSupabase('order_id', orderId);
+      if (!rows.length) return `No order found for ID: ${orderId}. Please check the order ID and try again.`;
+      const row = rows[0];
+      return await trackAndFormat(row.order_id, row.awb, row.name);
     }
 
     if (queryType === 'phone') {
       const cleaned = query.replace(/\D/g, '').slice(-10);
-      if (!/^[6-9][0-9]{9}$/.test(cleaned)) return 'Invalid mobile number provided.';
-      let orderIds = await getOrdersByPhone(cleaned);
-      // Fallback: query Supabase directly
-      if (!orderIds.length) {
-        const { data: rows } = await supabase
-          .from('orders')
-          .select('order_id, awb, name')
-          .eq('mobile', cleaned)
-          .not('awb', 'is', null)
-          .order('created_at', { ascending: false })
-          .limit(3);
-        if (rows?.length) return resolveFromSupabaseRows(rows);
-      }
-      if (!orderIds.length) return 'No orders found for this phone number.';
-      return await resolveMultipleOrders(orderIds);
+      if (!/^[6-9][0-9]{9}$/.test(cleaned)) return 'Invalid mobile number. Please provide a 10-digit Indian mobile number.';
+      const rows = await lookupOrdersFromSupabase('mobile', cleaned);
+      if (!rows.length) return 'No orders found for this phone number.';
+      const results = await Promise.all(rows.map(r => trackAndFormat(r.order_id, r.awb, r.name)));
+      return results.join('\n\n');
     }
 
     if (queryType === 'email') {
-      let orderIds = await getOrdersByEmail(query);
-      // Fallback: query Supabase directly
-      if (!orderIds.length) {
-        const { data: rows } = await supabase
-          .from('orders')
-          .select('order_id, awb, name')
-          .eq('email', query.toLowerCase().trim())
-          .not('awb', 'is', null)
-          .order('created_at', { ascending: false })
-          .limit(3);
-        if (rows?.length) return resolveFromSupabaseRows(rows);
-      }
-      if (!orderIds.length) return 'No orders found for this email address.';
-      return await resolveMultipleOrders(orderIds);
+      const rows = await lookupOrdersFromSupabase('email', query.toLowerCase().trim());
+      if (!rows.length) return 'No orders found for this email address.';
+      const results = await Promise.all(rows.map(r => trackAndFormat(r.order_id, r.awb, r.name)));
+      return results.join('\n\n');
     }
 
     return 'Unknown query type. Please provide order ID, phone, email, or AWB.';
@@ -382,51 +353,6 @@ async function runTrackOrder(query, queryType) {
     console.error('runTrackOrder error:', err);
     return 'Tracking lookup temporarily unavailable. Please try again shortly.';
   }
-}
-
-async function resolveMultipleOrders(orderIds) {
-  const records = await Promise.all(orderIds.map(id => getAwbByOrderId(id)));
-  const valid   = records.filter(r => r?.awb);
-  if (!valid.length) return 'Orders found but shipments not yet dispatched.';
-
-  const awbs     = valid.map(r => r.awb);
-  const trackMap = await getTracking(awbs);
-
-  const summaries = valid.map(record => {
-    const trackData = trackMap[record.awb]?.tracking_data || null;
-    return formatTrackingResult(normalizeTracking(record.awb, trackData, record));
-  });
-
-  return summaries.join('\n\n');
-}
-
-async function resolveFromSupabaseRows(rows) {
-  const awbs     = rows.map(r => r.awb);
-  const trackMap = await getTracking(awbs);
-  const summaries = rows.map(row => {
-    const trackData = trackMap[row.awb]?.tracking_data || null;
-    return formatTrackingResult(normalizeTracking(row.awb, trackData, { orderId: row.order_id, name: row.name || '' }));
-  });
-  return summaries.join('\n\n');
-}
-
-function formatTrackingResult(info) {
-  const parts = [];
-  if (info.orderId) parts.push(`Order ID: ${info.orderId}`);
-  parts.push(`AWB: ${info.awb}`);
-  if (info.courierName) parts.push(`Courier: ${info.courierName}`);
-  parts.push(`Status: ${info.status}`);
-  if (info.eta) parts.push(`ETA: ${info.eta}`);
-
-  if (info.scans?.length) {
-    const latest = info.scans[0];
-    const scanParts = [`Last update: ${latest.status}`];
-    if (latest.location) scanParts.push(`at ${latest.location}`);
-    if (latest.timestamp) scanParts.push(`(${latest.timestamp})`);
-    parts.push(scanParts.join(' '));
-  }
-
-  return parts.join(' | ');
 }
 
 // ─── Main handler ─────────────────────────────────────────────────────────────
