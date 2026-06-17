@@ -2,6 +2,14 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
 
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 function renderMarkdown(text) {
   // Sanitize: strip script/iframe tags and on* event attributes
   let s = text
@@ -20,11 +28,11 @@ function renderMarkdown(text) {
     if (/^- (.+)/.test(line)) {
       if (!inUl) { out.push('<ul>'); inUl = true; }
       if (inOl)  { out.push('</ol>'); inOl = false; }
-      out.push(`<li>${line.replace(/^- /, '')}</li>`);
+      out.push(`<li>${escapeHtml(line.replace(/^- /, ''))}</li>`);
     } else if (/^\d+\. (.+)/.test(line)) {
       if (!inOl) { out.push('<ol>'); inOl = true; }
       if (inUl)  { out.push('</ul>'); inUl = false; }
-      out.push(`<li>${line.replace(/^\d+\. /, '')}</li>`);
+      out.push(`<li>${escapeHtml(line.replace(/^\d+\. /, ''))}</li>`);
     } else {
       if (inUl) { out.push('</ul>'); inUl = false; }
       if (inOl) { out.push('</ol>'); inOl = false; }
