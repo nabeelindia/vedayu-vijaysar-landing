@@ -120,6 +120,7 @@ export default function ChatWidget() {
   const [contactCaptureRequested, setContactCaptureRequested] = useState(false);
   const [contactSubmitted, setContactSubmitted] = useState(false);
   const [scrollToOrderIndex, setScrollToOrderIndex] = useState(null);
+  const [packSelectionIndex, setPackSelectionIndex] = useState(null);
   const [sessionId, setSessionId] = useState('');
 
   const messagesEndRef = useRef(null);
@@ -159,6 +160,9 @@ export default function ChatWidget() {
       }
       if (data.scrollToOrderRequested) {
         setScrollToOrderIndex(updatedMessages.length);
+      }
+      if (data.packSelectionRequested) {
+        setPackSelectionIndex(updatedMessages.length);
       }
     } catch (err) {
       setMessages(prev => [
@@ -240,6 +244,28 @@ export default function ChatWidget() {
                 >
                   {m.role === 'user' ? m.content : null}
                 </div>
+                {m.role === 'assistant' && packSelectionIndex === i && (
+                  <div className="chat-pack-buttons">
+                    {[
+                      { label: 'Pack of 1', price: '₹499' },
+                      { label: 'Pack of 2', price: '₹899', badge: '⭐ Popular' },
+                      { label: 'Pack of 5', price: '₹1,999', badge: '🏆 Best Value' },
+                    ].map(pack => (
+                      <button
+                        key={pack.label}
+                        className="chat-pack-btn"
+                        onClick={() => {
+                          setPackSelectionIndex(null);
+                          sendMessage(pack.label);
+                        }}
+                      >
+                        <span className="chat-pack-name">{pack.label}</span>
+                        <span className="chat-pack-price">{pack.price}</span>
+                        {pack.badge && <span className="chat-pack-badge">{pack.badge}</span>}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 {m.role === 'assistant' && scrollToOrderIndex === i && (
                   <button
                     className="chat-scroll-to-order"

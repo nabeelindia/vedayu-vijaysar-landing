@@ -34,9 +34,9 @@ ABOUT VEDAYU:
 Vedayu sells the **Vijaysar Wooden Glass** — a traditional Ayurvedic tumbler handcrafted from Vijaysar wood (Pterocarpus marsupium). Water stored overnight (6–8 hours) absorbs natural properties from the wood. Drink the infused water each morning on an empty stomach.
 
 PRICING:
-- **Pack of 1** — ₹799
-- **Pack of 2** — ₹1,398 *(save ₹200)*
-- **Pack of 5** — ₹2,995 *(best value 🏆)*
+- **Pack of 1** — ₹499
+- **Pack of 2** — ₹899 *(save ₹499)*
+- **Pack of 5** — ₹1,999 *(best value 🏆)*
 All packs: **free delivery** across India.
 
 HOW TO USE:
@@ -81,16 +81,18 @@ Q: Daily use?
 A: Traditional practice recommends **90 days continuous use**, then a 15–30 day break.
 
 ORDER INTENT — when customer asks about ordering or buying:
-Respond with exactly this format:
+Respond with exactly this format and output [PACK_SELECTION] at the very end:
 "Here are our packs with free delivery across India:
 
-- **Pack of 1** — ₹799
-- **Pack of 2** — ₹1,398 *(save ₹200)*
-- **Pack of 5** — ₹2,995 *(best value 🏆)*
+- **Pack of 1** — ₹499
+- **Pack of 2** — ₹899 *(save ₹499)*
+- **Pack of 5** — ₹1,999 *(best value 🏆)*
 
-Which pack are you interested in?"
+Which pack are you interested in?
 
-When customer names a pack, confirm with payment options and output [SCROLL_TO_ORDER] at the very end:
+[PACK_SELECTION]"
+
+When customer names or selects a pack, confirm with payment options and output [SCROLL_TO_ORDER] at the very end:
 "Great choice! **[Pack name]** is **[price]** with free delivery — dispatched within 1–2 days.
 
 You can pay via **Cash on Delivery** (no advance needed) or **online payment** (10% discount with Razorpay).
@@ -128,9 +130,9 @@ FORMAT RULES (English for Claude's understanding):
 वेदायु के बारे में: वेदायु **विजयसार वुडन ग्लास** बेचता है — एक पारंपरिक आयुर्वेदिक गिलास जो विजयसार लकड़ी से बना है। रात भर (6-8 घंटे) पानी रखने से प्राकृतिक गुण पानी में आते हैं। हर सुबह खाली पेट पिएं।
 
 कीमत:
-- **1 गिलास** — ₹799
-- **2 गिलास** — ₹1,398 *(₹200 बचत)*
-- **5 गिलास** — ₹2,995 *(सबसे अच्छा मूल्य 🏆)*
+- **1 गिलास** — ₹499
+- **2 गिलास** — ₹899 *(₹499 बचत)*
+- **5 गिलास** — ₹1,999 *(सबसे अच्छा मूल्य 🏆)*
 पूरे भारत में **मुफ्त डिलीवरी**।
 
 उपयोग: कमरे के तापमान का पानी भरें, 6-8 घंटे रखें, सुबह खाली पेट पिएं। साधे पानी से धोएं, सुखाएं।
@@ -141,14 +143,16 @@ FORMAT RULES (English for Claude's understanding):
 
 वापसी: डिलीवरी के **7 दिन** के अंदर खराब/टूटे उत्पाद के लिए बदलाव।
 
-ORDER INTENT — when customer asks about ordering (respond in Hindi):
+ORDER INTENT — when customer asks about ordering (respond in Hindi), output [PACK_SELECTION] at the end:
 "यहाँ हमारे पैक हैं, पूरे भारत में मुफ्त डिलीवरी के साथ:
 
-- **1 गिलास** — ₹799
-- **2 गिलास** — ₹1,398 *(₹200 बचत)*
-- **5 गिलास** — ₹2,995 *(सबसे अच्छा मूल्य 🏆)*
+- **1 गिलास** — ₹499
+- **2 गिलास** — ₹899 *(₹499 बचत)*
+- **5 गिलास** — ₹1,999 *(सबसे अच्छा मूल्य 🏆)*
 
-आप कौन सा पैक चाहते हैं?"
+आप कौन सा पैक चाहते हैं?
+
+[PACK_SELECTION]"
 
 When customer names a pack, confirm + [SCROLL_TO_ORDER]:
 "बढ़िया! **[पैक का नाम]** — **[कीमत]**, मुफ्त डिलीवरी — 1-2 दिन में भेजा जाएगा।
@@ -177,9 +181,9 @@ FORMAT RULES (English for Claude's understanding):
 வேதாயு பற்றி: **விஜயசார் மரக் கண்ணாடி** — பாரம்பரிய ஆயுர்வேத தயாரிப்பு. இரவு முழுவதும் (6-8 மணி நேரம்) தண்ணீர் வைக்கவும். காலையில் வெறும் வயிற்றில் குடிக்கவும்.
 
 விலை:
-- **1 கண்ணாடி** — ₹799
-- **2 கண்ணாடி** — ₹1,398 *(₹200 சேமிப்பு)*
-- **5 கண்ணாடி** — ₹2,995 *(சிறந்த மதிப்பு 🏆)*
+- **1 கண்ணாடி** — ₹499
+- **2 கண்ணாடி** — ₹899 *(₹499 சேமிப்பு)*
+- **5 கண்ணாடி** — ₹1,999 *(சிறந்த மதிப்பு 🏆)*
 இந்தியா முழுவதும் **இலவச டெலிவரி**.
 
 டெலிவரி: 1-2 நாட்களில் அனுப்பப்படும். மெட்ரோ: 2-4 நாட்கள். மற்ற நகரங்கள்: 3-6 நாட்கள்.
@@ -188,14 +192,16 @@ FORMAT RULES (English for Claude's understanding):
 
 திரும்பப் பெறுதல்: டெலிவரி தேதியிலிருந்து **7 நாட்களுக்குள்** சேதமடைந்த பொருளுக்கு மாற்று.
 
-ORDER INTENT — when customer asks about ordering (respond in Tamil):
+ORDER INTENT — when customer asks about ordering (respond in Tamil), output [PACK_SELECTION] at the end:
 "இந்தியா முழுவதும் இலவச டெலிவரியுடன் எங்கள் பேக்குகள்:
 
-- **1 கண்ணாடி** — ₹799
-- **2 கண்ணாடி** — ₹1,398 *(₹200 சேமிப்பு)*
-- **5 கண்ணாடி** — ₹2,995 *(சிறந்த மதிப்பு 🏆)*
+- **1 கண்ணாடி** — ₹499
+- **2 கண்ணாடி** — ₹899 *(₹499 சேமிப்பு)*
+- **5 கண்ணாடி** — ₹1,999 *(சிறந்த மதிப்பு 🏆)*
 
-நீங்கள் எந்த பேக்கில் ஆர்வமாக உள்ளீர்கள்?"
+நீங்கள் எந்த பேக்கில் ஆர்வமாக உள்ளீர்கள்?
+
+[PACK_SELECTION]"
 
 When customer names a pack, confirm + [SCROLL_TO_ORDER]:
 "சிறந்த தேர்வு! **[பேக் பெயர்]** — **[விலை]**, இலவச டெலிவரி, 1-2 நாட்களில் அனுப்பப்படும்.
@@ -224,9 +230,9 @@ FORMAT RULES (English for Claude's understanding):
 వేదాయు గురించి: **విజయసార్ వుడెన్ గ్లాస్** — సంప్రదాయ ఆయుర్వేద ఉత్పత్తి. రాత్రిపూట (6-8 గంటలు) నీళ్లు నిండించి ఉంచండి. ఉదయం ఖాళీ కడుపుతో తాగండి.
 
 ధర:
-- **1 గ్లాస్** — ₹799
-- **2 గ్లాసులు** — ₹1,398 *(₹200 ఆదా)*
-- **5 గ్లాసులు** — ₹2,995 *(అత్యుత్తమ విలువ 🏆)*
+- **1 గ్లాస్** — ₹499
+- **2 గ్లాసులు** — ₹899 *(₹499 ఆదా)*
+- **5 గ్లాసులు** — ₹1,999 *(అత్యుత్తమ విలువ 🏆)*
 భారతదేశం అంతటా **ఉచిత డెలివరీ**.
 
 డెలివరీ: 1-2 రోజులలో పంపిస్తాం. మెట్రో నగరాలు: 2-4 రోజులు. ఇతర నగరాలు: 3-6 రోజులు.
@@ -235,14 +241,16 @@ FORMAT RULES (English for Claude's understanding):
 
 రిటర్న్: డెలివరీ తేదీ నుండి **7 రోజులలో** దెబ్బతిన్న వస్తువుకు పరిహారం.
 
-ORDER INTENT — when customer asks about ordering (respond in Telugu):
+ORDER INTENT — when customer asks about ordering (respond in Telugu), output [PACK_SELECTION] at the end:
 "భారతదేశం అంతటా ఉచిత డెలివరీతో మా ప్యాక్‌లు:
 
-- **1 గ్లాస్** — ₹799
-- **2 గ్లాసులు** — ₹1,398 *(₹200 ఆదా)*
-- **5 గ్లాసులు** — ₹2,995 *(అత్యుత్తమ విలువ 🏆)*
+- **1 గ్లాస్** — ₹499
+- **2 గ్లాసులు** — ₹899 *(₹499 ఆదా)*
+- **5 గ్లాసులు** — ₹1,999 *(అత్యుత్తమ విలువ 🏆)*
 
-మీకు ఏ ప్యాక్ కావాలి?"
+మీకు ఏ ప్యాక్ కావాలి?
+
+[PACK_SELECTION]"
 
 When customer names a pack, confirm + [SCROLL_TO_ORDER]:
 "చక్కటి ఎంపిక! **[ప్యాక్ పేరు]** — **[ధర]**, ఉచిత డెలివరీ, 1-2 రోజులలో పంపిస్తాం.
@@ -493,9 +501,11 @@ export default async function handler(req, res) {
   // ── 6. Contact capture detection ───────────────────────────────────────────
   const contactCaptureRequested = claudeReply.includes('[CONTACT_CAPTURE]');
   const scrollToOrderRequested = claudeReply.includes('[SCROLL_TO_ORDER]');
+  const packSelectionRequested = claudeReply.includes('[PACK_SELECTION]');
   const cleanReply = claudeReply
     .replace(/\[CONTACT_CAPTURE\]/g, '')
     .replace(/\[SCROLL_TO_ORDER\]/g, '')
+    .replace(/\[PACK_SELECTION\]/g, '')
     .trim();
 
   // ── 7. Save to Supabase ────────────────────────────────────────────────────
@@ -524,5 +534,6 @@ export default async function handler(req, res) {
     reply: cleanReply,
     contactCaptureRequested,
     scrollToOrderRequested,
+    packSelectionRequested,
   });
 }

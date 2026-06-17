@@ -1663,3 +1663,50 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
 .chat-scroll-to-order:hover {
   background: #6a4e33;
 }
+
+.chat-pack-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 8px 0 4px;
+}
+
+.chat-pack-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #fff;
+  border: 1.5px solid #7C5C3E;
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.chat-pack-btn:hover {
+  background: #f5ede5;
+  border-color: #5a3e28;
+}
+
+.chat-pack-name {
+  font-weight: 600;
+  color: #3d2b1f;
+  font-size: 0.88rem;
+  flex: 1;
+}
+
+.chat-pack-price {
+  font-weight: 700;
+  color: #7C5C3E;
+  font-size: 0.88rem;
+}
+
+.chat-pack-badge {
+  font-size: 0.72rem;
+  background: #f0e9e1;
+  color: #7C5C3E;
+  border-radius: 6px;
+  padding: 2px 6px;
+  white-space: nowrap;
+}
