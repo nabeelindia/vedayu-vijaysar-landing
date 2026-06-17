@@ -1549,6 +1549,13 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
   font-size: .86rem;
   line-height: 1.55;
 }
+.chat-msg-bot ul, .chat-msg-bot ol {
+  padding-left: 18px;
+  margin: 4px 0;
+}
+.chat-msg-bot li {
+  margin-bottom: 2px;
+}
 .chat-msg-user {
   background: #7C5C3E;
   color: #fff;

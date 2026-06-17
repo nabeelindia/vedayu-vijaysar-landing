@@ -323,7 +323,16 @@ async function runTrackOrder(query, queryType) {
     }
 
     if (queryType === 'order_id') {
-      const record = await getAwbByOrderId(query.trim().toUpperCase());
+      let record = await getAwbByOrderId(query.trim().toUpperCase());
+      // Fallback: look up AWB from Supabase orders table
+      if (!record?.awb) {
+        const { data: row } = await supabase
+          .from('orders')
+          .select('awb, name')
+          .eq('order_id', query.trim().toUpperCase())
+          .maybeSingle();
+        if (row?.awb) record = { awb: row.awb, orderId: query.trim().toUpperCase(), name: row.name || '' };
+      }
       if (!record?.awb) return `No shipment found for Order ID: ${query}. It may not have been dispatched yet.`;
       const trackMap  = await getTracking(record.awb);
       const trackData = trackMap[record.awb]?.tracking_data || null;
