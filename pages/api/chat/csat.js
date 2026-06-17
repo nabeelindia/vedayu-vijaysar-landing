@@ -27,9 +27,8 @@ export default async function handler(req, res) {
     .single();
 
   // 5. Handle error or missing row
-  if (error || !data) {
-    return res.status(404).json({ error: 'Session not found' });
-  }
+  if (error) return res.status(500).json({ error: 'Database error' });
+  if (!data) return res.status(404).json({ error: 'Session not found' });
 
   // 6. Return 200 with success
   return res.status(200).json({ success: true });
