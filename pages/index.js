@@ -662,6 +662,12 @@ export default function Home() {
     document.getElementById('checkout')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
+  useEffect(() => {
+    const handler = (e) => scrollToCheckout(e.detail);
+    window.addEventListener('vedayu:selectPack', handler);
+    return () => window.removeEventListener('vedayu:selectPack', handler);
+  }, []);
+
   /* prepaid is 10% off; referral gives flat ₹50 off the base price */
   const PREPAID_DISC = 0.10;
   const effectivePrice = (packId, method) => {

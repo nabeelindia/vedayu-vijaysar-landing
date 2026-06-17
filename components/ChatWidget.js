@@ -121,6 +121,7 @@ export default function ChatWidget() {
   const [contactSubmitted, setContactSubmitted] = useState(false);
   const [scrollToOrderIndex, setScrollToOrderIndex] = useState(null);
   const [packSelectionIndex, setPackSelectionIndex] = useState(null);
+  const [selectedPackId, setSelectedPackId] = useState(null);
   const [sessionId, setSessionId] = useState('');
 
   const messagesEndRef = useRef(null);
@@ -235,47 +236,90 @@ export default function ChatWidget() {
               </div>
             )}
             {messages.map((m, i) => (
-              <div key={i}>
-                <div
-                  className={m.role === 'user' ? 'chat-msg-user' : 'chat-msg-bot'}
-                  {...(m.role === 'assistant'
-                    ? { dangerouslySetInnerHTML: { __html: renderMarkdown(m.content) } }
-                    : {})}
-                >
-                  {m.role === 'user' ? m.content : null}
-                </div>
-                {m.role === 'assistant' && packSelectionIndex === i && (
-                  <div className="chat-pack-buttons">
-                    {[
-                      { label: 'Pack of 1', price: '₹499' },
-                      { label: 'Pack of 2', price: '₹899', badge: '⭐ Popular' },
-                      { label: 'Pack of 5', price: '₹1,999', badge: '🏆 Best Value' },
-                    ].map(pack => (
-                      <button
-                        key={pack.label}
-                        className="chat-pack-btn"
-                        onClick={() => {
-                          setPackSelectionIndex(null);
-                          sendMessage(pack.label);
-                        }}
-                      >
-                        <span className="chat-pack-name">{pack.label}</span>
-                        <span className="chat-pack-price">{pack.price}</span>
-                        {pack.badge && <span className="chat-pack-badge">{pack.badge}</span>}
-                      </button>
-                    ))}
+              <div key={i} className={m.role === 'user' ? 'chat-row-user' : 'chat-row-bot'}>
+                {m.role === 'assistant' && (
+                  <div className="chat-avatar-bot" aria-hidden="true">
+                    <svg viewBox="0 0 40 40" width="32" height="32" xmlns="http://www.w3.org/2000/svg">
+                      {/* background circle */}
+                      <circle cx="20" cy="20" r="20" fill="#FDE8D8"/>
+                      {/* body / kurta */}
+                      <ellipse cx="20" cy="36" rx="13" ry="10" fill="#7C5C3E"/>
+                      {/* neck */}
+                      <rect x="17" y="26" width="6" height="5" rx="2" fill="#C8855A"/>
+                      {/* face */}
+                      <ellipse cx="20" cy="20" rx="9" ry="10" fill="#C8855A"/>
+                      {/* hair — long sides */}
+                      <ellipse cx="11" cy="20" rx="3.5" ry="8" fill="#1A0A00"/>
+                      <ellipse cx="29" cy="20" rx="3.5" ry="8" fill="#1A0A00"/>
+                      {/* hair top */}
+                      <ellipse cx="20" cy="11" rx="9" ry="6" fill="#1A0A00"/>
+                      {/* hair bun */}
+                      <circle cx="20" cy="6" r="4" fill="#1A0A00"/>
+                      {/* hair bun highlight / flower */}
+                      <circle cx="20" cy="6" r="2" fill="#C0392B"/>
+                      <circle cx="20" cy="6" r="1" fill="#F0A500"/>
+                      {/* bindi */}
+                      <circle cx="20" cy="17" r="1.3" fill="#C0392B"/>
+                      {/* eyes */}
+                      <ellipse cx="16.5" cy="20.5" rx="2" ry="1.5" fill="#1A0A00"/>
+                      <ellipse cx="23.5" cy="20.5" rx="2" ry="1.5" fill="#1A0A00"/>
+                      {/* eye shine */}
+                      <circle cx="17.2" cy="20" r="0.5" fill="white"/>
+                      <circle cx="24.2" cy="20" r="0.5" fill="white"/>
+                      {/* smile */}
+                      <path d="M16.5 24 Q20 27 23.5 24" stroke="#8B4513" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+                      {/* earrings */}
+                      <circle cx="11.5" cy="23" r="1.2" fill="#F0A500"/>
+                      <circle cx="28.5" cy="23" r="1.2" fill="#F0A500"/>
+                    </svg>
                   </div>
                 )}
-                {m.role === 'assistant' && scrollToOrderIndex === i && (
-                  <button
-                    className="chat-scroll-to-order"
-                    onClick={() => {
-                      document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
-                      setOpen(false);
-                    }}
+                <div className="chat-bubble-wrap">
+                  <div
+                    className={m.role === 'user' ? 'chat-msg-user' : 'chat-msg-bot'}
+                    {...(m.role === 'assistant'
+                      ? { dangerouslySetInnerHTML: { __html: renderMarkdown(m.content) } }
+                      : {})}
                   >
-                    {t('chat.cta.scrollToOrder')}
-                  </button>
+                    {m.role === 'user' ? m.content : null}
+                  </div>
+                  {m.role === 'assistant' && packSelectionIndex === i && (
+                    <div className="chat-pack-buttons">
+                      {[
+                        { label: 'Pack of 1', price: '₹499', packId: 1 },
+                        { label: 'Pack of 2', price: '₹899', badge: '⭐ Popular', packId: 2 },
+                        { label: 'Pack of 5', price: '₹1,999', badge: '🏆 Best Value', packId: 5 },
+                      ].map(pack => (
+                        <button
+                          key={pack.label}
+                          className="chat-pack-btn"
+                          onClick={() => {
+                            setPackSelectionIndex(null);
+                            setSelectedPackId(pack.packId);
+                            sendMessage(pack.label);
+                          }}
+                        >
+                          <span className="chat-pack-name">{pack.label}</span>
+                          {pack.badge && <span className="chat-pack-badge">{pack.badge}</span>}
+                          <span className="chat-pack-price">{pack.price}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {m.role === 'assistant' && scrollToOrderIndex === i && (
+                    <button
+                      className="chat-scroll-to-order"
+                      onClick={() => {
+                        window.dispatchEvent(new CustomEvent('vedayu:selectPack', { detail: selectedPackId || 1 }));
+                        setOpen(false);
+                      }}
+                    >
+                      {t('chat.cta.scrollToOrder')}
+                    </button>
+                  )}
+                </div>
+                {m.role === 'user' && (
+                  <div className="chat-avatar-user" aria-hidden="true">U</div>
                 )}
               </div>
             ))}
