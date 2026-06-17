@@ -36,7 +36,7 @@ function renderMarkdown(text) {
     } else {
       if (inUl) { out.push('</ul>'); inUl = false; }
       if (inOl) { out.push('</ol>'); inOl = false; }
-      out.push(line);
+      out.push(escapeHtml(line));
     }
   }
   if (inUl) out.push('</ul>');
@@ -246,7 +246,7 @@ export default function ChatWidget() {
                       setOpen(false);
                     }}
                   >
-                    👆 Tap here to select your pack →
+                    {t('chat.cta.scrollToOrder')}
                   </button>
                 )}
               </div>

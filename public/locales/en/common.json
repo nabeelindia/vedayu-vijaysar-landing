@@ -488,5 +488,6 @@
   "chat.contact.phone": "Mobile number",
   "chat.contact.submit": "Submit",
   "chat.contact.thanks": "Thank you! We'll reach out to you soon.",
-  "chat.error": "Sorry, something went wrong. Please try again."
+  "chat.error": "Sorry, something went wrong. Please try again.",
+  "chat.cta.scrollToOrder": "👆 Tap here to select your pack →"
 }
