@@ -1519,7 +1519,7 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
   border-radius: 14px 14px 14px 4px;
   padding: 9px 12px;
   font-size: .86rem;
-  line-height: 1.45;
+  line-height: 1.55;
 }
 .chat-msg-user {
   align-self: flex-end;

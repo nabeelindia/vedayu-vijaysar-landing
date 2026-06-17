@@ -2,6 +2,51 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
 
+function renderMarkdown(text) {
+  // Sanitize: strip script/iframe tags and on* event attributes
+  let s = text
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+    .replace(/\s+on\w+="[^"]*"/gi, '')
+    .replace(/\s+on\w+='[^']*'/gi, '');
+
+  // Process lists line-by-line
+  const lines = s.split('\n');
+  const out = [];
+  let inUl = false;
+  let inOl = false;
+
+  for (const line of lines) {
+    if (/^- (.+)/.test(line)) {
+      if (!inUl) { out.push('<ul>'); inUl = true; }
+      if (inOl)  { out.push('</ol>'); inOl = false; }
+      out.push(`<li>${line.replace(/^- /, '')}</li>`);
+    } else if (/^\d+\. (.+)/.test(line)) {
+      if (!inOl) { out.push('<ol>'); inOl = true; }
+      if (inUl)  { out.push('</ul>'); inUl = false; }
+      out.push(`<li>${line.replace(/^\d+\. /, '')}</li>`);
+    } else {
+      if (inUl) { out.push('</ul>'); inUl = false; }
+      if (inOl) { out.push('</ol>'); inOl = false; }
+      out.push(line);
+    }
+  }
+  if (inUl) out.push('</ul>');
+  if (inOl) out.push('</ol>');
+
+  let result = out.join('\n');
+
+  // Inline formatting (bold before italic to avoid double-processing)
+  result = result.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  result = result.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+  // Line breaks (double newline = paragraph break)
+  result = result.replace(/\n\n/g, '<br><br>');
+  result = result.replace(/\n/g, '<br>');
+
+  return result;
+}
+
 function ContactForm({ sessionId, onSuccess, thankYouText }) {
   const { t } = useTranslation('common');
   const [name, setName] = useState('');
@@ -172,8 +217,14 @@ export default function ChatWidget() {
               </div>
             )}
             {messages.map((m, i) => (
-              <div key={i} className={m.role === 'user' ? 'chat-msg-user' : 'chat-msg-bot'}>
-                {m.content}
+              <div
+                key={i}
+                className={m.role === 'user' ? 'chat-msg-user' : 'chat-msg-bot'}
+                {...(m.role === 'assistant'
+                  ? { dangerouslySetInnerHTML: { __html: renderMarkdown(m.content) } }
+                  : {})}
+              >
+                {m.role === 'user' ? m.content : null}
               </div>
             ))}
             {contactCaptureRequested && !contactSubmitted && (
