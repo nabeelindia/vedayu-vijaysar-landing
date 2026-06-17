@@ -125,12 +125,12 @@ b) If status IS "Delivered":
    — If delivered WITHIN the last 7 days (including today): eligible — proceed to Step 3.
    — If the delivery date is unclear from the tool result: ask "When did you receive your order?" then apply the 7-day check based on their answer.
 
-Step 3 — Eligible: collect the issue, then capture contact:
+Step 3 — Eligible: collect the issue, then submit the request:
 Ask: "I'm sorry to hear that! Can you briefly describe the issue with your order?"
-After they explain, output [CONTACT_CAPTURE]:
-"No worries — our **7-day replacement policy** covers this. Please leave your contact details and our team will arrange a replacement within 24 hours.
+After they explain, output [RETURN_REQUEST:ORDER_ID] where ORDER_ID is the actual order ID from the tool result (e.g. [RETURN_REQUEST:VED-C250605XX]):
+"No worries — our **7-day replacement policy** covers this. I've logged your replacement request and our team will contact you within 24 hours to arrange a replacement.
 
-[CONTACT_CAPTURE]"
+[RETURN_REQUEST:VED-C250605XX]"
 
 EMPATHY RULE: If the customer expresses frustration, urgency, or disappointment (e.g. "still not delivered", "where is my order", "this is wrong", "not happy", "wasted money"), ALWAYS start your reply by acknowledging their feeling in one short sentence before solving. Example: "I'm so sorry to hear that — let me sort this out right away."
 
@@ -199,7 +199,7 @@ Step 2: If NOT Delivered → tell customer return is only available after delive
 If Delivered > 7 days ago → tell customer the 7-day window has passed, do NOT output [CONTACT_CAPTURE].
 If Delivered within 7 days → Step 3.
 If delivery date unclear → ask when they received it, then apply the 7-day check.
-Step 3 (eligible): Ask about the issue. Then confirm policy and output [CONTACT_CAPTURE].
+Step 3 (eligible): Ask about the issue. After they describe it, output [RETURN_REQUEST:ORDER_ID] with the actual order ID from the tool result (e.g. [RETURN_REQUEST:VED-C250605XX]). Tell them the team will contact them within 24 hours.
 
 EMPATHY RULE: If the customer expresses frustration, urgency, or disappointment, ALWAYS start your reply by acknowledging their feeling in one short sentence before solving.
 
@@ -264,7 +264,7 @@ Step 2: If NOT Delivered → tell customer return is only available after delive
 If Delivered > 7 days ago → tell customer the 7-day window has passed, do NOT output [CONTACT_CAPTURE].
 If Delivered within 7 days → Step 3.
 If delivery date unclear → ask when they received it, then apply the 7-day check.
-Step 3 (eligible): Ask about the issue. Then confirm policy and output [CONTACT_CAPTURE].
+Step 3 (eligible): Ask about the issue. After they describe it, output [RETURN_REQUEST:ORDER_ID] with the actual order ID from the tool result (e.g. [RETURN_REQUEST:VED-C250605XX]). Tell them the team will contact them within 24 hours.
 
 EMPATHY RULE: If the customer expresses frustration, urgency, or disappointment, ALWAYS start your reply by acknowledging their feeling in one short sentence before solving.
 
@@ -329,7 +329,7 @@ Step 2: If NOT Delivered → tell customer return is only available after delive
 If Delivered > 7 days ago → tell customer the 7-day window has passed, do NOT output [CONTACT_CAPTURE].
 If Delivered within 7 days → Step 3.
 If delivery date unclear → ask when they received it, then apply the 7-day check.
-Step 3 (eligible): Ask about the issue. Then confirm policy and output [CONTACT_CAPTURE].
+Step 3 (eligible): Ask about the issue. After they describe it, output [RETURN_REQUEST:ORDER_ID] with the actual order ID from the tool result (e.g. [RETURN_REQUEST:VED-C250605XX]). Tell them the team will contact them within 24 hours.
 
 EMPATHY RULE: If the customer expresses frustration, urgency, or disappointment, ALWAYS start your reply by acknowledging their feeling in one short sentence before solving.
 
@@ -551,13 +551,45 @@ export default async function handler(req, res) {
   const packSelectionRequested = claudeReply.includes('[PACK_SELECTION]');
   const captureForOrderRequested = claudeReply.includes('[CAPTURE_FOR_ORDER]');
   const humanHandoffRequested = claudeReply.includes('[HUMAN_HANDOFF]');
+  const returnRequestMatch = claudeReply.match(/\[RETURN_REQUEST:([A-Z0-9\-]+)\]/);
+  const returnRequestOrderId = returnRequestMatch ? returnRequestMatch[1] : null;
   const cleanReply = claudeReply
     .replace(/\[CONTACT_CAPTURE\]/g, '')
     .replace(/\[SCROLL_TO_ORDER\]/g, '')
     .replace(/\[PACK_SELECTION\]/g, '')
     .replace(/\[CAPTURE_FOR_ORDER\]/g, '')
     .replace(/\[HUMAN_HANDOFF\]/g, '')
+    .replace(/\[RETURN_REQUEST:[A-Z0-9\-]+\]/g, '')
     .trim();
+
+  // ── 6b. Handle return request — look up order + save to return_requests ────
+  if (returnRequestOrderId) {
+    try {
+      const { data: orderRow } = await supabase
+        .from('orders')
+        .select('order_id, name, mobile, email, pack, amount')
+        .eq('order_id', returnRequestOrderId)
+        .single();
+
+      // Extract the issue from the last user message
+      const lastUserMsg = messages.filter(m => m.role === 'user').slice(-1)[0];
+      const issue = lastUserMsg ? String(lastUserMsg.content || '').slice(0, 500) : null;
+
+      await supabase.from('return_requests').insert({
+        session_id:     sessionId,
+        order_id:       returnRequestOrderId,
+        customer_name:  orderRow?.name  || null,
+        customer_phone: orderRow?.mobile || null,
+        customer_email: orderRow?.email  || null,
+        pack:           orderRow?.pack   || null,
+        amount:         orderRow?.amount ? String(orderRow.amount) : null,
+        issue,
+        status: 'pending',
+      });
+    } catch (rrErr) {
+      console.error('Return request save error (non-fatal):', rrErr);
+    }
+  }
 
   // ── 7. Save to Supabase ────────────────────────────────────────────────────
   // Build simplified messages array for storage (no tool_use blocks)

@@ -8,6 +8,7 @@ const NAV = [
   { href: '/admin/customers',  label: 'Customers', icon: '👥' },
   { href: '/admin/whatsapp',   label: 'WhatsApp',  icon: '💬' },
   { href: '/admin/chats',      label: 'AI Chats',  icon: '🤖' },
+  { href: '/admin/returns',    label: 'Returns',   icon: '🔄' },
   { href: '/admin/analytics',  label: 'Analytics', icon: '📊' },
   { href: '/admin/referrals',  label: 'Referrals', icon: '🎁' },
   { href: '/admin/abandoned',  label: 'Abandoned', icon: '🛒' },
