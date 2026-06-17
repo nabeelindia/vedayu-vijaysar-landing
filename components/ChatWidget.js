@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
 
 function escapeHtml(str) {
+  if (!str) return '';
   return str
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -11,6 +12,7 @@ function escapeHtml(str) {
 }
 
 function renderMarkdown(text) {
+  if (!text) return '';
   // Sanitize: strip script/iframe tags and on* event attributes
   let s = text
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
