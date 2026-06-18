@@ -166,7 +166,7 @@ export default function OrderConfirmed() {
   const [miswakErr,    setMiswakErr]    = useState('');
   const [custMobile,   setCustMobile]   = useState('');
   const [custEmail,    setCustEmail]    = useState('');
-  const [notifyState,      setNotifyState]      = useState('idle');   // 'idle' | 'requesting' | 'granted' | 'denied'
+  const [notifyState,      setNotifyState]      = useState('idle');   // 'idle' | 'requesting' | 'granted' | 'denied' | 'browser-denied'
   const [showNotifyToggle, setShowNotifyToggle] = useState(false);
 
   /* Fade in */
