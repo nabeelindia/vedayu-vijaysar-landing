@@ -17,6 +17,7 @@ import { generateOrderId } from '../../lib/orders';
 import { supabase } from '../../lib/supabase';
 import { sendPush } from '../../lib/push';
 import { isBlockedDay } from '../../lib/holidays';
+import { triggerTabblyCall } from '../../lib/tabbly';
 
 const formatUtm = (utm = {}) => {
   if (!Object.keys(utm).length) return 'Direct / Unknown';
@@ -272,25 +273,17 @@ export default async function handler(req, res) {
   }).then(() => {}, () => {});
 
   // ── Tabbly outbound COD verification call ───────────────────────────────
-  // Order already saved above — fire-and-forget, non-blocking.
-  const baseUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : 'http://localhost:3000';
-  fetch(`${baseUrl}/api/tabbly-trigger`, {
-    method:  'POST',
-    headers: {
-      'Content-Type':  'application/json',
-      'Authorization': `Bearer ${process.env.SESSION_SECRET}`,
-    },
-    body: JSON.stringify({
-      orderId: orderId,
-      name:    name,
-      price:   safePrice,
-      address: fullAddr,
-      state:   state,
-      mobile:  mobile.trim(),
-    }),
-  }).catch(err => console.error('[Tabbly] Fire-and-forget failed:', err.message));
+  // Order already saved above. Call directly (not via internal HTTP which
+  // gets killed after res.json() on Vercel serverless).
+  triggerTabblyCall({
+    orderId: orderId,
+    name:    name,
+    mobile:  mobile.trim(),
+    price:   safePrice,
+    address: fullAddr,
+    state:   state,
+  }).then(r => console.log('[Tabbly] Call triggered for', orderId, r))
+    .catch(err => console.error('[Tabbly] Trigger failed for', orderId, ':', err.message));
 
   // ── COD verification — store record and send WhatsApp ───────────────────
   const normalised = mobile.trim().startsWith('91') ? mobile.trim() : `91${mobile.trim()}`;

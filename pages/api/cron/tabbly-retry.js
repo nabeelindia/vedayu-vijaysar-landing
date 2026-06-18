@@ -5,7 +5,9 @@ import { supabase }                          from '../../../lib/supabase';
 import { triggerTabblyCall, isWithinCallWindow } from '../../../lib/tabbly';
 
 export default async function handler(req, res) {
-  if (req.headers.authorization !== `Bearer ${process.env.SESSION_SECRET}`) {
+  // Vercel cron jobs authenticate via CRON_SECRET in x-vercel-cron-signature header
+  const cronSecret = process.env.CRON_SECRET;
+  if (cronSecret && req.headers['x-vercel-cron-signature'] !== cronSecret) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
   if (!supabase) return res.status(503).json({ error: 'DB not configured' });
@@ -29,7 +31,7 @@ export default async function handler(req, res) {
   for (const retry of due) {
     const { data: order } = await supabase
       .from('orders')
-      .select('name, price, address, city, state, pincode')
+      .select('name, mobile, price, address, city, state, pincode')
       .eq('order_id', retry.order_id)
       .single();
 
@@ -48,6 +50,7 @@ export default async function handler(req, res) {
       await triggerTabblyCall({
         orderId: retry.order_id,
         name:    order.name,
+        mobile:  order.mobile,
         price:   order.price,
         address: fullAddress,
         state:   order.state,
