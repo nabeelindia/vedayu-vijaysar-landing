@@ -298,7 +298,7 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
   border-radius: 50%; display: flex; align-items: center; justify-content: center;
   font-size: 1.1rem; font-weight: 700; margin: 0 auto 10px;
 }
-.process-item h4 { font-size: .86rem; color: #fff; margin-bottom: 5px; }
+.process-item h3 { font-size: .86rem; color: #fff; margin-bottom: 5px; }
 .process-item p  { font-size: .76rem; color: rgba(255,255,255,.76); line-height: 1.55; }
 
 /* ====================================================
@@ -381,7 +381,7 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
 /* Delivery details section heading */
 .co-section-head { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
 .co-section-head .csh-icon { font-size: 1.2rem; flex-shrink: 0; }
-.co-section-head h4 { margin: 0 0 2px; font-size: 1rem; font-weight: 700; color: var(--vd-dark-brown); }
+.co-section-head h3 { margin: 0 0 2px; font-size: 1rem; font-weight: 700; color: var(--vd-dark-brown); }
 .co-section-head p { margin: 0; font-size: .76rem; color: var(--vd-text-light); }
 
 /* Icon-prefixed input wrapper */
@@ -618,7 +618,7 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
 .trust-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px,1fr)); gap: 18px; text-align: center; }
 .trust-item  { padding: 18px 14px; }
 .trust-icon  { font-size: 2.1rem; margin-bottom: 10px; }
-.trust-item h4 { font-size: .86rem; font-weight: 700; color: #fff; margin-bottom: 5px; }
+.trust-item h3 { font-size: .86rem; font-weight: 700; color: #fff; margin-bottom: 5px; }
 .trust-item p  { font-size: .76rem; color: rgba(255,255,255,.76); line-height: 1.5; }
 
 /* ====================================================

@@ -1085,6 +1085,7 @@ export default function Home() {
         );
       })()}
 
+      <main id="main-content">
       {/* ── MARQUEE ── */}
       <div className="marquee" aria-hidden="true">
         <div className="marquee-track">
@@ -1205,7 +1206,7 @@ export default function Home() {
                 {/* Dot indicators */}
                 <div style={{ position:'absolute', bottom:10, left:'50%', transform:'translateX(-50%)', display:'flex', gap:6 }}>
                   {GALLERY.map((_, i) => (
-                    <button key={i} onClick={() => setGalleryIdx(i)} style={{ width: i===galleryIdx ? 20 : 8, height:8, borderRadius:4, border:'none', background: i===galleryIdx ? '#5C3D1E' : 'rgba(255,255,255,.7)', cursor:'pointer', transition:'all .2s', padding:'8px 4px', margin:0, boxSizing:'content-box' }} aria-label={`Image ${i+1}`} />
+                    <button key={i} onClick={() => setGalleryIdx(i)} style={{ width: i===galleryIdx ? 20 : 8, height:8, borderRadius:4, border:'none', background: i===galleryIdx ? '#5C3D1E' : 'rgba(255,255,255,.7)', cursor:'pointer', transition:'all .2s', padding:'8px', margin:0, boxSizing:'content-box' }} aria-label={`Image ${i+1}`} />
                   ))}
                 </div>
               </div>
@@ -1500,7 +1501,7 @@ export default function Home() {
               return (
               <div className="process-item" key={n}>
                 <div className="process-num">{n}</div>
-                <h4>{title}</h4>
+                <h3>{title}</h3>
                 <p>{body}</p>
               </div>
             );})}
@@ -1972,7 +1973,7 @@ export default function Home() {
                     <div className="co-section-head">
                       <span className="csh-icon">📦</span>
                       <div>
-                        <h4>Delivery Details</h4>
+                        <h3>Delivery Details</h3>
                         <p>Enter your address for fast, free delivery</p>
                       </div>
                     </div>
@@ -2195,7 +2196,7 @@ export default function Home() {
               return (
               <div className="trust-item" key={key}>
                 <div className="trust-icon">{icon}</div>
-                <h4>{title}</h4>
+                <h3>{title}</h3>
                 <p>{body}</p>
               </div>
             );})}
@@ -2339,6 +2340,8 @@ export default function Home() {
           Top
         </button>
       )}
+
+      </main>
 
       {/* ── SITE FOOTER ── */}
       <SiteFooter />

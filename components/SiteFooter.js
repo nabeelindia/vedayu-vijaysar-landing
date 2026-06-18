@@ -44,11 +44,11 @@ export default function SiteFooter() {
 
           {/* Blog + Policy Links */}
           <div className="footer-links">
-            <h4 className="footer-links-heading">{t('footer.explore_heading')}</h4>
+            <h3 className="footer-links-heading">{t('footer.explore_heading')}</h3>
             <ul>
               <li><Link href="/blog">{t('footer.blog_link')}</Link></li>
             </ul>
-            <h4 className="footer-links-heading" style={{ marginTop: '1rem' }}>{t('footer.support_heading')}</h4>
+            <h3 className="footer-links-heading" style={{ marginTop: '1rem' }}>{t('footer.support_heading')}</h3>
             <ul>
               <li><Link href="/track" className="footer-track-btn">{t('footer.track_link')}</Link></li>
               <li><Link href="/contact">{t('footer.contact_link')}</Link></li>
