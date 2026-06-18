@@ -11,7 +11,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { amount, packName, customerName, referrerId, mobile } = req.body;
+  const { amount, packName, customerName, referrerId, mobile, email, address, city, state, pincode, qty } = req.body;
 
   if (!amount || isNaN(amount) || amount < 1) {
     return res.status(400).json({ error: 'Invalid amount' });
@@ -45,10 +45,17 @@ export default async function handler(req, res) {
       receipt:         `vedayu_${Date.now()}`,
       payment_capture: 1, // auto-capture on authorization — no manual capture needed
       notes: {
-        customer: customerName || '',
-        pack:     packName || 'Vijaysar Wooden Glass',
-        brand:    'Vedayu',
-        product:  'Vijaysar Wooden Herbal Glass / Tumbler',
+        customer_name: customerName || '',
+        mobile:        mobile       || '',
+        email:         email        || '',
+        address_line:  address      || '',
+        city:          city         || '',
+        state:         state        || '',
+        pincode:       pincode      || '',
+        pack:          packName     || 'Vijaysar Wooden Glass',
+        qty:           String(qty   || 1),
+        brand:         'Vedayu',
+        product:       'Vijaysar Wooden Herbal Glass / Tumbler',
       },
     });
 

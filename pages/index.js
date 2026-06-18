@@ -72,16 +72,16 @@ function getShipsBy(dtLocale) {
   const hour         = ist.getUTCHours();
   const minute       = ist.getUTCMinutes();
   const isSunday     = dayOfWeek === 0;
-  const beforeCutoff = hour < 18;         // before 6:00 PM IST
+  const beforeCutoff = hour < 17;         // before 5:00 PM IST
 
   if (!isSunday && beforeCutoff) {
-    const totalMinsLeft = (18 * 60) - (hour * 60 + minute);
+    const totalMinsLeft = (17 * 60) - (hour * 60 + minute);
     const h = Math.floor(totalMinsLeft / 60);
     const m = totalMinsLeft % 60;
     const note = h > 0
       ? `order within ${h} hr${h > 1 ? 's' : ''} ${m} min`
       : `order within ${totalMinsLeft} min`;
-    return { label: 'Today', note };
+    return { label: 'Today', note, minsLeft: totalMinsLeft };
   }
 
   // Find next working day (skip Sunday)
@@ -185,7 +185,8 @@ export default function Home() {
   /* form state */
   const [pack,       setPack]       = useState(1);
   const [payment,    setPayment]    = useState('prepaid');
-  const [form,       setForm]       = useState({ name:'', mobile:'', email:'', address:'', pincode:'', city:'', state:'' });
+  const [form,       setForm]       = useState({ name:'', mobile:'', email:'', house:'', area:'', landmark:'', pincode:'', city:'', state:'' });
+  const [mobSummaryOpen, setMobSummaryOpen] = useState(false);
   const [loading,    setLoading]    = useState(false);
   const [openFaq,    setOpenFaq]    = useState(null);
   const [toast,      setToast]      = useState(null);
@@ -406,7 +407,8 @@ export default function Home() {
     name:    () => form.name.trim().length > 1,
     mobile:  () => /^[6-9][0-9]{9}$/.test(form.mobile.trim()),
     email:   () => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()),
-    address: () => form.address.trim().length > 5,
+    house:   () => form.house.trim().length > 2,
+    area:    () => form.area.trim().length > 2,
     pincode: () => /^[1-9][0-9]{5}$/.test(form.pincode),
     city:    () => form.city.trim().length > 0,
     state:   () => form.state.length > 0,
@@ -538,7 +540,8 @@ export default function Home() {
     if (!/^[6-9][0-9]{9}$/.test(form.mobile.trim()))             return 'Please enter a valid 10-digit mobile number.';
     if (!form.email.trim()) return 'Please enter your email address.';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) return 'Please enter a valid email address.';
-    if (!form.address.trim())                                     return 'Please enter your delivery address.';
+    if (!form.house.trim())  return 'Please enter your house / flat / building.';
+    if (!form.area.trim())   return 'Please enter your area / locality.';
     if (!/^[1-9][0-9]{5}$/.test(form.pincode))                   return 'Please enter a valid 6-digit pincode.';
     if (!form.city.trim())                                        return 'Please enter your city.';
     if (!form.state)                                              return 'Please select your state.';
@@ -553,6 +556,7 @@ export default function Home() {
 
     const selectedPack  = PACKS[pack];
     const finalPrice    = effectivePrice(pack, payment);
+    const computedAddress = [form.house, form.area, form.landmark].filter(Boolean).join(', ');
     const orderData = {
       pack:       selectedPack.name,
       price:      finalPrice,
@@ -564,6 +568,7 @@ export default function Home() {
         ? scheduledDate.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })
         : null,
       ...form,
+      address: computedAddress,
     };
 
     try {
@@ -577,7 +582,7 @@ export default function Home() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to place order');
         orderPlaced.current = true;
-        writeCustomerCookie({ name: form.name, mobile: form.mobile, email: form.email, address: form.address, pincode: form.pincode, city: form.city, state: form.state });
+        writeCustomerCookie({ name: form.name, mobile: form.mobile, email: form.email, address: computedAddress, pincode: form.pincode, city: form.city, state: form.state });
         try { sessionStorage.setItem('vc_upsell_ctx', JSON.stringify({ mobile: form.mobile, email: form.email || '' })); } catch (_) {}
         router.push(`/order-confirmed?method=cod&pack=${encodeURIComponent(selectedPack.name)}&price=${finalPrice}&name=${encodeURIComponent(form.name)}&orderId=${encodeURIComponent(data.orderId)}${scheduledDate ? `&scheduledShipDate=${scheduledDate.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })}` : ''}`);
 
@@ -589,7 +594,19 @@ export default function Home() {
         const res  = await fetch('/api/create-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount: finalPrice, packName: selectedPack.name, customerName: form.name, referrerId: referrerId || undefined, mobile: form.mobile }),
+          body: JSON.stringify({
+            amount:       finalPrice,
+            packName:     selectedPack.name,
+            qty:          selectedPack.qty,
+            customerName: form.name,
+            mobile:       form.mobile,
+            email:        form.email || '',
+            address:      computedAddress,
+            city:         form.city,
+            state:        form.state,
+            pincode:      form.pincode,
+            referrerId:   referrerId || undefined,
+          }),
         });
         const { order_id, amount } = await res.json();
         if (!res.ok) throw new Error('Could not create payment order. Please try again.');
@@ -603,7 +620,7 @@ export default function Home() {
           description: `Vijaysar Wooden Glass — ${selectedPack.name} (10% prepaid discount applied)`,
           image:       '/images/logo.png',
           prefill:     { name: form.name, contact: `+91${form.mobile}`, email: form.email || '' },
-          notes:       { address: `${form.address}, ${form.city}, ${form.state} - ${form.pincode}` },
+          notes:       { address: `${computedAddress}, ${form.city}, ${form.state} - ${form.pincode}` },
           theme:       { color: '#5C3D1E' },
           modal: {
             ondismiss: () => {
@@ -615,7 +632,7 @@ export default function Home() {
           },
           handler: async (response) => {
             orderPlaced.current = true;
-            writeCustomerCookie({ name: form.name, mobile: form.mobile, email: form.email, address: form.address, pincode: form.pincode, city: form.city, state: form.state });
+            writeCustomerCookie({ name: form.name, mobile: form.mobile, email: form.email, address: computedAddress, pincode: form.pincode, city: form.city, state: form.state });
             let finalOrderId = response.razorpay_payment_id || order_id || '';
             try {
               // Verify payment server-side + fire CAPI Purchase
@@ -639,7 +656,15 @@ export default function Home() {
               });
               const vData = await vRes.json();
               if (vData.orderId) finalOrderId = vData.orderId;
-            } catch { /* non-blocking — redirect regardless */ }
+            } catch (verifyErr) {
+              console.error('verify-payment error:', verifyErr);
+              // Don't redirect on failure — the order may not be saved.
+              // The Razorpay webhook will recover the order server-side.
+              // Show an error to the user so they can contact support.
+              setLoading(false);
+              showToast('Payment received but order confirmation failed. Please WhatsApp us with your payment ID: ' + response.razorpay_payment_id, 'error');
+              return;
+            }
             try { sessionStorage.setItem('vc_upsell_ctx', JSON.stringify({ mobile: form.mobile, email: form.email || '' })); } catch (_) {}
             router.push(`/order-confirmed?method=prepaid&pack=${encodeURIComponent(selectedPack.name)}&price=${finalPrice}&name=${encodeURIComponent(form.name)}&orderId=${encodeURIComponent(finalOrderId)}${scheduledDate ? `&scheduledShipDate=${scheduledDate.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })}` : ''}`);
           },
@@ -1763,16 +1788,9 @@ export default function Home() {
             </div>
           )}
 
-          <div className="checkout-wrap">
-            <div className="checkout-head">
-              <h3>{t('checkout.heading_order')}</h3>
-              <p>{t('checkout.secure')}</p>
-            </div>
-
-            <div className="checkout-body">
-
-              {/* Pack selector */}
-              <label className="field-label" style={{ marginBottom: 8 }}>{t('checkout.select_pack')}</label>
+          {/* ── shared pack selector snippet ── */}
+          {(() => {
+            const PackSelector = () => (
               <div className="pack-selector">
                 {[1, 2, 5].map(p => (
                   <div key={p} className={`pack-option${pack === p ? ' active' : ''}`} onClick={() => setPack(p)} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setPack(p)}>
@@ -1781,247 +1799,358 @@ export default function Home() {
                     {p === 1 && <span style={{ display:'block', height:18, marginBottom:2 }} />}
                     <span className="pack-name">{p === 1 ? t('pricing.pack1.title') : p === 2 ? t('pricing.pack2.title') : t('pricing.pack5.title')}</span>
                     <span className="pack-price">{fmt(PACKS[p].price)}</span>
-                    <span style={{ fontSize:'.68rem', color:'var(--vd-text-light)', fontWeight:600, display:'block', marginTop:2 }}>
-                      {t(`pack.per_glass_${p}`)}
-                    </span>
-                    {p > 1 && <span style={{ fontSize:'.62rem', background:'var(--vd-off-white)', color:'var(--vd-green)', padding:'1px 5px', borderRadius:8, marginTop:3, display:'inline-block', fontWeight:700 }}>
-                      {t('pack.save_prefix')} {fmt(PACKS[p].original - PACKS[p].price)}
-                    </span>}
+                    <span style={{ fontSize:'.68rem', color:'var(--vd-text-light)', fontWeight:600, display:'block', marginTop:2 }}>{t(`pack.per_glass_${p}`)}</span>
+                    {p > 1 && <span style={{ fontSize:'.62rem', background:'var(--vd-off-white)', color:'var(--vd-green)', padding:'1px 5px', borderRadius:8, marginTop:3, display:'inline-block', fontWeight:700 }}>{t('pack.save_prefix')} {fmt(PACKS[p].original - PACKS[p].price)}</span>}
                   </div>
                 ))}
               </div>
+            );
 
-              {/* Order summary */}
-              <div className="order-summary">
-                <div className="order-row"><span>{t('checkout.item_glass')} × {currentPack.qty}</span><span>{fmt(currentPack.price)}</span></div>
-                {payment === 'prepaid' && (
-                  <div className="order-row" style={{ color: '#4A7C59', fontWeight: 600 }}>
-                    <span>{t('checkout.prepaid_discount_label')}</span>
-                    <span>− {fmt(discountAmt(pack))}</span>
+            const ctaLabel = loading
+              ? <><span className="spinner" />{t('checkout.processing')}</>
+              : payment === 'prepaid'
+                ? <>💳 Pay Now & Save ₹{discountAmt(pack).toLocaleString('en-IN')} →</>
+                : <>💵 Place COD Order — ₹{currentPrice.toLocaleString('en-IN')} →</>;
+
+            const DeliveryEstimate = () => (deliveryEst || shipsBy) ? (
+              <div style={{ background:'#F0F9F3', border:'1px solid #4A7C59', borderRadius:8, padding:'10px 14px', marginBottom:6, fontSize:'.88rem', color:'#2d6b40' }}>
+                {shipsBy && (
+                  <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom: deliveryEst ? 5 : 0 }}>
+                    📦 <span>{t('delivery.ships_label')} <strong>{scheduledDate ? t('delivery.ships_scheduled', { date: scheduledDateFormatted }) : shipsBy.label}</strong>{!scheduledDate && shipsBy.note && <span style={{ fontWeight:400, color:'#4A7C59', marginLeft:6 }}>· {shipsBy.note}</span>}</span>
                   </div>
                 )}
-                <div className="order-row order-row-free"><span>{t('checkout.delivery_label')}</span><span>{t('delivery.free')}</span></div>
-                <div className="order-row order-row-total"><span>{t('checkout.total_label')}</span><span>{fmt(currentPrice)}</span></div>
+                {deliveryEst && (
+                  <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                    🚚 <span>{t('delivery.eta_label')} <strong>{deliveryEst}</strong></span>
+                  </div>
+                )}
               </div>
+            ) : null;
 
-              {/* Welcome back — cookie or server KV lookup restored details */}
-              {welcomeBack && (
-                <div style={{ background: '#F0F9F3', border: '1px solid #4A7C59', borderRadius: 8, padding: '10px 14px', marginBottom: 12, fontSize: '.88rem', color: '#2d6b40', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  👋 <span>Welcome back, <strong>{welcomeBack}</strong>! Your delivery details are pre-filled — just place your order.</span>
-                </div>
-              )}
-
-              {/* Customer details */}
-              <label className="field-label" style={{ marginBottom: 8 }}>{t('checkout.your_details')}</label>
-              <div className="field-row">
-                <div className="field-group">
-                  <label className="field-label" htmlFor="name">{t('checkout.name_label')}{vIcon('name')}</label>
-                  <input id="name" type="text" placeholder={t('checkout.name_placeholder')} autoComplete="name" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} onBlur={() => touch('name')} style={vStyle('name')} />
-                </div>
-                <div className="field-group">
-                  <label className="field-label" htmlFor="mobile">{t('checkout.mobile_label')}{vIcon('mobile')}</label>
-                  <input id="mobile" type="tel" placeholder={t('checkout.mobile_placeholder')} maxLength={10} inputMode="numeric" value={form.mobile} onChange={e => { const v = e.target.value.replace(/\D/g,''); setForm(f => ({ ...f, mobile: v })); tryLookup(v, form.email); }} onBlur={async () => { touch('mobile'); if (referrerId && /^[6-9]\d{9}$/.test(form.mobile)) { try { const r = await fetch(`/api/referral-validate?mobile=${form.mobile}`); const d = await r.json(); if (!d.valid) { setReferralDiscount(0); setReferrerId(''); showToast('Referral discount is for new customers only.', 'info'); } } catch {} } }} style={vStyle('mobile')} />
-                </div>
-              </div>
-
-              <div className="field-group">
-                <label className="field-label" htmlFor="email">
-                  {t('checkout.email_label')}{vIcon('email')}
-                </label>
-                <input id="email" type="email" placeholder={t('checkout.email_placeholder')} autoComplete="email" required value={form.email} onChange={e => { const v = e.target.value; setForm(f => ({ ...f, email: v })); tryLookup(form.mobile, v); }} onBlur={() => touch('email')} style={vStyle('email')} />
-              </div>
-
-              <div className="field-group">
-                <label className="field-label" htmlFor="address">{t('checkout.address_label')}{vIcon('address')}</label>
-                <textarea id="address" rows={2} placeholder={t('checkout.address_placeholder')} value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} onBlur={() => touch('address')} style={{ resize: 'vertical', ...vStyle('address') }} />
-              </div>
-
-              <div className="field-row">
-                <div className="field-group">
-                  <label className="field-label" htmlFor="pincode">
-                    {t('checkout.pincode_label')}{vIcon('pincode')}{pincodeLoading && <span style={{ fontWeight:400, color:'#4A7C59', fontSize:'.76rem', marginLeft:6 }}>🔍 {t('checkout.detecting')}</span>}
-                  </label>
-                  <input id="pincode" type="text" placeholder={t('checkout.pincode_placeholder')} maxLength={6} inputMode="numeric" value={form.pincode} onChange={e => handlePincode(e.target.value.replace(/\D/g,''))} onBlur={() => touch('pincode')} style={vStyle('pincode')} />
-                </div>
-                <div className="field-group">
-                  <label className="field-label" htmlFor="city">{t('checkout.city_label')}{vIcon('city')}</label>
-                  <input id="city" type="text" placeholder={pincodeLoading ? t('checkout.detecting') : t('checkout.city_placeholder')} value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} onBlur={() => touch('city')} style={vStyle('city')} />
-                </div>
-              </div>
-
-              <div className="field-group">
-                <label className="field-label" htmlFor="state">{t('checkout.state_label')}{vIcon('state')}</label>
-                <select id="state" value={form.state} onChange={e => setForm(f => ({ ...f, state: e.target.value }))} onBlur={() => touch('state')} style={vStyle('state')}>
-                  <option value="">{pincodeLoading ? t('checkout.detecting') : t('checkout.state_placeholder')}</option>
-                  {STATES.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-              </div>
-
-              {(deliveryEst || shipsBy) && (
-                <div style={{ background:'#F0F9F3', border:'1px solid #4A7C59', borderRadius:8, padding:'10px 14px', marginBottom:6, fontSize:'.88rem', color:'#2d6b40' }}>
-                  {shipsBy && (
-                    <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom: deliveryEst ? 5 : 0 }}>
-                      📦 <span>{t('delivery.ships_label')} <strong>{scheduledDate ? t('delivery.ships_scheduled', { date: scheduledDateFormatted }) : shipsBy.label}</strong>{!scheduledDate && shipsBy.note && <span style={{ fontWeight:400, color:'#4A7C59', marginLeft:6 }}>· {shipsBy.note}</span>}</span>
-                    </div>
-                  )}
-                  {deliveryEst && (
-                    <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                      🚚 <span>{t('delivery.eta_label')} <strong>{deliveryEst}</strong></span>
+            const ScheduleLater = () => {
+              if (!deliveryEst && !shipsBy) return null;
+              const today = new Date(); today.setHours(0,0,0,0);
+              const minDate = new Date(today); minDate.setDate(minDate.getDate() + 2);
+              const maxDate = new Date(today); maxDate.setDate(maxDate.getDate() + 14);
+              const holidayDates = getHolidayDates();
+              return (
+                <div style={{ marginBottom:10 }}>
+                  <button type="button" ref={scheduleBtnRef}
+                    onClick={() => { if (scheduleBtnRef.current) { const r = scheduleBtnRef.current.getBoundingClientRect(); setSchedulePopupPos({ top: r.bottom + 6, left: r.left }); } setScheduleOpen(o => !o); }}
+                    style={{ background: scheduledDate ? '#F0F9F3' : 'none', border: scheduledDate ? '1px solid #4A7C59' : 'none', borderRadius:6, color: scheduledDate ? '#2d6b40' : '#4A7C59', fontSize:'.82rem', fontWeight:600, cursor:'pointer', padding: scheduledDate ? '5px 10px' : '2px 0', textDecoration: scheduledDate ? 'none' : 'underline', display:'flex', alignItems:'center', gap:5 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    {scheduledDate ? scheduledDateFormatted : 'Need delivery later? Schedule here'}
+                    {scheduledDate && <span onClick={e => { e.stopPropagation(); setScheduleOpen(false); handleScheduledDate(null); }} style={{ marginLeft:4, color:'#888', fontWeight:400, fontSize:'.78rem' }}>✕</span>}
+                  </button>
+                  {scheduleOpen && (
+                    <div ref={schedulePopupRef} style={(() => { const isMobile = typeof window !== 'undefined' && window.innerWidth < 500; return isMobile ? { position:'fixed', zIndex:9999, left:8, right:8, bottom:80, background:'#fff', border:'1px solid #4A7C59', borderRadius:14, boxShadow:'0 -4px 32px rgba(0,0,0,.18)', padding:'14px 10px 10px', overflowX:'hidden' } : { position:'fixed', zIndex:9999, top:schedulePopupPos.top, left:Math.min(schedulePopupPos.left, typeof window!=='undefined'?window.innerWidth-310:0), background:'#fff', border:'1px solid #4A7C59', borderRadius:10, boxShadow:'0 4px 24px rgba(0,0,0,.18)', padding:'12px 14px 10px', minWidth:280, maxWidth:'calc(100vw - 32px)' }; })()}>
+                      <div style={{ fontSize:'.78rem', fontWeight:600, color:'#2d6b40', marginBottom:6 }}>{t('delivery.schedule_choose')}</div>
+                      <DayPicker mode="single" selected={scheduledDate} onSelect={(date) => { handleScheduledDate(date); if (date) setScheduleOpen(false); }} startMonth={new Date(minDate.getFullYear(), minDate.getMonth(), 1)} endMonth={new Date(maxDate.getFullYear(), maxDate.getMonth(), 1)} hideNavigation={minDate.getMonth()===maxDate.getMonth()&&minDate.getFullYear()===maxDate.getFullYear()} disabled={[{before:minDate},{after:maxDate},{dayOfWeek:[0]},...holidayDates]} locale={dayPickerLocale} style={{ margin:0, width:'100%' }} />
+                      {scheduledDate && <button type="button" onClick={() => { setScheduleOpen(false); handleScheduledDate(null); }} style={{ background:'none', border:'none', color:'#888', fontSize:'.75rem', cursor:'pointer', textDecoration:'underline', padding:'4px 0 2px' }}>{t('delivery.schedule_asap')}</button>}
                     </div>
                   )}
                 </div>
-              )}
+              );
+            };
 
-              {/* Schedule for later toggle */}
-              {(deliveryEst || shipsBy) && (() => {
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const minDate  = new Date(today); minDate.setDate(minDate.getDate() + 2);
-                const maxDate  = new Date(today); maxDate.setDate(maxDate.getDate() + 14);
-                const holidayDates = getHolidayDates();
-                return (
-                  <div style={{ marginBottom:10 }}>
-                    <button
-                      type="button"
-                      ref={scheduleBtnRef}
-                      onClick={() => {
-                        if (scheduleBtnRef.current) {
-                          const r = scheduleBtnRef.current.getBoundingClientRect();
-                          setSchedulePopupPos({ top: r.bottom + 6, left: r.left });
-                        }
-                        setScheduleOpen(o => !o);
-                      }}
-                      style={{
-                        background: scheduledDate ? '#F0F9F3' : 'none',
-                        border: scheduledDate ? '1px solid #4A7C59' : 'none',
-                        borderRadius: 6,
-                        color: scheduledDate ? '#2d6b40' : '#4A7C59',
-                        fontSize: '.82rem',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        padding: scheduledDate ? '5px 10px' : '2px 0',
-                        textDecoration: scheduledDate ? 'none' : 'underline',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 5,
-                      }}
-                    >
-                      🗓 {scheduledDate ? scheduledDateFormatted : t('delivery.schedule_later')}
-                      {scheduledDate && (
-                        <span
-                          onClick={e => { e.stopPropagation(); setScheduleOpen(false); handleScheduledDate(null); }}
-                          style={{ marginLeft:4, color:'#888', fontWeight:400, fontSize:'.78rem' }}
-                        >✕</span>
+            const PaymentSection = () => (
+              <>
+                <label className="field-label" style={{ marginBottom: 10 }}>{t('checkout.payment_label')}</label>
+                <div className="co-pay-options">
+                  {/* Prepaid */}
+                  <div className={`co-pay-card${payment === 'prepaid' ? ' active' : ''}`} onClick={() => setPayment('prepaid')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setPayment('prepaid')}>
+                    <div className="co-pay-card-top">
+                      <div className="co-pay-radio"><div className="co-pay-radio-dot" /></div>
+                      <div className="co-pay-info">
+                        <div className="co-pay-name">
+                          💳 {t('checkout.prepaid_label')}
+                          <span className="co-pay-rec-badge">RECOMMENDED</span>
+                          <span className="co-pay-off-badge">🎉 10% OFF</span>
+                        </div>
+                        <div className="co-pay-sub">UPI · Cards · Netbanking · Wallets</div>
+                      </div>
+                    </div>
+                    <div className="co-pay-logos">
+                      <span title="UPI" style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', height:24, padding:'0 6px', border:'1.5px solid #097939', borderRadius:4, fontSize:'.72rem', fontWeight:800, color:'#097939', letterSpacing:'.5px', lineHeight:1 }}>UPI</span>
+                      <svg title="Paytm" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style={{width:'auto'}}><path fill="#00BAF2" d="M15.85 8.167a.204.204 0 0 0-.04.004c-.68.19-.543 1.148-1.781 1.23h-.12a.23.23 0 0 0-.052.005h-.001a.24.24 0 0 0-.184.235v1.09c0 .134.106.241.237.241h.645v4.623c0 .132.104.238.233.238h1.058a.236.236 0 0 0 .233-.238v-4.623h.6c.13 0 .236-.107.236-.241v-1.09a.239.239 0 0 0-.236-.24h-.612V8.386a.218.218 0 0 0-.216-.22zm4.225 1.17c-.398 0-.762.15-1.042.395v-.124a.238.238 0 0 0-.234-.224h-1.07a.24.24 0 0 0-.236.242v5.92a.24.24 0 0 0 .236.242h1.07c.12 0 .217-.091.233-.209v-4.25a.393.393 0 0 1 .371-.408h.196a.41.41 0 0 1 .226.09.405.405 0 0 1 .145.319v4.074l.004.155a.24.24 0 0 0 .237.241h1.07a.239.239 0 0 0 .235-.23l-.001-4.246c0-.14.062-.266.174-.34a.419.419 0 0 1 .196-.068h.198c.23.02.37.2.37.408.005 1.396.004 2.8.004 4.224a.24.24 0 0 0 .237.241h1.07c.13 0 .236-.108.236-.241v-4.543c0-.31-.034-.442-.08-.577a1.601 1.601 0 0 0-1.51-1.09h-.015a1.58 1.58 0 0 0-1.152.5c-.291-.308-.7-.5-1.153-.5zM.232 9.4A.234.234 0 0 0 0 9.636v5.924c0 .132.096.238.216.241h1.09c.13 0 .237-.107.237-.24l.004-1.658H2.57c.857 0 1.453-.605 1.453-1.481v-1.538c0-.877-.596-1.484-1.453-1.484H.232zm9.032 0a.239.239 0 0 0-.237.241v2.47c0 .94.657 1.608 1.579 1.608h.675s.016 0 .037.004a.253.253 0 0 1 .222.253c0 .13-.096.235-.219.251l-.018.004-.303.006H9.739a.239.239 0 0 0-.236.24v1.09a.24.24 0 0 0 .236.242h1.75c.92 0 1.577-.669 1.577-1.608v-4.56a.239.239 0 0 0-.236-.24h-1.07a.239.239 0 0 0-.236.24c-.005.787 0 1.525 0 2.255a.253.253 0 0 1-.25.25h-.449a.253.253 0 0 1-.25-.255c.005-.754-.005-1.5-.005-2.25a.239.239 0 0 0-.236-.24zm-4.004.006a.232.232 0 0 0-.238.226v1.023c0 .132.113.24.252.24h1.413c.112.017.2.1.213.23v.14c-.013.124-.1.214-.207.224h-.7c-.93 0-1.594.63-1.594 1.515v1.269c0 .88.57 1.506 1.495 1.506h1.94c.348 0 .63-.27.63-.6v-4.136c0-1.004-.508-1.637-1.72-1.637zm-3.713 1.572h.678c.139 0 .25.115.25.256v.836a.253.253 0 0 1-.25.256h-.1c-.192.002-.386 0-.578 0zm4.67 1.977h.445c.139 0 .252.108.252.24v.932a.23.23 0 0 1-.014.076.25.25 0 0 1-.238.164h-.445a.247.247 0 0 1-.252-.24v-.933c0-.132.113-.239.252-.239Z"/></svg>
+                      <svg title="PhonePe" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style={{width:'auto'}}><path fill="#5f259f" d="M10.206 9.941h2.949v4.692c-.402.201-.938.268-1.34.268-1.072 0-1.609-.536-1.609-1.743V9.941zm13.47 4.816c-1.523 6.449-7.985 10.442-14.433 8.919C2.794 22.154-1.199 15.691.324 9.243 1.847 2.794 8.309-1.199 14.757.324c6.449 1.523 10.442 7.985 8.919 14.433zm-6.231-5.888a.887.887 0 0 0-.871-.871h-1.609l-3.686-4.222c-.335-.402-.871-.536-1.407-.402l-1.274.401c-.201.067-.268.335-.134.469l4.021 3.82H6.386c-.201 0-.335.134-.335.335v.67c0 .469.402.871.871.871h.938v3.217c0 2.413 1.273 3.82 3.418 3.82.67 0 1.206-.067 1.877-.335v2.145c0 .603.469 1.072 1.072 1.072h.938a.432.432 0 0 0 .402-.402V9.874h1.542c.201 0 .335-.134.335-.335v-.67z"/></svg>
+                      <span title="RuPay" style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', height:24, padding:'0 6px', background:'#E31837', borderRadius:4, fontSize:'.68rem', fontWeight:800, color:'#fff', letterSpacing:'.3px', lineHeight:1 }}>RuPay</span>
+                      <svg title="Mastercard" height="24" viewBox="0 0 38 24" xmlns="http://www.w3.org/2000/svg" style={{width:'auto',borderRadius:3,border:'1px solid #ddd'}}><rect width="38" height="24" rx="3" fill="#fff"/><circle cx="15" cy="12" r="7" fill="#EB001B"/><circle cx="23" cy="12" r="7" fill="#F79E1B"/><path d="M19 6.8a7 7 0 0 1 0 10.4A7 7 0 0 1 19 6.8z" fill="#FF5F00"/></svg>
+                      <svg title="Visa" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style={{width:'auto'}}><path fill="#1A1F71" d="M9.112 8.262L5.97 15.758H3.92L2.374 9.775c-.094-.368-.175-.503-.461-.658C1.447 8.864.677 8.627 0 8.479l.046-.217h3.3a.904.904 0 01.894.764l.817 4.338 2.018-5.102zm8.033 5.049c.008-1.979-2.736-2.088-2.717-2.972.006-.269.262-.555.822-.628a3.66 3.66 0 011.913.336l.34-1.59a5.207 5.207 0 00-1.814-.333c-1.917 0-3.266 1.02-3.278 2.479-.012 1.079.963 1.68 1.698 2.04.756.367 1.01.603 1.006.931-.005.504-.602.725-1.16.734-.975.015-1.54-.263-1.992-.473l-.351 1.642c.453.208 1.289.39 2.156.398 2.037 0 3.37-1.006 3.377-2.564m5.061 2.447H24l-1.565-7.496h-1.656a.883.883 0 00-.826.55l-2.909 6.946h2.036l.405-1.12h2.488zm-2.163-2.656l1.02-2.815.588 2.815zm-8.16-4.84l-1.603 7.496H8.34l1.605-7.496z"/></svg>
+                    </div>
+                  </div>
+                  {/* COD */}
+                  <div className={`co-pay-card${payment === 'cod' ? ' active' : ''}`} onClick={() => setPayment('cod')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setPayment('cod')}>
+                    <div className="co-pay-card-top">
+                      <div className="co-pay-radio"><div className="co-pay-radio-dot" /></div>
+                      <div className="co-pay-info">
+                        <div className="co-pay-name">💵 {t('checkout.cod_label')}</div>
+                        <div style={{ fontSize:'.72rem', color:'#4A7C59', fontWeight:600, marginTop:4 }}>✓ {t('checkout.no_cod_fee')}</div>
+                        <div style={{ fontSize:'.68rem', color:'var(--vd-text-light)', marginTop:3 }}>No harassment · Easy returns</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </>
+            );
+
+            const ContactBelow = () => (
+              <div className="checkout-contact-below">
+                <span>📞 <a href="tel:+917070701956">+91 7070701956</a></span>
+                <span style={{ color:'#ccc' }}>|</span>
+                <span>✉️ <a href="mailto:hi@vedayulife.com">hi@vedayulife.com</a></span>
+              </div>
+            );
+
+            return (
+              <div className="checkout-wrap-new">
+
+                {/* Full-width gradient header */}
+                <div className="checkout-head-full">
+                  <h3>{t('checkout.heading_order')}</h3>
+                  <p>{t('checkout.secure')}</p>
+                </div>
+
+                <div className="checkout-cols">
+                {/* ── LEFT: Delivery Form ── */}
+                <div className="checkout-form-col">
+                  <div className="checkout-body">
+
+                    {/* Mobile-only: collapsible order summary */}
+                    <div className="mob-order-summary">
+                      <div className="mob-order-summary-toggle" onClick={() => setMobSummaryOpen(o => !o)} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setMobSummaryOpen(o => !o)}>
+                        <span className="mot-left">{t('checkout.order_summary_toggle')}</span>
+                        <span className="mot-right">
+                          {fmt(currentPrice)}
+                          <span className={`mot-chevron${mobSummaryOpen ? ' open' : ''}`}>▼</span>
+                        </span>
+                      </div>
+                      {mobSummaryOpen && (
+                        <div className="mob-order-summary-body">
+                          <div className="checkout-order-panel">
+                            <div className="op-product">
+                              <img src="https://res.cloudinary.com/ddmmfkvwb/image/upload/w_80,h_80,c_fill,q_auto,f_auto/product_rsek8j" alt="Vijaysar Wooden Glass" className="op-img" />
+                              <div style={{ flex:1, minWidth:0 }}>
+                                <div className="op-name">{t('checkout.item_glass')} × {currentPack.qty}</div>
+                                <div className="op-variant">{currentPack.label}</div>
+                              </div>
+                              <div className="op-price">{fmt(currentPack.price)}</div>
+                            </div>
+                            <div className="op-rows">
+                              {payment === 'prepaid' && <div className="op-row discount"><span>{t('checkout.prepaid_discount_label')}</span><span>− {fmt(discountAmt(pack))}</span></div>}
+                              <div className="op-row free-ship"><span>{t('checkout.delivery_label')}</span><span style={{fontWeight:600}}>{t('delivery.free')}</span></div>
+                              <div className="op-row total"><span>{t('checkout.total_label')}</span><span>{fmt(currentPrice)}</span></div>
+                            </div>
+                          </div>
+                        </div>
                       )}
-                    </button>
+                    </div>
 
-                    {scheduleOpen && (
-                      <div
-                        ref={schedulePopupRef}
-                        style={(() => {
-                          const isMobile = typeof window !== 'undefined' && window.innerWidth < 500;
-                          if (isMobile) return {
-                            position: 'fixed',
-                            zIndex: 9999,
-                            left: 8,
-                            right: 8,
-                            bottom: 80,
-                            background: '#fff',
-                            border: '1px solid #4A7C59',
-                            borderRadius: 14,
-                            boxShadow: '0 -4px 32px rgba(0,0,0,.18)',
-                            padding: '14px 10px 10px',
-                            overflowX: 'hidden',
-                          };
-                          return {
-                            position: 'fixed',
-                            zIndex: 9999,
-                            top: schedulePopupPos.top,
-                            left: Math.min(schedulePopupPos.left, window.innerWidth - 310),
-                            background: '#fff',
-                            border: '1px solid #4A7C59',
-                            borderRadius: 10,
-                            boxShadow: '0 4px 24px rgba(0,0,0,.18)',
-                            padding: '12px 14px 10px',
-                            minWidth: 280,
-                            maxWidth: 'calc(100vw - 32px)',
-                          };
+                    {/* Mobile-only: pack selector */}
+                    <div className="mob-pack-selector-wrap">
+                      <label className="field-label" style={{ marginBottom: 8 }}>{t('checkout.select_pack')}</label>
+                      <PackSelector />
+                    </div>
+
+                    {/* Delivery details section heading */}
+                    <div className="co-section-head">
+                      <span className="csh-icon">📦</span>
+                      <div>
+                        <h4>Delivery Details</h4>
+                        <p>Enter your address for fast, free delivery</p>
+                      </div>
+                    </div>
+
+                    {/* Welcome back banner */}
+                    {welcomeBack && (
+                      <div style={{ background: '#F0F9F3', border: '1px solid #4A7C59', borderRadius: 8, padding: '10px 14px', marginBottom: 12, fontSize: '.88rem', color: '#2d6b40', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        👋 <span>Welcome back, <strong>{welcomeBack}</strong>! Your delivery details are pre-filled — just place your order.</span>
+                      </div>
+                    )}
+
+                    {/* Delivery details */}
+                    <label className="field-label" style={{ marginBottom: 8 }}>{t('checkout.your_details')}</label>
+
+                    <div className="field-row">
+                      <div className="field-group">
+                        <label className="field-label" htmlFor="mobile">{t('checkout.mobile_label')}{vIcon('mobile')}</label>
+                        <div style={{ display:'flex', alignItems:'stretch' }}>
+                          <span style={{ display:'inline-flex', alignItems:'center', padding:'0 10px', background:'#f7f7f7', border:'1.5px solid var(--vd-border)', borderRight:'none', borderRadius:'8px 0 0 8px', fontSize:'.85rem', color:'#555', whiteSpace:'nowrap', fontWeight:600 }}>🇮🇳 +91</span>
+                          <input id="mobile" type="tel" placeholder={t('checkout.mobile_placeholder')} maxLength={10} inputMode="numeric" value={form.mobile} onChange={e => { const v = e.target.value.replace(/\D/g,''); setForm(f => ({ ...f, mobile: v })); tryLookup(v, form.email); if (v.length === 10) touch('mobile'); }} onBlur={async () => { touch('mobile'); if (referrerId && /^[6-9]\d{9}$/.test(form.mobile)) { try { const r = await fetch(`/api/referral-validate?mobile=${form.mobile}`); const d = await r.json(); if (!d.valid) { setReferralDiscount(0); setReferrerId(''); showToast('Referral discount is for new customers only.', 'info'); } } catch {} } }} style={{ flex:1, borderRadius:'0 8px 8px 0', ...vStyle('mobile') }} />
+                        </div>
+                        <div style={{ fontSize:'.72rem', color:'var(--vd-text-light)', marginTop:3 }}>We'll send order updates on this number</div>
+                      </div>
+                      <div className="field-group">
+                        <label className="field-label" htmlFor="name">{t('checkout.name_label')}{vIcon('name')}</label>
+                        <input id="name" type="text" placeholder={t('checkout.name_placeholder')} autoComplete="name" value={form.name} onChange={e => { setForm(f => ({ ...f, name: e.target.value })); if (e.target.value.trim().length >= 2) touch('name'); }} onBlur={() => touch('name')} style={vStyle('name')} />
+                      </div>
+                    </div>
+
+                    <div className="field-group">
+                      <label className="field-label" htmlFor="email">{t('checkout.email_label')}{vIcon('email')}</label>
+                      <input id="email" type="email" placeholder={t('checkout.email_placeholder')} autoComplete="email" value={form.email} onChange={e => { const v = e.target.value; setForm(f => ({ ...f, email: v })); tryLookup(form.mobile, v); }} onBlur={() => touch('email')} style={vStyle('email')} />
+                      <div style={{ fontSize:'.72rem', color:'var(--vd-text-light)', marginTop:3 }}>For order confirmation and updates</div>
+                    </div>
+
+                    <div className="field-row">
+                      <div className="field-group">
+                        <label className="field-label" htmlFor="pincode">
+                          {t('checkout.pincode_label')}{vIcon('pincode')}{pincodeLoading && <span style={{ fontWeight:400, color:'#4A7C59', fontSize:'.76rem', marginLeft:6 }}>🔍 {t('checkout.detecting')}</span>}
+                        </label>
+                        <input id="pincode" type="text" placeholder={t('checkout.pincode_placeholder')} maxLength={6} inputMode="numeric" value={form.pincode} onChange={e => handlePincode(e.target.value.replace(/\D/g,''))} onBlur={() => touch('pincode')} style={vStyle('pincode')} />
+                      </div>
+                      <div className="field-group">
+                        {(form.city || form.state) ? (
+                          <>
+                            <label className="field-label" style={{ opacity:0 }}>City/State</label>
+                            <div style={{ border:'1.5px solid #4A7C59', borderRadius:8, padding:'10px 12px', background:'#f3fbf5', display:'flex', gap:20 }}>
+                              {form.city && <div style={{ fontSize:'.82rem' }}><span style={{ fontSize:'.7rem', color:'#888', display:'block' }}>{t('checkout.city_label').replace(' *','')}</span><strong style={{ color:'#2d6b40' }}>{form.city}</strong> <span style={{ color:'#4A7C59', fontSize:'.8rem' }}>✓</span></div>}
+                              {form.state && <div style={{ fontSize:'.82rem' }}><span style={{ fontSize:'.7rem', color:'#888', display:'block' }}>{t('checkout.state_label').replace(' *','')}</span><strong style={{ color:'#2d6b40' }}>{form.state}</strong> <span style={{ color:'#4A7C59', fontSize:'.8rem' }}>✓</span></div>}
+                            </div>
+                            <div style={{ fontSize:'.7rem', color:'#4A7C59', marginTop:3 }}>Auto-filled for accuracy</div>
+                          </>
+                        ) : (
+                          <>
+                            <label className="field-label" htmlFor="city">{t('checkout.city_label')}{vIcon('city')}</label>
+                            <input id="city" type="text" placeholder={pincodeLoading ? t('checkout.detecting') : t('checkout.city_placeholder')} value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} onBlur={() => touch('city')} style={vStyle('city')} />
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* State hidden input (only when auto-filled, still part of form) */}
+                    {(form.city || form.state) && (
+                      <input type="hidden" value={form.state} />
+                    )}
+                    {/* State select shown when not auto-filled */}
+                    {!form.state && (
+                      <div className="field-group">
+                        <label className="field-label" htmlFor="state">{t('checkout.state_label')}{vIcon('state')}</label>
+                        <select id="state" value={form.state} onChange={e => setForm(f => ({ ...f, state: e.target.value }))} onBlur={() => touch('state')} style={vStyle('state')}>
+                          <option value="">{pincodeLoading ? t('checkout.detecting') : t('checkout.state_placeholder')}</option>
+                          {STATES.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </div>
+                    )}
+
+                    <div className="field-row">
+                      <div className="field-group">
+                        <label className="field-label" htmlFor="house">{t('checkout.house_label')}{vIcon('house')}</label>
+                        <input id="house" type="text" placeholder={t('checkout.house_placeholder')} autoComplete="address-line1" value={form.house} onChange={e => { setForm(f => ({ ...f, house: e.target.value })); if (e.target.value.trim().length >= 3) touch('house'); }} onBlur={() => touch('house')} style={vStyle('house')} />
+                      </div>
+                      <div className="field-group">
+                        <label className="field-label" htmlFor="area">{t('checkout.area_label')}{vIcon('area')}</label>
+                        <input id="area" type="text" placeholder={t('checkout.area_placeholder')} autoComplete="address-line2" value={form.area} onChange={e => { setForm(f => ({ ...f, area: e.target.value })); if (e.target.value.trim().length >= 3) touch('area'); }} onBlur={() => touch('area')} style={vStyle('area')} />
+                      </div>
+                    </div>
+
+                    <div className="field-group">
+                      <label className="field-label" htmlFor="landmark">{t('checkout.landmark_label')}</label>
+                      <input id="landmark" type="text" placeholder={t('checkout.landmark_placeholder')} value={form.landmark} onChange={e => setForm(f => ({ ...f, landmark: e.target.value }))} style={{}} />
+                      <div style={{ fontSize:'.72rem', color:'var(--vd-text-light)', marginTop:3 }}>{t('checkout.landmark_helper')}</div>
+                    </div>
+
+                    {/* Dynamic delivery info bar — 2 columns */}
+                    {(shipsBy || deliveryEst) && (
+                      <div className="co-trust-bar co-trust-bar-2col" style={{ marginBottom: 14 }}>
+                        {shipsBy && (() => {
+                          const urgent = shipsBy.minsLeft != null && shipsBy.minsLeft <= 60;
+                          const veryUrgent = shipsBy.minsLeft != null && shipsBy.minsLeft <= 30;
+                          return (
+                            <div className="co-trust-bar-item" style={urgent ? { background: veryUrgent ? '#fff5f5' : '#fffbf0' } : {}}>
+                              <span className="tbi-icon">📦</span>
+                              <div>
+                                <div className="tbi-head">Ships {scheduledDate ? scheduledDateFormatted : shipsBy.label}</div>
+                                {!scheduledDate && shipsBy.note && (
+                                  <div className="tbi-sub" style={urgent ? { color: veryUrgent ? '#c53030' : '#b7791f' } : {}}>
+                                    {shipsBy.note}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
                         })()}
-                      >
-                        <div style={{ fontSize:'.78rem', fontWeight:600, color:'#2d6b40', marginBottom:6 }}>{t('delivery.schedule_choose')}</div>
-                        <DayPicker
-                          mode="single"
-                          selected={scheduledDate}
-                          onSelect={(date) => { handleScheduledDate(date); if (date) setScheduleOpen(false); }}
-                          startMonth={new Date(minDate.getFullYear(), minDate.getMonth(), 1)}
-                          endMonth={new Date(maxDate.getFullYear(), maxDate.getMonth(), 1)}
-                          hideNavigation={minDate.getMonth() === maxDate.getMonth() && minDate.getFullYear() === maxDate.getFullYear()}
-                          disabled={[
-                            { before: minDate },
-                            { after: maxDate },
-                            { dayOfWeek: [0] },
-                            ...holidayDates,
-                          ]}
-                          locale={dayPickerLocale}
-                          style={{ margin: 0, width: '100%' }}
-                        />
-                        {scheduledDate && (
-                          <button
-                            type="button"
-                            onClick={() => { setScheduleOpen(false); handleScheduledDate(null); }}
-                            style={{ background:'none', border:'none', color:'#888', fontSize:'.75rem', cursor:'pointer', textDecoration:'underline', padding:'4px 0 2px' }}
-                          >
-                            {t('delivery.schedule_asap')}
-                          </button>
+                        {deliveryEst && (
+                          <div className="co-trust-bar-item">
+                            <span className="tbi-icon">🚚</span>
+                            <div>
+                              <div className="tbi-head">Estimated Delivery</div>
+                              <div className="tbi-sub">{deliveryEst}</div>
+                            </div>
+                          </div>
                         )}
                       </div>
                     )}
-                  </div>
-                );
-              })()}
+                    <ScheduleLater />
 
-              {/* Payment */}
-              <label className="field-label" style={{ marginBottom: 8 }}>{t('checkout.payment_label')}</label>
-              <div className="payment-grid">
-                <div className={`payment-option${payment === 'prepaid' ? ' active' : ''}`} onClick={() => setPayment('prepaid')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setPayment('prepaid')}>
-                  <span className="payment-icon">💳</span>
-                  <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8, marginTop:2 }}>
-                    <span className="payment-label" style={{ margin:0 }}>{t('checkout.prepaid_label')}</span>
-                    <span style={{ background:'#4A7C59', color:'#fff', fontSize:'.68rem', fontWeight:700, padding:'2px 8px', borderRadius:20 }}>🎉 10% OFF</span>
-                  </div>
-                  <div style={{ display:'flex', flexWrap:'wrap', justifyContent:'center', alignItems:'center', gap:6, marginTop:8 }}>
-                    {/* UPI */}
-                    <span title="UPI" style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', height:28, padding:'0 7px', border:'1.5px solid #097939', borderRadius:4, fontSize:'.75rem', fontWeight:800, color:'#097939', letterSpacing:'.5px', lineHeight:1 }}>UPI</span>
-                    {/* Paytm */}
-                    <svg title="Paytm" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style={{width:'auto'}}><path fill="#00BAF2" d="M15.85 8.167a.204.204 0 0 0-.04.004c-.68.19-.543 1.148-1.781 1.23h-.12a.23.23 0 0 0-.052.005h-.001a.24.24 0 0 0-.184.235v1.09c0 .134.106.241.237.241h.645v4.623c0 .132.104.238.233.238h1.058a.236.236 0 0 0 .233-.238v-4.623h.6c.13 0 .236-.107.236-.241v-1.09a.239.239 0 0 0-.236-.24h-.612V8.386a.218.218 0 0 0-.216-.22zm4.225 1.17c-.398 0-.762.15-1.042.395v-.124a.238.238 0 0 0-.234-.224h-1.07a.24.24 0 0 0-.236.242v5.92a.24.24 0 0 0 .236.242h1.07c.12 0 .217-.091.233-.209v-4.25a.393.393 0 0 1 .371-.408h.196a.41.41 0 0 1 .226.09.405.405 0 0 1 .145.319v4.074l.004.155a.24.24 0 0 0 .237.241h1.07a.239.239 0 0 0 .235-.23l-.001-4.246c0-.14.062-.266.174-.34a.419.419 0 0 1 .196-.068h.198c.23.02.37.2.37.408.005 1.396.004 2.8.004 4.224a.24.24 0 0 0 .237.241h1.07c.13 0 .236-.108.236-.241v-4.543c0-.31-.034-.442-.08-.577a1.601 1.601 0 0 0-1.51-1.09h-.015a1.58 1.58 0 0 0-1.152.5c-.291-.308-.7-.5-1.153-.5zM.232 9.4A.234.234 0 0 0 0 9.636v5.924c0 .132.096.238.216.241h1.09c.13 0 .237-.107.237-.24l.004-1.658H2.57c.857 0 1.453-.605 1.453-1.481v-1.538c0-.877-.596-1.484-1.453-1.484H.232zm9.032 0a.239.239 0 0 0-.237.241v2.47c0 .94.657 1.608 1.579 1.608h.675s.016 0 .037.004a.253.253 0 0 1 .222.253c0 .13-.096.235-.219.251l-.018.004-.303.006H9.739a.239.239 0 0 0-.236.24v1.09a.24.24 0 0 0 .236.242h1.75c.92 0 1.577-.669 1.577-1.608v-4.56a.239.239 0 0 0-.236-.24h-1.07a.239.239 0 0 0-.236.24c-.005.787 0 1.525 0 2.255a.253.253 0 0 1-.25.25h-.449a.253.253 0 0 1-.25-.255c.005-.754-.005-1.5-.005-2.25a.239.239 0 0 0-.236-.24zm-4.004.006a.232.232 0 0 0-.238.226v1.023c0 .132.113.24.252.24h1.413c.112.017.2.1.213.23v.14c-.013.124-.1.214-.207.224h-.7c-.93 0-1.594.63-1.594 1.515v1.269c0 .88.57 1.506 1.495 1.506h1.94c.348 0 .63-.27.63-.6v-4.136c0-1.004-.508-1.637-1.72-1.637zm-3.713 1.572h.678c.139 0 .25.115.25.256v.836a.253.253 0 0 1-.25.256h-.1c-.192.002-.386 0-.578 0zm4.67 1.977h.445c.139 0 .252.108.252.24v.932a.23.23 0 0 1-.014.076.25.25 0 0 1-.238.164h-.445a.247.247 0 0 1-.252-.24v-.933c0-.132.113-.239.252-.239Z"/></svg>
-                    {/* PhonePe */}
-                    <svg title="PhonePe" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style={{width:'auto'}}><path fill="#5f259f" d="M10.206 9.941h2.949v4.692c-.402.201-.938.268-1.34.268-1.072 0-1.609-.536-1.609-1.743V9.941zm13.47 4.816c-1.523 6.449-7.985 10.442-14.433 8.919C2.794 22.154-1.199 15.691.324 9.243 1.847 2.794 8.309-1.199 14.757.324c6.449 1.523 10.442 7.985 8.919 14.433zm-6.231-5.888a.887.887 0 0 0-.871-.871h-1.609l-3.686-4.222c-.335-.402-.871-.536-1.407-.402l-1.274.401c-.201.067-.268.335-.134.469l4.021 3.82H6.386c-.201 0-.335.134-.335.335v.67c0 .469.402.871.871.871h.938v3.217c0 2.413 1.273 3.82 3.418 3.82.67 0 1.206-.067 1.877-.335v2.145c0 .603.469 1.072 1.072 1.072h.938a.432.432 0 0 0 .402-.402V9.874h1.542c.201 0 .335-.134.335-.335v-.67z"/></svg>
-                    {/* RuPay */}
-                    <span title="RuPay" style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', height:28, padding:'0 7px', background:'#E31837', borderRadius:4, fontSize:'.72rem', fontWeight:800, color:'#fff', letterSpacing:'.3px', lineHeight:1 }}>RuPay</span>
-                    {/* Mastercard */}
-                    <svg title="Mastercard" height="28" viewBox="0 0 38 24" xmlns="http://www.w3.org/2000/svg" style={{width:'auto',borderRadius:3,border:'1px solid #ddd'}}>
-                      <rect width="38" height="24" rx="3" fill="#fff"/>
-                      <circle cx="15" cy="12" r="7" fill="#EB001B"/>
-                      <circle cx="23" cy="12" r="7" fill="#F79E1B"/>
-                      <path d="M19 6.8a7 7 0 0 1 0 10.4A7 7 0 0 1 19 6.8z" fill="#FF5F00"/>
-                    </svg>
-                    {/* Visa */}
-                    <svg title="Visa" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style={{width:'auto'}}><path fill="#1A1F71" d="M9.112 8.262L5.97 15.758H3.92L2.374 9.775c-.094-.368-.175-.503-.461-.658C1.447 8.864.677 8.627 0 8.479l.046-.217h3.3a.904.904 0 01.894.764l.817 4.338 2.018-5.102zm8.033 5.049c.008-1.979-2.736-2.088-2.717-2.972.006-.269.262-.555.822-.628a3.66 3.66 0 011.913.336l.34-1.59a5.207 5.207 0 00-1.814-.333c-1.917 0-3.266 1.02-3.278 2.479-.012 1.079.963 1.68 1.698 2.04.756.367 1.01.603 1.006.931-.005.504-.602.725-1.16.734-.975.015-1.54-.263-1.992-.473l-.351 1.642c.453.208 1.289.39 2.156.398 2.037 0 3.37-1.006 3.377-2.564m5.061 2.447H24l-1.565-7.496h-1.656a.883.883 0 00-.826.55l-2.909 6.946h2.036l.405-1.12h2.488zm-2.163-2.656l1.02-2.815.588 2.815zm-8.16-4.84l-1.603 7.496H8.34l1.605-7.496z"/></svg>
+                    <PaymentSection />
+
+                    <button className="btn btn-brown btn-full" style={{ padding: '17px', fontSize: '1.05rem' }} onClick={placeOrder} disabled={loading}>
+                      {ctaLabel}
+                    </button>
+                    <div className="co-trust-badges" style={{ marginTop: 10, marginBottom: 12 }}>
+                      <div className="co-trust-badge"><span className="tbd-icon">🛡</span><div><span className="tbd-name">Secure Payment</span><span className="tbd-sub">256-bit SSL</span></div></div>
+                      <div className="co-trust-badge"><span className="tbd-icon">🚚</span><div><span className="tbd-name">Free Delivery</span><span className="tbd-sub">Pan-India</span></div></div>
+                      <div className="co-trust-badge"><span className="tbd-icon">🔄</span><div><span className="tbd-name">7-Day Replacement</span><span className="tbd-sub">Hassle-free</span></div></div>
+                      <div className="co-trust-badge"><span className="tbd-icon">✅</span><div><span className="tbd-name">Quality Checked</span><span className="tbd-sub">Lab verified</span></div></div>
+                    </div>
+                    <ContactBelow />
                   </div>
                 </div>
-                <div className={`payment-option${payment === 'cod' ? ' active' : ''}`} onClick={() => setPayment('cod')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setPayment('cod')}>
-                  <span className="payment-icon">💵</span>
-                  <span className="payment-label">{t('checkout.cod_label')}</span>
-                  <span className="payment-sub">{t('checkout.cod_sublabel')}</span>
+
+                {/* ── RIGHT: Sidebar (desktop only) ── */}
+                <div className="checkout-sidebar">
+                  <div className="checkout-sidebar-inner">
+                    <div className="checkout-sidebar-pack-label">{t('checkout.select_pack')}</div>
+                    <PackSelector />
+
+                    <div className="checkout-order-panel">
+                      <div className="op-product">
+                        <img src="https://res.cloudinary.com/ddmmfkvwb/image/upload/w_80,h_80,c_fill,q_auto,f_auto/product_rsek8j" alt="Vijaysar Wooden Glass" className="op-img" />
+                        <div style={{ flex:1, minWidth:0 }}>
+                          <div className="op-name">{t('checkout.item_glass')} × {currentPack.qty}</div>
+                          <div className="op-variant">{currentPack.label}</div>
+                        </div>
+                        <div className="op-price">{fmt(currentPack.price)}</div>
+                      </div>
+                      <div className="op-rows">
+                        <div className="op-row discount" style={payment === 'cod' ? { opacity: .5 } : {}}>
+                          <span>{t('checkout.prepaid_discount_label')}</span>
+                          <span>{payment === 'prepaid' ? `− ${fmt(discountAmt(pack))}` : '₹0'}</span>
+                        </div>
+                        <div className="op-row free-ship"><span>{t('checkout.delivery_label')}</span><span style={{fontWeight:600}}>{t('delivery.free')}</span></div>
+                        <div className="op-row total"><span>{t('checkout.total_label')}</span><span>{fmt(currentPrice)}</span></div>
+                      </div>
+                      {payment === 'prepaid' && discountAmt(pack) > 0 && (
+                        <div className="checkout-saved-badge">🎉 You saved {fmt(discountAmt(pack))} with online payment</div>
+                      )}
+                      {payment === 'cod' && (
+                        <div className="checkout-saved-badge" style={{ background:'#f7f3ee', color:'var(--vd-text-light)', border:'1px solid #e0d5c5' }}>💳 Switch to online payment to save {fmt(discountAmt(pack))}</div>
+                      )}
+                    </div>
+
+                    <button className="checkout-sidebar-btn" onClick={placeOrder} disabled={loading}>
+                      {loading ? t('checkout.processing') : payment === 'prepaid' ? <>🔒 Pay Now & Save ₹{discountAmt(pack).toLocaleString('en-IN')}</> : <>Place COD Order — ₹{currentPrice.toLocaleString('en-IN')}</>}
+                    </button>
+                    <p style={{ textAlign:'center', fontSize:'.7rem', color:'var(--vd-text-light)', marginTop:4 }}>🛡 Safe, Secure & Encrypted Payments</p>
+
+                    <div className="checkout-need-help">
+                      <div className="nh-icon">📞</div>
+                      <div className="nh-text">
+                        <div className="nh-heading">{t('checkout.need_help')}</div>
+                        <div className="nh-sub">{t('checkout.need_help_sub')}</div>
+                        <div className="nh-phone">+91 7070701956</div>
+                        <div className="nh-email">hi@vedayulife.com</div>
+                        <div className="nh-hours">{t('checkout.need_help_hours')}</div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+
+                </div>{/* end checkout-cols */}
               </div>
-
-              <button className="btn btn-brown btn-full" style={{ padding: '17px', fontSize: '1.05rem' }} onClick={placeOrder} disabled={loading}>
-                {loading ? <><span className="spinner" />{t('checkout.processing')}</> : payment === 'prepaid' ? t('checkout.place_order_prepaid') : t('checkout.place_order_cod')}
-              </button>
-              <p className="form-footer">{t('checkout.free_delivery_note')}</p>
-            </div>
-          </div>
+            );
+          })()}
 
         </div>
       </section>
@@ -2144,7 +2273,9 @@ export default function Home() {
             <div className="sticky-cta-inner">
               <div className="sticky-text">
                 {formReady
-                  ? <><strong>{t('sticky.ready')}</strong> {fmt(PACKS[pack].price)} · {pack === 1 ? t('pack.try_it') : pack === 2 ? t('pack.couple') : t('pack.family')}</>
+                  ? payment === 'prepaid' && discountAmt(pack) > 0
+                    ? <><strong>Save {fmt(discountAmt(pack))}</strong> · Pay {fmt(currentPrice)} · Free delivery</>
+                    : <><strong>{t('sticky.ready')}</strong> {fmt(currentPrice)} · Free delivery</>
                   : <><strong>{pack === 1 ? t('pack.try_it') : pack === 2 ? t('pack.couple') : t('pack.family')}</strong> {fmt(PACKS[pack].price)} · {t('sticky.free_delivery')}</>
                 }
               </div>
@@ -2153,7 +2284,10 @@ export default function Home() {
                 disabled={loading}
                 style={{ background: formReady ? '#4A7C59' : 'var(--vd-gold)', color: '#fff', fontWeight: 700, padding: '11px 22px', borderRadius: 6, fontSize: '.88rem', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'background .3s' }}
               >
-                {loading ? '⏳' : formReady ? t('sticky.place_order') : t('sticky.buy_now')}
+                {loading ? '⏳' : formReady
+                  ? payment === 'prepaid' ? <>💳 Pay & Save ₹{discountAmt(pack).toLocaleString('en-IN')}</>
+                  : <>💵 Place COD Order</>
+                  : t('sticky.buy_now')}
               </button>
             </div>
           </div>
