@@ -588,7 +588,7 @@ export default function Home() {
         orderPlaced.current = true;
         writeCustomerCookie({ name: form.name, mobile: form.mobile, email: form.email, address: computedAddress, pincode: form.pincode, city: form.city, state: form.state });
         try { sessionStorage.setItem('vc_upsell_ctx', JSON.stringify({ mobile: form.mobile, email: form.email || '' })); } catch (_) {}
-        router.push(`/order-confirmed?method=cod&pack=${encodeURIComponent(selectedPack.name)}&price=${finalPrice}&name=${encodeURIComponent(form.name)}&orderId=${encodeURIComponent(data.orderId)}${scheduledDate ? `&scheduledShipDate=${scheduledDate.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })}` : ''}`);
+        router.push(`/order-confirmed?method=cod&pack=${encodeURIComponent(selectedPack.name)}&price=${finalPrice}&name=${encodeURIComponent(form.name)}&orderId=${encodeURIComponent(data.orderId)}${scheduledDate ? `&scheduledShipDate=${scheduledDate.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })}` : ''}${deliveryEst ? `&deliveryEst=${encodeURIComponent(deliveryEst)}` : ''}`);
 
       } else {
         /* ── Razorpay prepaid flow ── */
@@ -670,7 +670,7 @@ export default function Home() {
               return;
             }
             try { sessionStorage.setItem('vc_upsell_ctx', JSON.stringify({ mobile: form.mobile, email: form.email || '' })); } catch (_) {}
-            router.push(`/order-confirmed?method=prepaid&pack=${encodeURIComponent(selectedPack.name)}&price=${finalPrice}&name=${encodeURIComponent(form.name)}&orderId=${encodeURIComponent(finalOrderId)}${scheduledDate ? `&scheduledShipDate=${scheduledDate.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })}` : ''}`);
+            router.push(`/order-confirmed?method=prepaid&pack=${encodeURIComponent(selectedPack.name)}&price=${finalPrice}&name=${encodeURIComponent(form.name)}&orderId=${encodeURIComponent(finalOrderId)}${scheduledDate ? `&scheduledShipDate=${scheduledDate.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })}` : ''}${deliveryEst ? `&deliveryEst=${encodeURIComponent(deliveryEst)}` : ''}`);
           },
         });
         rzp.open();
