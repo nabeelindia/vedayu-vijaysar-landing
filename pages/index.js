@@ -421,37 +421,6 @@ export default function Home() {
   const vStyle = (f) => touched[f] ? { borderColor: fieldOk[f]() ? '#4A7C59' : '#e53e3e', boxShadow: fieldOk[f]() ? '0 0 0 2px rgba(74,124,89,.15)' : '0 0 0 2px rgba(229,62,62,.15)' } : {};
   const vIcon  = (f) => touched[f] ? (fieldOk[f]() ? <span style={{color:'#4A7C59',marginLeft:4,fontSize:'.8rem'}}>✓</span> : <span style={{color:'#e53e3e',marginLeft:4,fontSize:'.8rem'}}>✗</span>) : null;
 
-  /* returning customer lookup — triggers when both mobile (10 digits) + email are filled */
-  const lookupRef = useRef(null);
-  const tryLookup = useCallback(async (mobile, email) => {
-    if (!/^[6-9][0-9]{9}$/.test(mobile)) return;
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
-    clearTimeout(lookupRef.current);
-    lookupRef.current = setTimeout(async () => {
-      try {
-        const res  = await fetch('/api/lookup-customer', {
-          method:  'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify({ mobile, email }),
-        });
-        const data = await res.json();
-        if (data.found) {
-          const c = data.customer;
-          setForm(f => ({
-            ...f,
-            name:    f.name    || c.name,
-            house:   f.house   || c.address,
-            pincode: f.pincode || c.pincode,
-            city:    f.city    || c.city,
-            state:   f.state   || c.state,
-          }));
-          if (c.pincode) handlePincode(c.pincode);
-          setWelcomeBack(c.name);
-        }
-      } catch (_) {}
-    }, 400);
-  }, [handlePincode]);
-
   /* pincode auto-fill + real-time delivery estimate
      1. Calls /api/pincode-lookup to auto-fill city/state.
      2. Calls /api/delivery-estimate (Velocity Rates API) for a real ETA.
@@ -518,6 +487,37 @@ export default function Home() {
 
     setPincodeLoading(false);
   }, []);
+
+  /* returning customer lookup — triggers when both mobile (10 digits) + email are filled */
+  const lookupRef = useRef(null);
+  const tryLookup = useCallback(async (mobile, email) => {
+    if (!/^[6-9][0-9]{9}$/.test(mobile)) return;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+    clearTimeout(lookupRef.current);
+    lookupRef.current = setTimeout(async () => {
+      try {
+        const res  = await fetch('/api/lookup-customer', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ mobile, email }),
+        });
+        const data = await res.json();
+        if (data.found) {
+          const c = data.customer;
+          setForm(f => ({
+            ...f,
+            name:    f.name    || c.name,
+            house:   f.house   || c.address,
+            pincode: f.pincode || c.pincode,
+            city:    f.city    || c.city,
+            state:   f.state   || c.state,
+          }));
+          if (c.pincode) handlePincode(c.pincode);
+          setWelcomeBack(c.name);
+        }
+      } catch (_) {}
+    }, 400);
+  }, [handlePincode]);
 
   const handleScheduledDate = async (date) => {
     if (!date) {
