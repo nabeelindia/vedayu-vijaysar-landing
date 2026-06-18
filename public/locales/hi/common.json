@@ -458,7 +458,7 @@
   "order_confirmed.dispatch_label": "डिस्पैच",
   "order_confirmed.dispatch_value": "24 घंटों में शिपमेंट",
   "order_confirmed.support_label": "सहायता",
-  "order_confirmed.support_value": "कभी भी WhatsApp करें",
+  "order_confirmed.support_value": "ईमेल / कॉल करें",
   "order_confirmed.miswak_added_title": "मिस्वाक आपके ऑर्डर में जोड़ा गया!",
   "order_confirmed.miswak_added_desc": "एक मुफ्त प्रीमियम मिस्वाक आपके बॉक्स में पैक किया गया है। जल्द ही एक अलग ईमेल कन्फर्मेशन मिलेगी।",
   "order_confirmed.special_offer_ribbon": "🎁 विशेष एक-बार का ऑफर — सिर्फ आपके लिए!",
@@ -515,5 +515,7 @@
   "order_confirmed.notify_enable_btn": "नोटिफिकेशन चालू करें",
   "order_confirmed.notify_granted_msg": "✅ नोटिफिकेशन चालू हो गई! शिपमेंट पर हम आपको बताएंगे।",
   "order_confirmed.notify_denied_msg": "⚠️ नोटिफिकेशन ब्लॉक है। ब्राउज़र सेटिंग में इस साइट की अनुमति दें।",
+  "order_confirmed.est_delivery_label": "अनुमानित डिलीवरी",
+  "order_confirmed.notify_blocked_msg": "आपके ब्राउज़र में नोटिफिकेशन ब्लॉक हैं। सक्षम करने के लिए, ब्राउज़र सेटिंग में इस साइट के लिए नोटिफिकेशन की अनुमति दें।",
   "order_confirmed.track_order_cta": "📦 ऑर्डर ट्रैक करें →"
 }

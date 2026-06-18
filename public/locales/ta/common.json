@@ -458,7 +458,7 @@
   "order_confirmed.dispatch_label": "அனுப்புதல்",
   "order_confirmed.dispatch_value": "24 மணி நேரத்தில் அனுப்பப்படும்",
   "order_confirmed.support_label": "ஆதரவு",
-  "order_confirmed.support_value": "எந்நேரமும் WhatsApp செய்யுங்கள்",
+  "order_confirmed.support_value": "மின்னஞ்சல் / அழைப்பு",
   "order_confirmed.miswak_added_title": "மிஸ்வாக் உங்கள் ஆர்டரில் சேர்க்கப்பட்டது!",
   "order_confirmed.miswak_added_desc": "ஒரு இலவச பிரீமியம் மிஸ்வாக் உங்கள் பாக்ஸில் பேக் செய்யப்பட்டுள்ளது. விரைவில் தனி மின்னஞ்சல் உறுதிப்படுத்தல் வரும்.",
   "order_confirmed.special_offer_ribbon": "🎁 சிறப்பு ஒரு-முறை சலுகை — உங்களுக்காக மட்டும்!",
@@ -515,5 +515,7 @@
   "order_confirmed.notify_enable_btn": "அறிவிப்புகளை இயக்கு",
   "order_confirmed.notify_granted_msg": "✅ அறிவிப்புகள் இயக்கப்பட்டன! ஏற்றுமதி நேரத்தில் தெரிவிப்போம்.",
   "order_confirmed.notify_denied_msg": "⚠️ அறிவிப்புகள் தடுக்கப்பட்டன. உலாவி அமைப்புகளில் அனுமதி மாற்றவும்.",
+  "order_confirmed.est_delivery_label": "மதிப்பிடப்பட்ட டெலிவரி",
+  "order_confirmed.notify_blocked_msg": "உங்கள் உலாவியில் அறிவிப்புகள் தடுக்கப்பட்டுள்ளன. இயக்க, உலாவி அமைப்புகளில் இந்த தளத்திற்கு அனுமதி வழங்கவும்.",
   "order_confirmed.track_order_cta": "📦 ஆர்டரை கண்காணி →"
 }

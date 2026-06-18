@@ -458,7 +458,7 @@
   "order_confirmed.dispatch_label": "Dispatch",
   "order_confirmed.dispatch_value": "Ships within 24 hours",
   "order_confirmed.support_label": "Support",
-  "order_confirmed.support_value": "WhatsApp us anytime",
+  "order_confirmed.support_value": "Email / Call us",
   "order_confirmed.miswak_added_title": "Miswak Added to Your Order!",
   "order_confirmed.miswak_added_desc": "A FREE Premium Miswak has been packed into your box. You'll receive a separate email confirmation shortly.",
   "order_confirmed.special_offer_ribbon": "🎁 SPECIAL ONE-TIME OFFER — Just For You!",
@@ -515,5 +515,7 @@
   "order_confirmed.notify_enable_btn": "Enable Notifications",
   "order_confirmed.notify_granted_msg": "✅ Notifications enabled! You'll hear from us when your order ships.",
   "order_confirmed.notify_denied_msg": "⚠️ Notifications blocked. To enable, update your browser's notification permissions for this site.",
+  "order_confirmed.est_delivery_label": "Est. Delivery",
+  "order_confirmed.notify_blocked_msg": "Notifications are blocked in your browser. To enable, go to your browser settings and allow notifications for this site.",
   "order_confirmed.track_order_cta": "📦 Track My Order →"
 }

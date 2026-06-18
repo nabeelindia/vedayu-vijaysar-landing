@@ -458,7 +458,7 @@
   "order_confirmed.dispatch_label": "డిస్పాచ్",
   "order_confirmed.dispatch_value": "24 గంటల్లో పంపబడుతుంది",
   "order_confirmed.support_label": "మద్దతు",
-  "order_confirmed.support_value": "ఎప్పుడైనా WhatsApp చేయండి",
+  "order_confirmed.support_value": "ఇమెయిల్ / కాల్ చేయండి",
   "order_confirmed.miswak_added_title": "మిస్వాక్ మీ ఆర్డర్‌లో చేర్చబడింది!",
   "order_confirmed.miswak_added_desc": "ఒక ఉచిత ప్రీమియం మిస్వాక్ మీ బాక్స్‌లో ప్యాక్ చేయబడింది. త్వరలో వేరే ఈమెయిల్ నిర్ధారణ వస్తుంది.",
   "order_confirmed.special_offer_ribbon": "🎁 ప్రత్యేక ఒక-సారి ఆఫర్ — మీకోసం మాత్రమే!",
@@ -515,5 +515,7 @@
   "order_confirmed.notify_enable_btn": "నోటిఫికేషన్‌లు ఆన్ చేయండి",
   "order_confirmed.notify_granted_msg": "✅ నోటిఫికేషన్‌లు ఆన్ అయ్యాయి! షిప్‌మెంట్ అప్‌డేట్ తెలియజేస్తాము.",
   "order_confirmed.notify_denied_msg": "⚠️ నోటిఫికేషన్‌లు బ్లాక్ అయ్యాయి. బ్రౌజర్ సెట్టింగ్స్‌లో అనుమతి మార్చండి.",
+  "order_confirmed.est_delivery_label": "అంచనా డెలివరీ",
+  "order_confirmed.notify_blocked_msg": "మీ బ్రౌజర్‌లో నోటిఫికేషన్లు నిరోధించబడ్డాయి. ప్రారంభించడానికి, బ్రౌజర్ సెట్టింగ్‌లలో ఈ సైట్‌కు అనుమతి ఇవ్వండి.",
   "order_confirmed.track_order_cta": "📦 ఆర్డర్ ట్రాక్ చేయండి →"
 }
