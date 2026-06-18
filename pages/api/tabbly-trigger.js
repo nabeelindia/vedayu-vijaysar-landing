@@ -10,13 +10,13 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const { orderId, name, price, address, state } = req.body;
-  if (!orderId || !name || !price || !address || !state) {
-    return res.status(400).json({ error: 'orderId, name, price, address, state required' });
+  const { orderId, name, price, address, state, mobile } = req.body;
+  if (!orderId || !name || !price || !address || !state || !mobile) {
+    return res.status(400).json({ error: 'orderId, name, price, address, state, mobile required' });
   }
 
   try {
-    const result = await triggerTabblyCall({ orderId, name, price, address, state });
+    const result = await triggerTabblyCall({ orderId, name, price, address, state, mobile });
     console.log(`[Tabbly] Call triggered for ${orderId}:`, result);
     return res.json({ ok: true, orderId, result });
   } catch (err) {

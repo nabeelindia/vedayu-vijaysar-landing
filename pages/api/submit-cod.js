@@ -87,6 +87,39 @@ export default async function handler(req, res) {
   const priceStr  = '₹' + safePrice.toLocaleString('en-IN');
   const orderDate = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
 
+  // ── CRITICAL: Save order to DB FIRST — before any external calls ─────────
+  // CLAUDE.md invariant: orders.insert() must be the first write. If this
+  // fails, nothing else runs and we alert immediately so the order can be
+  // manually recovered (payment ID logged below).
+  if (supabase) {
+    const { error: ordErr } = await supabase.from('orders').insert({
+      order_id:    orderId,
+      method:      'cod',
+      status:      'pending',
+      name,
+      mobile:      mobile.trim(),
+      email:       email?.trim() || null,
+      address,
+      city,
+      state,
+      pincode,
+      pack,
+      qty:         Number(qty),
+      price:       safePrice,
+      utm:         Object.keys(utm).length ? utm : null,
+      referrer_id: referrerId || null,
+      scheduled_ship_date: safeScheduledDate,
+    });
+    if (ordErr) {
+      console.error('[CRITICAL] orders.insert() failed for COD order:', ordErr.message, 'orderId:', orderId);
+      sendPush({
+        title: `⚠️ COD ORDER LOST — ${name}`,
+        body:  `DB write failed. Order ${orderId} NOT saved. Mobile: ${mobile.trim()}`,
+      }).catch(() => {});
+      return res.status(500).json({ error: 'Failed to save order. Please try again.' });
+    }
+  }
+
   if (process.env.RESEND_API_KEY && process.env.ORDERS_EMAIL) {
     const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -238,31 +271,8 @@ export default async function handler(req, res) {
     method:       'cod',
   }).then(() => {}, () => {});
 
-  // ── Persist order to Supabase ────────────────────────────────────────────
-  if (supabase) {
-    const { error: ordErr } = await supabase.from('orders').insert({
-      order_id:    orderId,
-      method:      'cod',
-      status:      'pending',
-      name,
-      mobile:      mobile.trim(),
-      email:       email?.trim() || null,
-      address,
-      city,
-      state,
-      pincode,
-      pack,
-      qty:         Number(qty),
-      price:       safePrice,
-      utm:         Object.keys(utm).length ? utm : null,
-      referrer_id: referrerId || null,
-      scheduled_ship_date: safeScheduledDate,
-    });
-    if (ordErr) console.error('orders insert failed:', ordErr.message);
-  }
-
   // ── Tabbly outbound COD verification call ───────────────────────────────
-  // Must be AFTER orders.insert() — DB write always first.
+  // Order already saved above — fire-and-forget, non-blocking.
   const baseUrl = process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
     : 'http://localhost:3000';
@@ -278,6 +288,7 @@ export default async function handler(req, res) {
       price:   safePrice,
       address: fullAddr,
       state:   state,
+      mobile:  mobile.trim(),
     }),
   }).catch(err => console.error('[Tabbly] Fire-and-forget failed:', err.message));
 

@@ -9,20 +9,26 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
   if (!supabase) return res.status(503).json({ error: 'DB not configured' });
 
-  // Verify shared secret — replace with HMAC-SHA256 sig check when Tabbly provides signing spec
+  // Tabbly sends webhook to URL — auth via ?key= query param since no custom-header support
   const webhookSecret = process.env.TABBLY_WEBHOOK_SECRET;
-  if (webhookSecret && req.headers['x-tabbly-secret'] !== webhookSecret) {
+  if (webhookSecret && req.query.key !== webhookSecret) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const {
-    order_id,
-    platform_tag,
-    call_status,
-    landmark                     = '',
-    updated_address_notes        = '',
-    customer_cancellation_reason = '',
-  } = req.body || {};
+  const raw = req.body || {};
+
+  // Tabbly payload: order_id lives in custom_identifiers (JSON string), outcomes in call_json_output
+  let parsedIdentifiers = {};
+  try { parsedIdentifiers = JSON.parse(raw.custom_identifiers || '{}'); } catch {}
+
+  const order_id    = raw.order_id    || parsedIdentifiers.order_id;
+  const call_status = raw.call_status;
+  const jsonOutput  = raw.call_json_output || {};
+
+  const platform_tag                   = raw.platform_tag                    || jsonOutput.platform_tag;
+  const landmark                       = raw.landmark                        || jsonOutput.landmark                        || '';
+  const updated_address_notes          = raw.updated_address_notes           || jsonOutput.updated_address_notes           || '';
+  const customer_cancellation_reason   = raw.customer_cancellation_reason    || jsonOutput.customer_cancellation_reason    || '';
 
   if (!order_id) return res.status(400).json({ error: 'order_id required' });
 
