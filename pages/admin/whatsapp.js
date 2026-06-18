@@ -7,6 +7,10 @@ import PageHeader from '../../components/admin/PageHeader';
 const fmtD = iso => iso ? new Date(iso).toLocaleString('en-IN',
   { timeZone:'Asia/Kolkata', dateStyle:'medium', timeStyle:'short' }) : '—';
 
+const fmtTime = iso => iso
+  ? new Date(iso).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' })
+  : null;
+
 function useIsMobile() {
   const [mobile, setMobile] = useState(false);
   useEffect(() => {
@@ -74,16 +78,24 @@ function Thread({ conv, onBack, isMobile, reply, setReply, sending, sendReply, b
       {/* Messages */}
       <div style={{ flex:1, overflowY:'auto', padding:12, display:'flex',
         flexDirection:'column', gap:8 }}>
-        {conv.messages.map((m, i) => (
-          <div key={i} style={{ display:'flex',
-            justifyContent: m.direction === 'out' ? 'flex-end' : 'flex-start' }}>
-            <div style={{ maxWidth:'80%', background: m.direction === 'out' ? '#5C3D1E' : '#f0ede8',
-              color: m.direction === 'out' ? '#fff' : '#1a1a1a',
-              padding:'8px 12px', borderRadius:10, fontSize:'.84rem', lineHeight:1.45 }}>
-              {m.message || m.bot_replied}
+        {conv.messages.map((m, i) => {
+          const isOut = m.direction === 'out';
+          const ts = fmtTime(m.created_at || m.timestamp);
+          return (
+            <div key={i} style={{ display:'flex', flexDirection:'column', alignItems: isOut ? 'flex-end' : 'flex-start' }}>
+              <div style={{ maxWidth:'80%', background: isOut ? '#5C3D1E' : '#f0ede8',
+                color: isOut ? '#fff' : '#1a1a1a',
+                padding:'8px 12px', borderRadius:10, fontSize:'.84rem', lineHeight:1.45 }}>
+                {m.message || m.bot_replied}
+              </div>
+              {ts && (
+                <span style={{ fontSize:'.62rem', color:'#aaa', marginTop:2, paddingLeft:4, paddingRight:4 }}>
+                  {ts}
+                </span>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
         <div ref={bottomRef} />
       </div>
       {/* Reply box */}
