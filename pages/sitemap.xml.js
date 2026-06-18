@@ -52,11 +52,6 @@ export async function getServerSideProps({ res }) {
 
   const staticPages = [
     { url: `${BASE_URL}/`,               lastmod: '2026-06-10', changefreq: 'weekly',  priority: '1.0' },
-    { url: `${BASE_URL}/contact`,        lastmod: '2026-05-19', changefreq: 'monthly', priority: '0.4' },
-    { url: `${BASE_URL}/privacy`,        lastmod: '2026-05-19', changefreq: 'yearly',  priority: '0.2' },
-    { url: `${BASE_URL}/terms`,          lastmod: '2026-05-19', changefreq: 'yearly',  priority: '0.2' },
-    { url: `${BASE_URL}/refund-policy`,  lastmod: '2026-05-19', changefreq: 'yearly',  priority: '0.2' },
-    { url: `${BASE_URL}/shipping-policy`, lastmod: '2026-05-19', changefreq: 'yearly',  priority: '0.2' },
   ];
 
   const sitemap = generateSitemap(staticPages, blogPosts);
