@@ -79,10 +79,14 @@ export default function AbandonedCheckouts() {
       {loading ? (
         <p style={{ color: '#aaa', fontSize: '.85rem' }}>Loading…</p>
       ) : carts.length === 0 ? (
-        <div style={{ background: '#fff', borderRadius: 12, padding: '32px 20px',
-          textAlign: 'center', color: '#aaa', fontSize: '.85rem',
-          boxShadow: '0 1px 3px rgba(0,0,0,.07)' }}>
-          No abandoned carts yet.
+        <div style={{
+          background: '#fff', borderRadius: 12, padding: '32px 24px',
+          textAlign: 'center', border: '1px solid #e8d5b0', color: '#888',
+          fontSize: '.85rem', lineHeight: 1.6,
+        }}>
+          <div style={{ fontSize: '2rem', marginBottom: 10 }}>🛒</div>
+          <p style={{ fontWeight: 700, color: '#5C3D1E', marginBottom: 6 }}>No abandoned checkouts recorded yet</p>
+          <p>Carts are tracked when a visitor fills in their mobile number and leaves without completing the order.</p>
         </div>
       ) : (
         <>
