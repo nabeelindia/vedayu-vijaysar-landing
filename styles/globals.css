@@ -494,7 +494,8 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
   display: block; width: 100%; margin-top: 12px;
   background: linear-gradient(135deg, var(--vd-brown), var(--vd-dark-brown));
   color: #fff; border: none; border-radius: 8px; padding: 13px 10px;
-  font-size: .88rem; font-weight: 700; cursor: pointer; text-align: center;
+  font-size: clamp(.78rem, 4vw, .88rem); font-weight: 700; cursor: pointer; text-align: center;
+  white-space: nowrap; overflow: hidden;
   box-shadow: 0 4px 18px rgba(92,61,30,.35); font-family: var(--font-sans);
   transition: transform .18s, box-shadow .18s; letter-spacing: .2px;
 }
