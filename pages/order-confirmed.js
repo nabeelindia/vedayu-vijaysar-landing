@@ -120,6 +120,38 @@ export default function OrderConfirmed() {
     return () => clearTimeout(timer);
   }, []);
 
+  /* Push notification opt-in — only if user checked the toggle at checkout */
+  useEffect(() => {
+    const shouldNotify = sessionStorage.getItem('vedayu_notify_orders');
+    if (shouldNotify !== '1') return;
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+    const VAPID_PUBLIC = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+    if (!VAPID_PUBLIC) return;
+
+    function urlBase64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - base64String.length % 4) % 4);
+      const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+      const raw = window.atob(base64);
+      return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+    }
+
+    navigator.serviceWorker.register('/sw.js').then(async reg => {
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') return;
+      const existing = await reg.pushManager.getSubscription();
+      const sub = existing || await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC),
+      });
+      await fetch('/api/subscribe-push', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(sub.toJSON()),
+      });
+      sessionStorage.removeItem('vedayu_notify_orders');
+    }).catch(() => {});
+  }, []);
+
   /* Read customer context (mobile/email) from sessionStorage */
   useEffect(() => {
     try {
