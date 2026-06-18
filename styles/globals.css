@@ -173,7 +173,7 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
 
 .hero-price { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
 .price-main     { font-size: 2.2rem; font-weight: 800; color: var(--vd-brown); line-height: 1; font-family: var(--font-serif); }
-.price-original { font-size: 1.1rem; color: #aaa; text-decoration: line-through; }
+.price-original { font-size: 1.1rem; color: #767676; text-decoration: line-through; }
 .price-save     { background: #E8F5E9; color: #2E7D32; font-size: .78rem; font-weight: 700; padding: 3px 10px; border-radius: 4px; }
 
 .hero-cta  { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 22px; }
@@ -339,7 +339,7 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
 .pricing-card h3       { font-size: 1.25rem; color: var(--vd-dark-brown); margin-bottom: 2px; }
 .pricing-tag           { display: block; font-size: .74rem; font-weight: 700; color: var(--vd-green); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 18px; }
 .pricing-price         { font-size: 2.4rem; font-weight: 800; color: var(--vd-brown); line-height: 1; margin-bottom: 3px; font-family: var(--font-serif); }
-.pricing-original      { font-size: .92rem; color: #aaa; text-decoration: line-through; margin-bottom: 3px; }
+.pricing-original      { font-size: .92rem; color: #767676; text-decoration: line-through; margin-bottom: 3px; }
 .pricing-saving        { font-size: .82rem; font-weight: 700; color: var(--vd-green); margin-bottom: 18px; }
 .pricing-features      { list-style: none; text-align: left; margin: 0 0 22px; }
 .pricing-features li   { display: flex; align-items: flex-start; gap: 9px; padding: 7px 0; font-size: .86rem; color: var(--vd-text-light); border-bottom: 1px solid #f0e8d8; }
@@ -525,7 +525,7 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
 .checkout-need-help .nh-sub { color: var(--vd-text-light); margin-top: 1px; }
 .checkout-need-help .nh-phone { color: var(--vd-dark-brown); font-weight: 600; margin-top: 4px; font-size: .8rem; }
 .checkout-need-help .nh-email { color: var(--vd-brown); font-size: .72rem; margin-top: 1px; }
-.checkout-need-help .nh-hours { color: #aaa; font-size: .68rem; margin-top: 2px; }
+.checkout-need-help .nh-hours { color: #767676; font-size: .68rem; margin-top: 2px; }
 
 /* Mobile-only pack selector */
 .mob-pack-selector-wrap { display: none; margin-bottom: 18px; }
@@ -1106,7 +1106,7 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
 }
 .exit-close {
   position: absolute; top: 12px; right: 14px; background: none;
-  border: none; font-size: 1.1rem; color: #aaa; cursor: pointer; line-height: 1;
+  border: none; font-size: 1.1rem; color: #767676; cursor: pointer; line-height: 1;
 }
 .exit-close:hover { color: #333; }
 .exit-badge {
@@ -1142,7 +1142,7 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
   border: 1px solid #e8d5b0; flex: 1;
 }
 .exit-pack-name { font-size: .7rem; font-weight: 700; color: var(--vd-brown); }
-.exit-pack-old  { font-size: .72rem; color: #aaa; text-decoration: line-through; }
+.exit-pack-old  { font-size: .72rem; color: #767676; text-decoration: line-through; }
 .exit-pack-new  { font-size: .95rem; font-weight: 800; color: #4A7C59; }
 /* highlighted referral strip */
 .exit-referral {
@@ -1154,7 +1154,7 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
 .exit-referral strong { color: var(--vd-brown); }
 .exit-skip {
   display: block; margin-top: 8px; background: none; border: none;
-  color: #aaa; font-size: .72rem; cursor: pointer; text-decoration: underline;
+  color: #767676; font-size: .72rem; cursor: pointer; text-decoration: underline;
 }
 .exit-skip:hover { color: #666; }
 @keyframes fadeIn  { from { opacity: 0 } to { opacity: 1 } }
@@ -1270,10 +1270,10 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
 }
 .footer-bottom p {
   font-size: .78rem;
-  color: #7a5c40;
+  color: #b89a78;
   line-height: 1.7;
 }
-.footer-bottom a { color: #7a5c40; }
+.footer-bottom a { color: #b89a78; }
 .footer-bottom a:hover { color: var(--vd-gold); }
 .footer-disclaimer {
   margin-top: 6px;

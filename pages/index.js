@@ -1021,7 +1021,7 @@ export default function Home() {
             }}>
               <button onClick={() => setDrawerOpen(false)} aria-label="Close menu"
                 style={{ position:'absolute', top:14, right:16, background:'none', border:'none', cursor:'pointer', color:'var(--vd-brown)', fontSize:'1.5rem', lineHeight:1 }}>✕</button>
-              <p style={{ fontSize:'.65rem', fontWeight:800, color:'#aaa', letterSpacing:1.5, textTransform:'uppercase', marginBottom:16 }}>{t('nav.navigate')}</p>
+              <p style={{ fontSize:'.65rem', fontWeight:800, color:'#666', letterSpacing:1.5, textTransform:'uppercase', marginBottom:16 }}>{t('nav.navigate')}</p>
               {NAV.filter(n => !n.mobileHide).map(({ label, href }) => (
                 <a key={href} href={href} onClick={e => navClick(e, href)}
                   style={{ fontSize:'.97rem', fontWeight:600, color:'var(--vd-brown)', textDecoration:'none', padding:'11px 0', borderBottom:'1px solid var(--vd-border)', flexShrink:0 }}>
@@ -1138,14 +1138,14 @@ export default function Home() {
                     onKeyDown={e => e.key === 'Enter' && setPack(+k)}
                   >
                     {+k === 2 && <span className="pack-popular-tag">{t('pack.most_popular_badge')}</span>}
-                    {+k === 5 && <span className="pack-popular-tag" style={{ background:'var(--vd-gold)' }}>🏆 {t('pack.best_value')}</span>}
+                    {+k === 5 && <span className="pack-popular-tag" style={{ background:'var(--vd-gold)', color:'var(--vd-dark-brown)' }}>🏆 {t('pack.best_value')}</span>}
                     {+k === 1 && <span style={{ display:'block', height:18, marginBottom:2 }} />}
                     <span className="pack-name">{+k === 1 ? t('pricing.pack1.title') : +k === 2 ? t('pricing.pack2.title') : t('pricing.pack5.title')}</span>
                     <span className="pack-price">₹{p.price.toLocaleString('en-IN')}</span>
                     <span style={{ fontSize:'.68rem', color:'var(--vd-text-light)', display:'block', marginTop:2 }}>
                       {t(`pack.per_glass_${+k}`)}
                     </span>
-                    {+k > 1 && <span style={{ fontSize:'.62rem', background:'var(--vd-off-white)', color:'var(--vd-green)', padding:'1px 5px', borderRadius:8, marginTop:3, display:'inline-block', fontWeight:700 }}>
+                    {+k > 1 && <span style={{ fontSize:'.62rem', background:'var(--vd-off-white)', color:'#2d6b40', padding:'1px 5px', borderRadius:8, marginTop:3, display:'inline-block', fontWeight:700 }}>
                       {t('pack.save_prefix')} ₹{(p.original - p.price).toLocaleString('en-IN')}
                     </span>}
                   </div>
@@ -1562,7 +1562,7 @@ export default function Home() {
               <div style={{ marginTop:18, background:'#eaf4ee', border:'1px solid #b2d8be', borderRadius:10, padding:'12px 16px', fontSize:'.82rem', color:'#2d6a4f', lineHeight:1.6 }}>
                 <strong>Lab Note:</strong> {t('lab.note')}
               </div>
-              <p style={{ fontSize:'.72rem', color:'#aaa', marginTop:10 }}>Tested by Hydel Laboratories (P) Ltd. · ISO:9001:2015 · ISO:14001:2015 · ISO:45001:2018 Certified</p>
+              <p style={{ fontSize:'.72rem', color:'#666', marginTop:10 }}>Tested by Hydel Laboratories (P) Ltd. · ISO:9001:2015 · ISO:14001:2015 · ISO:45001:2018 Certified</p>
             </div>
           </div>
         </div>
@@ -1816,7 +1816,7 @@ export default function Home() {
                     <span className="pack-name">{p === 1 ? t('pricing.pack1.title') : p === 2 ? t('pricing.pack2.title') : t('pricing.pack5.title')}</span>
                     <span className="pack-price">{fmt(PACKS[p].price)}</span>
                     <span style={{ fontSize:'.68rem', color:'var(--vd-text-light)', fontWeight:600, display:'block', marginTop:2 }}>{t(`pack.per_glass_${p}`)}</span>
-                    {p > 1 && <span style={{ fontSize:'.62rem', background:'var(--vd-off-white)', color:'var(--vd-green)', padding:'1px 5px', borderRadius:8, marginTop:3, display:'inline-block', fontWeight:700 }}>{t('pack.save_prefix')} {fmt(PACKS[p].original - PACKS[p].price)}</span>}
+                    {p > 1 && <span style={{ fontSize:'.62rem', background:'var(--vd-off-white)', color:'#2d6b40', padding:'1px 5px', borderRadius:8, marginTop:3, display:'inline-block', fontWeight:700 }}>{t('pack.save_prefix')} {fmt(PACKS[p].original - PACKS[p].price)}</span>}
                   </div>
                 ))}
               </div>
