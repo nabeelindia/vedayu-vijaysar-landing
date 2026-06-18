@@ -7,6 +7,10 @@ const BROWN = '#5C3D1E';
 const fmtD = iso => iso ? new Date(iso).toLocaleString('en-IN',
   { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' }) : '—';
 
+const fmtTime = iso => iso
+  ? new Date(iso).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' })
+  : null;
+
 const LOCALE_FLAG = { en: '🇬🇧', hi: '🇮🇳', ta: '🇮🇳', te: '🇮🇳' };
 const LOCALE_LABEL = { en: 'EN', hi: 'HI', ta: 'TA', te: 'TE' };
 
@@ -127,8 +131,9 @@ function SessionDetail({ session, onBack, isMobile }) {
         )}
         {messages.map((m, i) => {
           const isUser = m.role === 'user';
+          const ts = fmtTime(m.timestamp || m.created_at);
           return (
-            <div key={i} style={{ display: 'flex', justifyContent: isUser ? 'flex-end' : 'flex-start' }}>
+            <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: isUser ? 'flex-end' : 'flex-start' }}>
               <div style={{
                 maxWidth: '80%',
                 background: isUser ? BROWN : '#f5f0e8',
@@ -138,6 +143,11 @@ function SessionDetail({ session, onBack, isMobile }) {
               }}>
                 {m.content || ''}
               </div>
+              {ts && (
+                <span style={{ fontSize: '.62rem', color: '#aaa', marginTop: 2, paddingLeft: 4, paddingRight: 4 }}>
+                  {ts}
+                </span>
+              )}
             </div>
           );
         })}
