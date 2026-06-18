@@ -11,6 +11,21 @@ const fmtTime = iso => iso
   ? new Date(iso).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' })
   : null;
 
+const msgDateKey = iso => iso
+  ? new Date(iso).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })
+  : null;
+
+const dateSeparatorLabel = (iso) => {
+  if (!iso) return null;
+  const todayIST = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+  const d = new Date(iso).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+  if (d === todayIST) return 'Today';
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  if (d === yesterday.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })) return 'Yesterday';
+  return new Date(iso).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short' });
+};
+
 function useIsMobile() {
   const [mobile, setMobile] = useState(false);
   useEffect(() => {
@@ -78,24 +93,40 @@ function Thread({ conv, onBack, isMobile, reply, setReply, sending, sendReply, b
       {/* Messages */}
       <div style={{ flex:1, overflowY:'auto', padding:12, display:'flex',
         flexDirection:'column', gap:8 }}>
-        {conv.messages.map((m, i) => {
-          const isOut = m.direction === 'out';
-          const ts = fmtTime(m.created_at || m.timestamp);
-          return (
-            <div key={i} style={{ display:'flex', flexDirection:'column', alignItems: isOut ? 'flex-end' : 'flex-start' }}>
-              <div style={{ maxWidth:'80%', background: isOut ? '#5C3D1E' : '#f0ede8',
-                color: isOut ? '#fff' : '#1a1a1a',
-                padding:'8px 12px', borderRadius:10, fontSize:'.84rem', lineHeight:1.45 }}>
-                {m.message || m.bot_replied}
+        {(() => {
+          let lastDate = null;
+          return conv.messages.map((m, i) => {
+            const isOut = m.direction === 'out';
+            const ts = fmtTime(m.created_at || m.timestamp);
+            const dateKey = msgDateKey(m.created_at || m.timestamp);
+            const showSep = dateKey && dateKey !== lastDate;
+            if (showSep) lastDate = dateKey;
+            return (
+              <div key={i}>
+                {showSep && (
+                  <div style={{ textAlign:'center', margin:'8px 0' }}>
+                    <span style={{ fontSize:'.68rem', color:'#aaa', background:'#f5f0e8',
+                      padding:'2px 10px', borderRadius:20 }}>
+                      {dateSeparatorLabel(m.created_at || m.timestamp)}
+                    </span>
+                  </div>
+                )}
+                <div style={{ display:'flex', flexDirection:'column', alignItems: isOut ? 'flex-end' : 'flex-start' }}>
+                  <div style={{ maxWidth:'80%', background: isOut ? '#5C3D1E' : '#f0ede8',
+                    color: isOut ? '#fff' : '#1a1a1a',
+                    padding:'8px 12px', borderRadius:10, fontSize:'.84rem', lineHeight:1.45 }}>
+                    {m.message || m.bot_replied}
+                  </div>
+                  {ts && (
+                    <span style={{ fontSize:'.62rem', color:'#aaa', marginTop:2, paddingLeft:4, paddingRight:4 }}>
+                      {ts}
+                    </span>
+                  )}
+                </div>
               </div>
-              {ts && (
-                <span style={{ fontSize:'.62rem', color:'#aaa', marginTop:2, paddingLeft:4, paddingRight:4 }}>
-                  {ts}
-                </span>
-              )}
-            </div>
-          );
-        })}
+            );
+          });
+        })()}
         <div ref={bottomRef} />
       </div>
       {/* Reply box */}
