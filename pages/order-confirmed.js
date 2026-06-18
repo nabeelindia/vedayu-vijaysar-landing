@@ -411,17 +411,20 @@ export default function OrderConfirmed() {
             <div className="oc-card-header">🧾 {t('order_confirmed.order_summary_header')}</div>
             <div className="oc-card-body">
               {[
-                [t('order_confirmed.product_label'), t('order_confirmed.product_name'), false],
-                ...(pack     ? [[t('order_confirmed.pack_label'),   packDisplay, false]] : []),
-                ...(priceStr ? [[t('order_confirmed.amount_label'), isCOD ? t('order_confirmed.amount_cod', { price: priceStr }) : t('order_confirmed.amount_prepaid', { price: priceStr }), false]] : []),
-                [t('order_confirmed.delivery_label'), t('order_confirmed.delivery_value'), false],
-                [t('order_confirmed.dispatch_label'), dispatchValue, true],
-                [t('order_confirmed.support_label'),  t('order_confirmed.support_value'),  false],
-              ].map(([k, v, isBadge]) => (
+                [t('order_confirmed.product_label'), t('order_confirmed.product_name'), false, false],
+                ...(pack     ? [[t('order_confirmed.pack_label'),   packDisplay, false, false]] : []),
+                ...(priceStr ? [[t('order_confirmed.amount_label'), isCOD ? t('order_confirmed.amount_cod', { price: priceStr }) : t('order_confirmed.amount_prepaid', { price: priceStr }), false, false]] : []),
+                [t('order_confirmed.delivery_label'), t('order_confirmed.delivery_value'), false, false],
+                ...(deliveryEstDisplay ? [[t('order_confirmed.est_delivery_label'), deliveryEstDisplay, false, true]] : []),
+                [t('order_confirmed.dispatch_label'), dispatchValue, true, false],
+                [t('order_confirmed.support_label'),  t('order_confirmed.support_value'),  false, false],
+              ].map(([k, v, isBadge, isEta]) => (
                 <div className="oc-detail-row" key={k}>
                   <span className="oc-detail-label">{k}</span>
                   <span className="oc-detail-value">
-                    {isBadge ? <span className="oc-dispatch-badge">🚚 {v}</span> : v}
+                    {isBadge ? <span className="oc-dispatch-badge">🚚 {v}</span>
+                     : isEta  ? <span style={{ background: '#fff3e0', color: '#8B4513', borderRadius: 20, padding: '3px 10px', fontSize: '.75rem', fontWeight: 700 }}>📅 {v}</span>
+                     : v}
                   </span>
                 </div>
               ))}
