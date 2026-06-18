@@ -2022,3 +2022,31 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
   transition: transform .2s; pointer-events: none;
 }
 .notify-toggle-switch input:checked ~ .notify-toggle-thumb { transform: translateX(18px); }
+
+/* ── Order Confirmed: Notification opt-in card ── */
+.oc-notify-card {
+  background: #faf6f1; border: 1px solid #e8ddd0; border-radius: 10px;
+  padding: 14px 16px; margin-bottom: 16px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.oc-notify-card-text  { flex: 1; }
+.oc-notify-card-title { font-size: .88rem; font-weight: 700; color: var(--vd-text); margin: 0 0 3px; }
+.oc-notify-card-desc  { font-size: .75rem; color: var(--vd-text-light); margin: 0; line-height: 1.4; }
+.oc-notify-card-msg   { font-size: .78rem; margin: 8px 0 0; line-height: 1.4; }
+
+/* ── Order Confirmed: Single Track CTA ── */
+.oc-track-cta {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 16px 24px; margin-bottom: 14px;
+  background: linear-gradient(135deg, var(--vd-brown), var(--vd-dark-brown));
+  color: #fff; text-decoration: none; border-radius: 10px;
+  font-size: 1rem; font-weight: 800; text-align: center;
+  box-shadow: 0 4px 16px rgba(92,61,30,.3); transition: box-shadow .2s;
+}
+.oc-track-cta:hover { box-shadow: 0 6px 24px rgba(92,61,30,.45); color: #fff; }
+
+/* ── Order Confirmed: COD call note ── */
+.oc-cod-call-note {
+  margin: 6px 0 0; font-size: .72rem; color: var(--vd-text-light);
+  font-style: italic; line-height: 1.5;
+}
