@@ -72,16 +72,16 @@ function getShipsBy(dtLocale) {
   const hour         = ist.getUTCHours();
   const minute       = ist.getUTCMinutes();
   const isSunday     = dayOfWeek === 0;
-  const beforeCutoff = hour < 18;         // before 6:00 PM IST
+  const beforeCutoff = hour < 17;         // before 5:00 PM IST
 
   if (!isSunday && beforeCutoff) {
-    const totalMinsLeft = (18 * 60) - (hour * 60 + minute);
+    const totalMinsLeft = (17 * 60) - (hour * 60 + minute);
     const h = Math.floor(totalMinsLeft / 60);
     const m = totalMinsLeft % 60;
     const note = h > 0
       ? `order within ${h} hr${h > 1 ? 's' : ''} ${m} min`
       : `order within ${totalMinsLeft} min`;
-    return { label: 'Today', note };
+    return { label: 'Today', note, minsLeft: totalMinsLeft };
   }
 
   // Find next working day (skip Sunday)
@@ -1809,8 +1809,8 @@ export default function Home() {
             const ctaLabel = loading
               ? <><span className="spinner" />{t('checkout.processing')}</>
               : payment === 'prepaid'
-                ? <>🔒 Pay Now & Save ₹{discountAmt(pack).toLocaleString('en-IN')} →</>
-                : <>Place COD Order — ₹{currentPrice.toLocaleString('en-IN')} →</>;
+                ? <>💳 Pay Now & Save ₹{discountAmt(pack).toLocaleString('en-IN')} →</>
+                : <>💵 Place COD Order — ₹{currentPrice.toLocaleString('en-IN')} →</>;
 
             const DeliveryEstimate = () => (deliveryEst || shipsBy) ? (
               <div style={{ background:'#F0F9F3', border:'1px solid #4A7C59', borderRadius:8, padding:'10px 14px', marginBottom:6, fontSize:'.88rem', color:'#2d6b40' }}>
@@ -1838,7 +1838,8 @@ export default function Home() {
                   <button type="button" ref={scheduleBtnRef}
                     onClick={() => { if (scheduleBtnRef.current) { const r = scheduleBtnRef.current.getBoundingClientRect(); setSchedulePopupPos({ top: r.bottom + 6, left: r.left }); } setScheduleOpen(o => !o); }}
                     style={{ background: scheduledDate ? '#F0F9F3' : 'none', border: scheduledDate ? '1px solid #4A7C59' : 'none', borderRadius:6, color: scheduledDate ? '#2d6b40' : '#4A7C59', fontSize:'.82rem', fontWeight:600, cursor:'pointer', padding: scheduledDate ? '5px 10px' : '2px 0', textDecoration: scheduledDate ? 'none' : 'underline', display:'flex', alignItems:'center', gap:5 }}>
-                    🗓 {scheduledDate ? scheduledDateFormatted : t('delivery.schedule_later')}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    {scheduledDate ? scheduledDateFormatted : 'Need delivery later? Schedule here'}
                     {scheduledDate && <span onClick={e => { e.stopPropagation(); setScheduleOpen(false); handleScheduledDate(null); }} style={{ marginLeft:4, color:'#888', fontWeight:400, fontSize:'.78rem' }}>✕</span>}
                   </button>
                   {scheduleOpen && (
@@ -1884,8 +1885,8 @@ export default function Home() {
                       <div className="co-pay-radio"><div className="co-pay-radio-dot" /></div>
                       <div className="co-pay-info">
                         <div className="co-pay-name">💵 {t('checkout.cod_label')}</div>
-                        <div className="co-pay-sub">{t('checkout.cod_sublabel')}</div>
                         <div style={{ fontSize:'.72rem', color:'#4A7C59', fontWeight:600, marginTop:4 }}>✓ {t('checkout.no_cod_fee')}</div>
+                        <div style={{ fontSize:'.68rem', color:'var(--vd-text-light)', marginTop:3 }}>No harassment · Easy returns</div>
                       </div>
                     </div>
                   </div>
@@ -1975,13 +1976,13 @@ export default function Home() {
                         <label className="field-label" htmlFor="mobile">{t('checkout.mobile_label')}{vIcon('mobile')}</label>
                         <div style={{ display:'flex', alignItems:'stretch' }}>
                           <span style={{ display:'inline-flex', alignItems:'center', padding:'0 10px', background:'#f7f7f7', border:'1.5px solid var(--vd-border)', borderRight:'none', borderRadius:'8px 0 0 8px', fontSize:'.85rem', color:'#555', whiteSpace:'nowrap', fontWeight:600 }}>🇮🇳 +91</span>
-                          <input id="mobile" type="tel" placeholder={t('checkout.mobile_placeholder')} maxLength={10} inputMode="numeric" value={form.mobile} onChange={e => { const v = e.target.value.replace(/\D/g,''); setForm(f => ({ ...f, mobile: v })); tryLookup(v, form.email); }} onBlur={async () => { touch('mobile'); if (referrerId && /^[6-9]\d{9}$/.test(form.mobile)) { try { const r = await fetch(`/api/referral-validate?mobile=${form.mobile}`); const d = await r.json(); if (!d.valid) { setReferralDiscount(0); setReferrerId(''); showToast('Referral discount is for new customers only.', 'info'); } } catch {} } }} style={{ flex:1, borderRadius:'0 8px 8px 0', ...vStyle('mobile') }} />
+                          <input id="mobile" type="tel" placeholder={t('checkout.mobile_placeholder')} maxLength={10} inputMode="numeric" value={form.mobile} onChange={e => { const v = e.target.value.replace(/\D/g,''); setForm(f => ({ ...f, mobile: v })); tryLookup(v, form.email); if (v.length === 10) touch('mobile'); }} onBlur={async () => { touch('mobile'); if (referrerId && /^[6-9]\d{9}$/.test(form.mobile)) { try { const r = await fetch(`/api/referral-validate?mobile=${form.mobile}`); const d = await r.json(); if (!d.valid) { setReferralDiscount(0); setReferrerId(''); showToast('Referral discount is for new customers only.', 'info'); } } catch {} } }} style={{ flex:1, borderRadius:'0 8px 8px 0', ...vStyle('mobile') }} />
                         </div>
                         <div style={{ fontSize:'.72rem', color:'var(--vd-text-light)', marginTop:3 }}>We'll send order updates on this number</div>
                       </div>
                       <div className="field-group">
                         <label className="field-label" htmlFor="name">{t('checkout.name_label')}{vIcon('name')}</label>
-                        <input id="name" type="text" placeholder={t('checkout.name_placeholder')} autoComplete="name" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} onBlur={() => touch('name')} style={vStyle('name')} />
+                        <input id="name" type="text" placeholder={t('checkout.name_placeholder')} autoComplete="name" value={form.name} onChange={e => { setForm(f => ({ ...f, name: e.target.value })); if (e.target.value.trim().length >= 2) touch('name'); }} onBlur={() => touch('name')} style={vStyle('name')} />
                       </div>
                     </div>
 
@@ -2035,11 +2036,11 @@ export default function Home() {
                     <div className="field-row">
                       <div className="field-group">
                         <label className="field-label" htmlFor="house">{t('checkout.house_label')}{vIcon('house')}</label>
-                        <input id="house" type="text" placeholder={t('checkout.house_placeholder')} autoComplete="address-line1" value={form.house} onChange={e => setForm(f => ({ ...f, house: e.target.value }))} onBlur={() => touch('house')} style={vStyle('house')} />
+                        <input id="house" type="text" placeholder={t('checkout.house_placeholder')} autoComplete="address-line1" value={form.house} onChange={e => { setForm(f => ({ ...f, house: e.target.value })); if (e.target.value.trim().length >= 3) touch('house'); }} onBlur={() => touch('house')} style={vStyle('house')} />
                       </div>
                       <div className="field-group">
                         <label className="field-label" htmlFor="area">{t('checkout.area_label')}{vIcon('area')}</label>
-                        <input id="area" type="text" placeholder={t('checkout.area_placeholder')} autoComplete="address-line2" value={form.area} onChange={e => setForm(f => ({ ...f, area: e.target.value }))} onBlur={() => touch('area')} style={vStyle('area')} />
+                        <input id="area" type="text" placeholder={t('checkout.area_placeholder')} autoComplete="address-line2" value={form.area} onChange={e => { setForm(f => ({ ...f, area: e.target.value })); if (e.target.value.trim().length >= 3) touch('area'); }} onBlur={() => touch('area')} style={vStyle('area')} />
                       </div>
                     </div>
 
@@ -2049,48 +2050,50 @@ export default function Home() {
                       <div style={{ fontSize:'.72rem', color:'var(--vd-text-light)', marginTop:3 }}>{t('checkout.landmark_helper')}</div>
                     </div>
 
-                    {/* Trust delivery bar */}
-                    <div className="co-trust-bar" style={{ marginBottom: 14 }}>
-                      <div className="co-trust-bar-item">
-                        <span className="tbi-icon">📦</span>
-                        <div>
-                          <div className="tbi-head">Ships Today</div>
-                          <div className="tbi-sub">If ordered before 2 PM</div>
-                        </div>
+                    {/* Dynamic delivery info bar — 2 columns */}
+                    {(shipsBy || deliveryEst) && (
+                      <div className="co-trust-bar co-trust-bar-2col" style={{ marginBottom: 14 }}>
+                        {shipsBy && (() => {
+                          const urgent = shipsBy.minsLeft != null && shipsBy.minsLeft <= 60;
+                          const veryUrgent = shipsBy.minsLeft != null && shipsBy.minsLeft <= 30;
+                          return (
+                            <div className="co-trust-bar-item" style={urgent ? { background: veryUrgent ? '#fff5f5' : '#fffbf0' } : {}}>
+                              <span className="tbi-icon">📦</span>
+                              <div>
+                                <div className="tbi-head">Ships {scheduledDate ? scheduledDateFormatted : shipsBy.label}</div>
+                                {!scheduledDate && shipsBy.note && (
+                                  <div className="tbi-sub" style={urgent ? { color: veryUrgent ? '#c53030' : '#b7791f' } : {}}>
+                                    {shipsBy.note}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })()}
+                        {deliveryEst && (
+                          <div className="co-trust-bar-item">
+                            <span className="tbi-icon">🚚</span>
+                            <div>
+                              <div className="tbi-head">Estimated Delivery</div>
+                              <div className="tbi-sub">{deliveryEst}</div>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <div className="co-trust-bar-item">
-                        <span className="tbi-icon">🚚</span>
-                        <div>
-                          <div className="tbi-head">3–5 Day Delivery</div>
-                          <div className="tbi-sub">Pan-India shipping</div>
-                        </div>
-                      </div>
-                      <div className="co-trust-bar-item">
-                        <span className="tbi-icon">🔒</span>
-                        <div>
-                          <div className="tbi-head">Safe & Secure</div>
-                          <div className="tbi-sub">Encrypted checkout</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <DeliveryEstimate />
+                    )}
                     <ScheduleLater />
-
-                    {/* Trust badges */}
-                    <div className="co-trust-badges" style={{ marginBottom: 18 }}>
-                      <div className="co-trust-badge"><span className="tbd-icon">🛡</span><div><span className="tbd-name">Secure Payment</span><span className="tbd-sub">256-bit SSL</span></div></div>
-                      <div className="co-trust-badge"><span className="tbd-icon">🚚</span><div><span className="tbd-name">Free Delivery</span><span className="tbd-sub">Pan-India</span></div></div>
-                      <div className="co-trust-badge"><span className="tbd-icon">🔄</span><div><span className="tbd-name">7-Day Replacement</span><span className="tbd-sub">Hassle-free</span></div></div>
-                      <div className="co-trust-badge"><span className="tbd-icon">✅</span><div><span className="tbd-name">Quality Checked</span><span className="tbd-sub">Lab verified</span></div></div>
-                    </div>
 
                     <PaymentSection />
 
                     <button className="btn btn-brown btn-full" style={{ padding: '17px', fontSize: '1.05rem' }} onClick={placeOrder} disabled={loading}>
                       {ctaLabel}
                     </button>
-                    <p className="form-footer">{t('checkout.free_delivery_note')}</p>
+                    <div className="co-trust-badges" style={{ marginTop: 10, marginBottom: 12 }}>
+                      <div className="co-trust-badge"><span className="tbd-icon">🛡</span><div><span className="tbd-name">Secure Payment</span><span className="tbd-sub">256-bit SSL</span></div></div>
+                      <div className="co-trust-badge"><span className="tbd-icon">🚚</span><div><span className="tbd-name">Free Delivery</span><span className="tbd-sub">Pan-India</span></div></div>
+                      <div className="co-trust-badge"><span className="tbd-icon">🔄</span><div><span className="tbd-name">7-Day Replacement</span><span className="tbd-sub">Hassle-free</span></div></div>
+                      <div className="co-trust-badge"><span className="tbd-icon">✅</span><div><span className="tbd-name">Quality Checked</span><span className="tbd-sub">Lab verified</span></div></div>
+                    </div>
                     <ContactBelow />
                   </div>
                 </div>
@@ -2111,12 +2114,18 @@ export default function Home() {
                         <div className="op-price">{fmt(currentPack.price)}</div>
                       </div>
                       <div className="op-rows">
-                        {payment === 'prepaid' && <div className="op-row discount"><span>{t('checkout.prepaid_discount_label')}</span><span>− {fmt(discountAmt(pack))}</span></div>}
+                        <div className="op-row discount" style={payment === 'cod' ? { opacity: .5 } : {}}>
+                          <span>{t('checkout.prepaid_discount_label')}</span>
+                          <span>{payment === 'prepaid' ? `− ${fmt(discountAmt(pack))}` : '₹0'}</span>
+                        </div>
                         <div className="op-row free-ship"><span>{t('checkout.delivery_label')}</span><span style={{fontWeight:600}}>{t('delivery.free')}</span></div>
                         <div className="op-row total"><span>{t('checkout.total_label')}</span><span>{fmt(currentPrice)}</span></div>
                       </div>
                       {payment === 'prepaid' && discountAmt(pack) > 0 && (
                         <div className="checkout-saved-badge">🎉 You saved {fmt(discountAmt(pack))} with online payment</div>
+                      )}
+                      {payment === 'cod' && (
+                        <div className="checkout-saved-badge" style={{ background:'#f7f3ee', color:'var(--vd-text-light)', border:'1px solid #e0d5c5' }}>💳 Switch to online payment to save {fmt(discountAmt(pack))}</div>
                       )}
                     </div>
 
@@ -2264,7 +2273,9 @@ export default function Home() {
             <div className="sticky-cta-inner">
               <div className="sticky-text">
                 {formReady
-                  ? <><strong>{t('sticky.ready')}</strong> {fmt(PACKS[pack].price)} · {pack === 1 ? t('pack.try_it') : pack === 2 ? t('pack.couple') : t('pack.family')}</>
+                  ? payment === 'prepaid' && discountAmt(pack) > 0
+                    ? <><strong>Save {fmt(discountAmt(pack))}</strong> · Pay {fmt(currentPrice)} · Free delivery</>
+                    : <><strong>{t('sticky.ready')}</strong> {fmt(currentPrice)} · Free delivery</>
                   : <><strong>{pack === 1 ? t('pack.try_it') : pack === 2 ? t('pack.couple') : t('pack.family')}</strong> {fmt(PACKS[pack].price)} · {t('sticky.free_delivery')}</>
                 }
               </div>
@@ -2273,7 +2284,10 @@ export default function Home() {
                 disabled={loading}
                 style={{ background: formReady ? '#4A7C59' : 'var(--vd-gold)', color: '#fff', fontWeight: 700, padding: '11px 22px', borderRadius: 6, fontSize: '.88rem', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'background .3s' }}
               >
-                {loading ? '⏳' : formReady ? t('sticky.place_order') : t('sticky.buy_now')}
+                {loading ? '⏳' : formReady
+                  ? payment === 'prepaid' ? <>💳 Pay & Save ₹{discountAmt(pack).toLocaleString('en-IN')}</>
+                  : <>💵 Place COD Order</>
+                  : t('sticky.buy_now')}
               </button>
             </div>
           </div>
