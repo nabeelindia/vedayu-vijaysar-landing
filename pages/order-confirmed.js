@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
+import ChatWidget from '../components/ChatWidget';
 
 /* Load Razorpay checkout script on demand */
 const loadRazorpay = () =>
@@ -15,6 +16,13 @@ const loadRazorpay = () =>
     s.onerror = () => resolve(false);
     document.body.appendChild(s);
   });
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64  = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw     = window.atob(base64);
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+}
 
 function MiswakCard({ id, miswakState, miswakErr, handleMiswakPayment, setMiswakState, t }) {
   if (miswakState === 'done') {
@@ -86,16 +94,13 @@ function ReferralCard({ id, orderId, refMsg, t }) {
   );
 }
 
-function BottomCTAs({ waHref, backHref, t }) {
+function BottomCTAs({ orderId, t }) {
   return (
     <>
-      <div className="oc-cta-strip oc-cta-strip--row">
-        <a href={waHref} target="_blank" rel="noopener noreferrer" className="btn btn-green btn-full">
-          {t('order_confirmed.whatsapp_track_cta')}
-        </a>
-        <a href={backHref} className="btn btn-outline btn-full">{t('order_confirmed.back_home')}</a>
-      </div>
-      <p style={{ marginTop: 8, fontSize: '.72rem', color: 'var(--vd-text-light)', lineHeight: 1.6, textAlign: 'center' }}>
+      <a href={`/track?order=${orderId || ''}`} className="oc-track-cta">
+        {t('order_confirmed.track_order_cta')}
+      </a>
+      <p style={{ marginTop: 0, fontSize: '.72rem', color: 'var(--vd-text-light)', lineHeight: 1.6, textAlign: 'center' }}>
         <em>{t('order_confirmed.disclaimer')}</em>
       </p>
     </>
@@ -113,6 +118,8 @@ export default function OrderConfirmed() {
   const [miswakErr,    setMiswakErr]    = useState('');
   const [custMobile,   setCustMobile]   = useState('');
   const [custEmail,    setCustEmail]    = useState('');
+  const [notifyState,      setNotifyState]      = useState('idle');   // 'idle' | 'requesting' | 'granted' | 'denied'
+  const [showNotifyToggle, setShowNotifyToggle] = useState(false);
 
   /* Fade in */
   useEffect(() => {
@@ -120,37 +127,45 @@ export default function OrderConfirmed() {
     return () => clearTimeout(timer);
   }, []);
 
-  /* Push notification opt-in — only if user checked the toggle at checkout */
+  /* Push notification opt-in */
   useEffect(() => {
     const shouldNotify = sessionStorage.getItem('vedayu_notify_orders');
-    if (shouldNotify !== '1') return;
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
-    const VAPID_PUBLIC = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-    if (!VAPID_PUBLIC) return;
-
-    function urlBase64ToUint8Array(base64String) {
-      const padding = '='.repeat((4 - base64String.length % 4) % 4);
-      const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-      const raw = window.atob(base64);
-      return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+    if (shouldNotify === '1') {
+      requestPushPermission().then(setNotifyState);
+    } else {
+      setShowNotifyToggle(true);
     }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-    navigator.serviceWorker.register('/sw.js').then(async reg => {
+  async function requestPushPermission() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return 'denied';
+    const VAPID_PUBLIC = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+    if (!VAPID_PUBLIC) {
+      console.warn('[Push] NEXT_PUBLIC_VAPID_PUBLIC_KEY not set');
+      return 'denied';
+    }
+    try {
+      setNotifyState('requesting');
+      const reg        = await navigator.serviceWorker.register('/sw.js');
       const permission = await Notification.requestPermission();
-      if (permission !== 'granted') return;
+      if (permission !== 'granted') return 'denied';
       const existing = await reg.pushManager.getSubscription();
       const sub = existing || await reg.pushManager.subscribe({
-        userVisibleOnly: true,
+        userVisibleOnly:      true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC),
       });
       await fetch('/api/subscribe-push', {
-        method: 'POST',
+        method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(sub.toJSON()),
+        body:    JSON.stringify(sub.toJSON()),
       });
       sessionStorage.removeItem('vedayu_notify_orders');
-    }).catch(() => {});
-  }, []);
+      return 'granted';
+    } catch (e) {
+      console.error('[Push] Permission request failed:', e);
+      return 'denied';
+    }
+  }
 
   /* Read customer context (mobile/email) from sessionStorage */
   useEffect(() => {
@@ -357,6 +372,42 @@ export default function OrderConfirmed() {
             </div>
           </div>
 
+          {isCOD && (
+            <p className="oc-cod-call-note" style={{ padding: '0 20px 14px' }}>
+              📞 {t('order_confirmed.cod_call_note')}
+            </p>
+          )}
+
+          {/* Notification opt-in card — only for users who did NOT opt in at checkout */}
+          {showNotifyToggle && (
+            <div className="oc-notify-card">
+              <div className="oc-notify-card-text">
+                <p className="oc-notify-card-title">🔔 {t('order_confirmed.notify_card_title')}</p>
+                <p className="oc-notify-card-desc">{t('order_confirmed.notify_card_desc')}</p>
+                {notifyState === 'granted' && (
+                  <p className="oc-notify-card-msg" style={{ color: '#2d6b40' }}>{t('order_confirmed.notify_granted_msg')}</p>
+                )}
+                {notifyState === 'denied' && (
+                  <p className="oc-notify-card-msg" style={{ color: '#c0392b' }}>{t('order_confirmed.notify_denied_msg')}</p>
+                )}
+              </div>
+              {notifyState !== 'granted' && notifyState !== 'denied' && (
+                <button
+                  onClick={() => requestPushPermission().then(setNotifyState)}
+                  disabled={notifyState === 'requesting'}
+                  style={{
+                    flexShrink: 0, padding: '9px 16px', background: 'var(--vd-brown)',
+                    color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700,
+                    fontSize: '.8rem', cursor: notifyState === 'requesting' ? 'not-allowed' : 'pointer',
+                    opacity: notifyState === 'requesting' ? .7 : 1,
+                  }}
+                >
+                  {notifyState === 'requesting' ? '...' : t('order_confirmed.notify_enable_btn')}
+                </button>
+              )}
+            </div>
+          )}
+
           {/* Mobile-only: teaser rows */}
           {miswakState !== 'done' && miswakState !== 'declined' && (
             <div className="oc-teaser oc-teaser-green oc-mobile-only" onClick={() => scrollTo('miswak-upsell-mobile')}>
@@ -401,7 +452,7 @@ export default function OrderConfirmed() {
           </div>
 
           {/* CTA buttons + disclaimer — below How to Use, always in left column */}
-          <BottomCTAs waHref={`https://wa.me/91${WA_NUM}?text=${waMessage}`} backHref="/" t={t} />
+          <BottomCTAs orderId={orderId} t={t} />
 
         </div>
 
@@ -412,6 +463,8 @@ export default function OrderConfirmed() {
         </div>
 
       </div>
+
+      <ChatWidget />
 
       {/* ── STICKY BOTTOM BAR (mobile only) ── */}
       {miswakState !== 'done' && miswakState !== 'declined' && (
