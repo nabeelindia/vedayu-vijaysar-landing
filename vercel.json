@@ -7,6 +7,7 @@
     { "path": "/api/cron/cod-hold-reminder", "schedule": "30 11 * * *" },
     { "path": "/api/cron/cod-auto-confirm",  "schedule": "30 0 * * *"  },
     { "path": "/api/cron/cart-recover",      "schedule": "0 5 * * *"   },
-    { "path": "/api/cron/sync-tracking",     "schedule": "0 4 * * *"    }
+    { "path": "/api/cron/sync-tracking",     "schedule": "0 4 * * *"    },
+    { "path": "/api/cron/tabbly-retry",      "schedule": "*/30 * * * *"  }
   ]
 }
