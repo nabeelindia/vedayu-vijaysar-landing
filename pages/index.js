@@ -2148,7 +2148,7 @@ export default function Home() {
                         <div className="checkout-saved-badge">🎉 You saved {fmt(discountAmt(pack))} with online payment</div>
                       )}
                       {payment === 'cod' && (
-                        <div className="checkout-saved-badge" style={{ background:'#f7f3ee', color:'var(--vd-text-light)', border:'1px solid #e0d5c5' }}>💳 Switch to online payment to save {fmt(discountAmt(pack))}</div>
+                        <div className="checkout-switch-badge">✨ Switch to online payment to save {fmt(discountAmt(pack))}</div>
                       )}
                     </div>
 
