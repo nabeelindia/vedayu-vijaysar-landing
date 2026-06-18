@@ -28,7 +28,7 @@ export default function OrderCard({ order, onClick }) {
           {order.order_id}
         </div>
         <div style={{ fontSize: '.82rem', color: '#333', marginTop: 2 }}>
-          {order.name} · {order.city}
+          {order.name} · {order.mobile} · {order.city}
         </div>
         <div style={{ fontSize: '.75rem', color: '#888', marginTop: 2 }}>
           {order.pack} · {fmt(order.price)} · {timeAgo(order.created_at)}
