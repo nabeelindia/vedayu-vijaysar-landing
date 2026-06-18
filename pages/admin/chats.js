@@ -11,6 +11,21 @@ const fmtTime = iso => iso
   ? new Date(iso).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' })
   : null;
 
+const msgDateKey = iso => iso
+  ? new Date(iso).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })
+  : null;
+
+const dateSeparatorLabel = (iso) => {
+  if (!iso) return null;
+  const todayIST = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+  const d = new Date(iso).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+  if (d === todayIST) return 'Today';
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  if (d === yesterday.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })) return 'Yesterday';
+  return new Date(iso).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short' });
+};
+
 const LOCALE_FLAG = { en: '🇬🇧', hi: '🇮🇳', ta: '🇮🇳', te: '🇮🇳' };
 const LOCALE_LABEL = { en: 'EN', hi: 'HI', ta: 'TA', te: 'TE' };
 
@@ -129,28 +144,44 @@ function SessionDetail({ session, onBack, isMobile }) {
             No messages in this session.
           </p>
         )}
-        {messages.map((m, i) => {
-          const isUser = m.role === 'user';
-          const ts = fmtTime(m.timestamp || m.created_at);
-          return (
-            <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: isUser ? 'flex-end' : 'flex-start' }}>
-              <div style={{
-                maxWidth: '80%',
-                background: isUser ? BROWN : '#f5f0e8',
-                color: isUser ? '#fff' : '#1a1a1a',
-                padding: '8px 12px', borderRadius: 10,
-                fontSize: '.84rem', lineHeight: 1.45,
-              }}>
-                {m.content || ''}
+        {(() => {
+          let lastDate = null;
+          return messages.map((m, i) => {
+            const isUser = m.role === 'user';
+            const ts = fmtTime(m.timestamp || m.created_at);
+            const dateKey = msgDateKey(m.timestamp || m.created_at);
+            const showSep = dateKey && dateKey !== lastDate;
+            if (showSep) lastDate = dateKey;
+            return (
+              <div key={i}>
+                {showSep && (
+                  <div style={{ textAlign: 'center', margin: '8px 0' }}>
+                    <span style={{ fontSize: '.68rem', color: '#aaa', background: '#f5f0e8',
+                      padding: '2px 10px', borderRadius: 20 }}>
+                      {dateSeparatorLabel(m.timestamp || m.created_at)}
+                    </span>
+                  </div>
+                )}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: isUser ? 'flex-end' : 'flex-start' }}>
+                  <div style={{
+                    maxWidth: '80%',
+                    background: isUser ? BROWN : '#f5f0e8',
+                    color: isUser ? '#fff' : '#1a1a1a',
+                    padding: '8px 12px', borderRadius: 10,
+                    fontSize: '.84rem', lineHeight: 1.45,
+                  }}>
+                    {m.content || ''}
+                  </div>
+                  {ts && (
+                    <span style={{ fontSize: '.62rem', color: '#aaa', marginTop: 2, paddingLeft: 4, paddingRight: 4 }}>
+                      {ts}
+                    </span>
+                  )}
+                </div>
               </div>
-              {ts && (
-                <span style={{ fontSize: '.62rem', color: '#aaa', marginTop: 2, paddingLeft: 4, paddingRight: 4 }}>
-                  {ts}
-                </span>
-              )}
-            </div>
-          );
-        })}
+            );
+          });
+        })()}
       </div>
     </div>
   );
