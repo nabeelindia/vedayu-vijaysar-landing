@@ -5,9 +5,9 @@ import { supabase }                          from '../../../lib/supabase';
 import { triggerTabblyCall, isWithinCallWindow } from '../../../lib/tabbly';
 
 export default async function handler(req, res) {
-  // Vercel cron jobs authenticate via CRON_SECRET in x-vercel-cron-signature header
+  // Vercel cron jobs send the CRON_SECRET as an Authorization: Bearer header
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && req.headers['x-vercel-cron-signature'] !== cronSecret) {
+  if (cronSecret && req.headers.authorization !== `Bearer ${cronSecret}`) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
   if (!supabase) return res.status(503).json({ error: 'DB not configured' });
