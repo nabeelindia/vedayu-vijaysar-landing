@@ -1518,7 +1518,14 @@ export default function Home() {
                 style={{ background:'none', border:'2px solid #e8d5b0', borderRadius:12, padding:0, cursor:'zoom-in', display:'block', boxShadow:'0 4px 24px rgba(92,61,30,.12)', overflow:'hidden', maxWidth:260 }}
                 aria-label="View lab certificate"
               >
-                <img src="/lab-cert-1.jpg" alt="Hydel Laboratories test report for Vijaysar Herbal Wood Tumbler" style={{ width:'100%', display:'block' }} />
+                <Image
+                  src="/lab-cert-1.jpg"
+                  alt="Hydel Laboratories test report for Vijaysar Herbal Wood Tumbler"
+                  width={800}
+                  height={600}
+                  style={{ width: '100%', height: 'auto', display: 'block' }}
+                  loading="lazy"
+                />
                 <div style={{ background:'#5C3D1E', color:'#fff', fontSize:'.78rem', fontWeight:700, padding:'8px 12px', textAlign:'center', letterSpacing:.5 }}>{t('lab.tap_view')}</div>
               </button>
               <a href="/lab-certificate.pdf" download style={{ display:'block', textAlign:'center', marginTop:10, fontSize:'.78rem', color:'var(--vd-brown)', fontWeight:600, textDecoration:'underline' }}>{t('lab.download')}</a>
