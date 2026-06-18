@@ -265,10 +265,12 @@ export default function Home() {
     const c = readCustomerCookie();
     if (c?.name) {
       setForm(f => ({
+        ...f,
         name:    c.name    || f.name,
         mobile:  c.mobile  || f.mobile,
         email:   c.email   || f.email,
-        address: c.address || f.address,
+        house:   c.house   || f.house,
+        area:    c.area    || f.area,
         pincode: c.pincode || f.pincode,
         city:    c.city    || f.city,
         state:   c.state   || f.state,
