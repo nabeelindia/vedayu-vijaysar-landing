@@ -440,16 +440,17 @@ export default function Home() {
           setForm(f => ({
             ...f,
             name:    f.name    || c.name,
-            address: f.address || c.address,
+            house:   f.house   || c.address,
             pincode: f.pincode || c.pincode,
             city:    f.city    || c.city,
             state:   f.state   || c.state,
           }));
+          if (c.pincode) handlePincode(c.pincode);
           setWelcomeBack(c.name);
         }
       } catch (_) {}
     }, 400);
-  }, []);
+  }, [handlePincode]);
 
   /* pincode auto-fill + real-time delivery estimate
      1. Calls /api/pincode-lookup to auto-fill city/state.
