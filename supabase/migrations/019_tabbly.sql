@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS tabbly_call_retries (
   attempt      int          NOT NULL DEFAULT 1 CHECK (attempt BETWEEN 1 AND 3),
   scheduled_at timestamptz  NOT NULL,
   status       text         NOT NULL DEFAULT 'pending'
-                            CHECK (status IN ('pending', 'fired', 'exhausted', 'skipped')),
+                            CHECK (status IN ('pending', 'fired', 'failed', 'exhausted', 'skipped')),
   last_error   text,
   fired_at     timestamptz,
   created_at   timestamptz  DEFAULT now(),

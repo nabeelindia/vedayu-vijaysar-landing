@@ -9,6 +9,12 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
   if (!supabase) return res.status(503).json({ error: 'DB not configured' });
 
+  // Verify shared secret — replace with HMAC-SHA256 sig check when Tabbly provides signing spec
+  const webhookSecret = process.env.TABBLY_WEBHOOK_SECRET;
+  if (webhookSecret && req.headers['x-tabbly-secret'] !== webhookSecret) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
   const {
     order_id,
     platform_tag,

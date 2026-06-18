@@ -63,8 +63,9 @@ export default async function handler(req, res) {
     } catch (err) {
       console.error(`[Tabbly] Retry ${retry.id} for ${retry.order_id} failed:`, err.message);
       await supabase.from('tabbly_call_retries').update({
-        last_error:  err.message,
-        updated_at:  new Date().toISOString(),
+        status:      'failed',
+        last_error:   err.message,
+        updated_at:   new Date().toISOString(),
       }).eq('id', retry.id);
     }
   }
