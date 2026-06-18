@@ -185,6 +185,7 @@ export default function Home() {
   /* form state */
   const [pack,       setPack]       = useState(1);
   const [payment,    setPayment]    = useState('prepaid');
+  const [notifyOrders, setNotifyOrders] = useState(true);
   const [form,       setForm]       = useState({ name:'', mobile:'', email:'', house:'', area:'', landmark:'', pincode:'', city:'', state:'' });
   const [mobSummaryOpen, setMobSummaryOpen] = useState(false);
   const [loading,    setLoading]    = useState(false);
@@ -554,6 +555,7 @@ export default function Home() {
   const placeOrder = async () => {
     const err = validate();
     if (err) { showToast(err); return; }
+    sessionStorage.setItem('vedayu_notify_orders', notifyOrders ? '1' : '0');
     setLoading(true);
 
     const selectedPack  = PACKS[pack];
@@ -2094,6 +2096,11 @@ export default function Home() {
 
                     <PaymentSection />
 
+                    <label style={{ display:'flex', alignItems:'center', gap:8, margin:'10px 0 4px', cursor:'pointer', fontSize:'.82rem', color:'var(--vd-text-light)' }}>
+                      <input type="checkbox" checked={notifyOrders} onChange={e => setNotifyOrders(e.target.checked)} style={{ width:16, height:16, accentColor:'var(--vd-brown)', cursor:'pointer', flexShrink:0 }} />
+                      Get order updates via browser notification
+                    </label>
+
                     <button className="btn btn-brown btn-full" style={{ padding: '17px', fontSize: '1.05rem' }} onClick={placeOrder} disabled={loading}>
                       {ctaLabel}
                     </button>
@@ -2137,6 +2144,11 @@ export default function Home() {
                         <div className="checkout-saved-badge" style={{ background:'#f7f3ee', color:'var(--vd-text-light)', border:'1px solid #e0d5c5' }}>💳 Switch to online payment to save {fmt(discountAmt(pack))}</div>
                       )}
                     </div>
+
+                    <label style={{ display:'flex', alignItems:'center', gap:8, margin:'10px 0 4px', cursor:'pointer', fontSize:'.82rem', color:'var(--vd-text-light)' }}>
+                      <input type="checkbox" checked={notifyOrders} onChange={e => setNotifyOrders(e.target.checked)} style={{ width:16, height:16, accentColor:'var(--vd-brown)', cursor:'pointer', flexShrink:0 }} />
+                      Get order updates via browser notification
+                    </label>
 
                     <button className="checkout-sidebar-btn" onClick={placeOrder} disabled={loading}>
                       {loading ? t('checkout.processing') : payment === 'prepaid' ? <>🔒 Pay Now & Save ₹{discountAmt(pack).toLocaleString('en-IN')}</> : <>Place COD Order — ₹{currentPrice.toLocaleString('en-IN')}</>}
