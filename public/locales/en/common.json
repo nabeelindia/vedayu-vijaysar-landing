@@ -508,5 +508,12 @@
   "chat.contact.submit": "Submit",
   "chat.contact.thanks": "Thank you! We'll reach out to you soon.",
   "chat.error": "Sorry, something went wrong. Please try again.",
-  "chat.cta.scrollToOrder": "🛒 Click here to order →"
+  "chat.cta.scrollToOrder": "🛒 Click here to order →",
+  "order_confirmed.cod_call_note": "Our team may call you shortly to confirm your dispatch.",
+  "order_confirmed.notify_card_title": "Get Order Updates",
+  "order_confirmed.notify_card_desc": "Enable browser notifications to get instant updates when your order ships.",
+  "order_confirmed.notify_enable_btn": "Enable Notifications",
+  "order_confirmed.notify_granted_msg": "✅ Notifications enabled! You'll hear from us when your order ships.",
+  "order_confirmed.notify_denied_msg": "⚠️ Notifications blocked. To enable, update your browser's notification permissions for this site.",
+  "order_confirmed.track_order_cta": "📦 Track My Order →"
 }

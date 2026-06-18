@@ -508,5 +508,12 @@
   "chat.contact.submit": "சமர்ப்பி",
   "chat.contact.thanks": "நன்றி! நாங்கள் விரைவில் உங்களை தொடர்பு கொள்கிறோம்.",
   "chat.error": "மன்னிக்கவும், ஏதோ தவறு நடந்தது. மீண்டும் முயற்சிக்கவும்.",
-  "chat.cta.scrollToOrder": "🛒 ஆர்டர் செய்ய இங்கே கிளிக் செய்யுங்கள் →"
+  "chat.cta.scrollToOrder": "🛒 ஆர்டர் செய்ய இங்கே கிளிக் செய்யுங்கள் →",
+  "order_confirmed.cod_call_note": "உங்கள் அனுப்புதலை உறுதிப்படுத்த எங்கள் குழு விரைவில் அழைக்கலாம்.",
+  "order_confirmed.notify_card_title": "ஆர்டர் புதுப்பிப்புகள் பெறுங்கள்",
+  "order_confirmed.notify_card_desc": "உங்கள் ஆர்டர் கப்பல் ஏற்றப்படும்போது உடனடி அறிவிப்புகள் பெற இயக்குங்கள்.",
+  "order_confirmed.notify_enable_btn": "அறிவிப்புகளை இயக்கு",
+  "order_confirmed.notify_granted_msg": "✅ அறிவிப்புகள் இயக்கப்பட்டன! ஏற்றுமதி நேரத்தில் தெரிவிப்போம்.",
+  "order_confirmed.notify_denied_msg": "⚠️ அறிவிப்புகள் தடுக்கப்பட்டன. உலாவி அமைப்புகளில் அனுமதி மாற்றவும்.",
+  "order_confirmed.track_order_cta": "📦 ஆர்டரை கண்காணி →"
 }

@@ -508,5 +508,12 @@
   "chat.contact.submit": "सबमिट करें",
   "chat.contact.thanks": "धन्यवाद! हम जल्द ही आपसे संपर्क करेंगे।",
   "chat.error": "माफ़ करें, कुछ गलत हो गया। कृपया दोबारा कोशिश करें।",
-  "chat.cta.scrollToOrder": "🛒 ऑर्डर करने के लिए यहाँ क्लिक करें →"
+  "chat.cta.scrollToOrder": "🛒 ऑर्डर करने के लिए यहाँ क्लिक करें →",
+  "order_confirmed.cod_call_note": "हमारी टीम जल्द ही आपसे डिस्पैच की पुष्टि के लिए कॉल कर सकती है।",
+  "order_confirmed.notify_card_title": "ऑर्डर अपडेट पाएं",
+  "order_confirmed.notify_card_desc": "ब्राउज़र नोटिफिकेशन चालू करें और जैसे ही ऑर्डर शिप हो, तुरंत जानें।",
+  "order_confirmed.notify_enable_btn": "नोटिफिकेशन चालू करें",
+  "order_confirmed.notify_granted_msg": "✅ नोटिफिकेशन चालू हो गई! शिपमेंट पर हम आपको बताएंगे।",
+  "order_confirmed.notify_denied_msg": "⚠️ नोटिफिकेशन ब्लॉक है। ब्राउज़र सेटिंग में इस साइट की अनुमति दें।",
+  "order_confirmed.track_order_cta": "📦 ऑर्डर ट्रैक करें →"
 }

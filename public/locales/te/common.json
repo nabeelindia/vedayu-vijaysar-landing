@@ -508,5 +508,12 @@
   "chat.contact.submit": "సమర్పించు",
   "chat.contact.thanks": "ధన్యవాదాలు! మేము త్వరలో మీకు తిరిగి వస్తాము.",
   "chat.error": "క్షమించండి, ఏదో తప్పు జరిగింది. దయచేసి మళ్ళీ ప్రయత్నించండి.",
-  "chat.cta.scrollToOrder": "🛒 ఆర్డర్ చేయడానికి ఇక్కడ క్లిక్ చేయండి →"
+  "chat.cta.scrollToOrder": "🛒 ఆర్డర్ చేయడానికి ఇక్కడ క్లిక్ చేయండి →",
+  "order_confirmed.cod_call_note": "మీ డిస్పాచ్‌ని నిర్ధారించడానికి మా టీమ్ త్వరలో కాల్ చేయవచ్చు.",
+  "order_confirmed.notify_card_title": "ఆర్డర్ అప్‌డేట్‌లు పొందండి",
+  "order_confirmed.notify_card_desc": "మీ ఆర్డర్ పంపిణీ అయినప్పుడు తక్షణ నోటిఫికేషన్‌లు పొందేందుకు ఆన్ చేయండి.",
+  "order_confirmed.notify_enable_btn": "నోటిఫికేషన్‌లు ఆన్ చేయండి",
+  "order_confirmed.notify_granted_msg": "✅ నోటిఫికేషన్‌లు ఆన్ అయ్యాయి! షిప్‌మెంట్ అప్‌డేట్ తెలియజేస్తాము.",
+  "order_confirmed.notify_denied_msg": "⚠️ నోటిఫికేషన్‌లు బ్లాక్ అయ్యాయి. బ్రౌజర్ సెట్టింగ్స్‌లో అనుమతి మార్చండి.",
+  "order_confirmed.track_order_cta": "📦 ఆర్డర్ ట్రాక్ చేయండి →"
 }
