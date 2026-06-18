@@ -261,6 +261,26 @@ export default async function handler(req, res) {
     if (ordErr) console.error('orders insert failed:', ordErr.message);
   }
 
+  // ── Tabbly outbound COD verification call ───────────────────────────────
+  // Must be AFTER orders.insert() — DB write always first.
+  const baseUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : 'http://localhost:3000';
+  fetch(`${baseUrl}/api/tabbly-trigger`, {
+    method:  'POST',
+    headers: {
+      'Content-Type':  'application/json',
+      'Authorization': `Bearer ${process.env.SESSION_SECRET}`,
+    },
+    body: JSON.stringify({
+      orderId: orderId,
+      name:    name,
+      price:   safePrice,
+      address: fullAddr,
+      state:   state,
+    }),
+  }).catch(err => console.error('[Tabbly] Fire-and-forget failed:', err.message));
+
   // ── COD verification — store record and send WhatsApp ───────────────────
   const normalised = mobile.trim().startsWith('91') ? mobile.trim() : `91${mobile.trim()}`;
   if (supabase) {
