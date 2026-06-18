@@ -267,16 +267,18 @@ export default function Home() {
     if (c?.name) {
       setForm(f => ({
         ...f,
-        name:    c.name    || f.name,
-        mobile:  c.mobile  || f.mobile,
-        email:   c.email   || f.email,
-        house:   c.house   || f.house,
-        area:    c.area    || f.area,
-        pincode: c.pincode || f.pincode,
-        city:    c.city    || f.city,
-        state:   c.state   || f.state,
+        name:     c.name     || f.name,
+        mobile:   c.mobile   || f.mobile,
+        email:    c.email    || f.email,
+        house:    c.house    || f.house,
+        area:     c.area     || f.area,
+        landmark: c.landmark || f.landmark,
+        pincode:  c.pincode  || f.pincode,
+        city:     c.city     || f.city,
+        state:    c.state    || f.state,
       }));
       setWelcomeBack(c.name);  // re-use the existing green welcome-back banner
+      if (c.pincode) handlePincode(c.pincode);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -586,7 +588,7 @@ export default function Home() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to place order');
         orderPlaced.current = true;
-        writeCustomerCookie({ name: form.name, mobile: form.mobile, email: form.email, address: computedAddress, pincode: form.pincode, city: form.city, state: form.state });
+        writeCustomerCookie({ name: form.name, mobile: form.mobile, email: form.email, house: form.house, area: form.area, landmark: form.landmark, pincode: form.pincode, city: form.city, state: form.state });
         try { sessionStorage.setItem('vc_upsell_ctx', JSON.stringify({ mobile: form.mobile, email: form.email || '' })); } catch (_) {}
         router.push(`/order-confirmed?method=cod&pack=${encodeURIComponent(selectedPack.name)}&price=${finalPrice}&name=${encodeURIComponent(form.name)}&orderId=${encodeURIComponent(data.orderId)}${scheduledDate ? `&scheduledShipDate=${scheduledDate.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })}` : ''}${deliveryEst ? `&deliveryEst=${encodeURIComponent(deliveryEst)}` : ''}`);
 
@@ -636,7 +638,7 @@ export default function Home() {
           },
           handler: async (response) => {
             orderPlaced.current = true;
-            writeCustomerCookie({ name: form.name, mobile: form.mobile, email: form.email, address: computedAddress, pincode: form.pincode, city: form.city, state: form.state });
+            writeCustomerCookie({ name: form.name, mobile: form.mobile, email: form.email, house: form.house, area: form.area, landmark: form.landmark, pincode: form.pincode, city: form.city, state: form.state });
             let finalOrderId = response.razorpay_payment_id || order_id || '';
             try {
               // Verify payment server-side + fire CAPI Purchase
