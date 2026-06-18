@@ -62,36 +62,6 @@ function App({ Component, pageProps }) {
     } catch (_) {}
   }, [router.locale]);
 
-  // Register service worker + request push permission for admin notifications
-  useEffect(() => {
-    if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) return;
-    const VAPID_PUBLIC = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-    if (!VAPID_PUBLIC) return;
-
-    navigator.serviceWorker.register('/sw.js').then(async reg => {
-      const permission = await Notification.requestPermission();
-      if (permission !== 'granted') return;
-
-      const existing = await reg.pushManager.getSubscription();
-      const sub = existing || await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC),
-      });
-
-      await fetch('/api/subscribe-push', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(sub.toJSON()),
-      });
-    }).catch(console.error);
-
-    function urlBase64ToUint8Array(base64String) {
-      const padding = '='.repeat((4 - base64String.length % 4) % 4);
-      const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-      const raw = window.atob(base64);
-      return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
-    }
-  }, []);
 
   return (
     <>
