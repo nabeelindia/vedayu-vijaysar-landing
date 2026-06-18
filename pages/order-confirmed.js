@@ -181,6 +181,11 @@ export default function OrderConfirmed() {
     if (shouldNotify === '1') {
       requestPushPermission().then(setNotifyState);
     } else {
+      // Check if browser has already denied — no point showing the button
+      const browserPerm = typeof Notification !== 'undefined' ? Notification.permission : 'default';
+      if (browserPerm === 'denied') {
+        setNotifyState('browser-denied');
+      }
       setShowNotifyToggle(true);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -438,19 +443,24 @@ export default function OrderConfirmed() {
           )}
 
           {/* Notification opt-in card — only for users who did NOT opt in at checkout */}
-          {showNotifyToggle && (
+          {showNotifyToggle && notifyState !== 'granted' && (
             <div className="oc-notify-card">
               <div className="oc-notify-card-text">
                 <p className="oc-notify-card-title">🔔 {t('order_confirmed.notify_card_title')}</p>
-                <p className="oc-notify-card-desc">{t('order_confirmed.notify_card_desc')}</p>
-                {notifyState === 'granted' && (
-                  <p className="oc-notify-card-msg" style={{ color: '#2d6b40' }}>{t('order_confirmed.notify_granted_msg')}</p>
-                )}
-                {notifyState === 'denied' && (
-                  <p className="oc-notify-card-msg" style={{ color: '#c0392b' }}>{t('order_confirmed.notify_denied_msg')}</p>
+                {notifyState === 'browser-denied' ? (
+                  <p className="oc-notify-card-desc" style={{ color: '#c0392b' }}>
+                    {t('order_confirmed.notify_blocked_msg')}
+                  </p>
+                ) : (
+                  <>
+                    <p className="oc-notify-card-desc">{t('order_confirmed.notify_card_desc')}</p>
+                    {notifyState === 'denied' && (
+                      <p className="oc-notify-card-msg" style={{ color: '#c0392b' }}>{t('order_confirmed.notify_denied_msg')}</p>
+                    )}
+                  </>
                 )}
               </div>
-              {notifyState !== 'granted' && notifyState !== 'denied' && (
+              {notifyState !== 'denied' && notifyState !== 'browser-denied' && (
                 <button
                   onClick={() => requestPushPermission().then(setNotifyState)}
                   disabled={notifyState === 'requesting'}
