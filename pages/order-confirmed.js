@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
 import ChatWidget from '../components/ChatWidget';
@@ -94,6 +94,49 @@ function ReferralCard({ id, orderId, refMsg, t }) {
   );
 }
 
+function DeliveryTimeline() {
+  const steps = [
+    { icon: '✓',  label: 'Confirmed', done: true },
+    { icon: '📦', label: 'Packed',    done: false },
+    { icon: '🚚', label: 'Shipped',   done: false },
+    { icon: '🏠', label: 'Delivered', done: false },
+  ];
+  return (
+    <div style={{ background: 'rgba(255,255,255,.12)', borderRadius: 12, padding: '14px 20px', margin: '0 16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        {steps.map((s, i) => (
+          <React.Fragment key={s.label}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
+              <div style={{
+                width: 30, height: 30, borderRadius: '50%', marginBottom: 5,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: s.done ? '.8rem' : '.75rem',
+                background: s.done ? '#fff' : 'rgba(255,255,255,.2)',
+                color: s.done ? '#2d6b40' : 'rgba(255,255,255,.6)',
+                fontWeight: 700,
+              }}>
+                {s.icon}
+              </div>
+              <span style={{
+                fontSize: '.58rem', fontWeight: 700, textAlign: 'center',
+                color: s.done ? '#fff' : 'rgba(255,255,255,.6)',
+              }}>
+                {s.label}
+              </span>
+            </div>
+            {i < steps.length - 1 && (
+              <div style={{
+                flex: 1, height: 2, marginBottom: 18,
+                background: s.done ? 'rgba(255,255,255,.6)' : 'rgba(255,255,255,.2)',
+              }} />
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function BottomCTAs({ orderId, t }) {
   return (
     <>
@@ -110,7 +153,12 @@ function BottomCTAs({ orderId, t }) {
 export default function OrderConfirmed() {
   const router  = useRouter();
   const { t } = useTranslation('common');
-  const { method, pack, price, name, orderId, scheduledShipDate } = router.query;
+  const { method, pack, price, name, orderId, scheduledShipDate, deliveryEst: deliveryEstRaw } = router.query;
+
+  // Strip leading "by " prefix if present (e.g. "by Tue, 24 Jun" → "Tue, 24 Jun")
+  const deliveryEstDisplay = deliveryEstRaw
+    ? deliveryEstRaw.replace(/^by\s+/i, '')
+    : '';
 
   const [visible,      setVisible]      = useState(false);
   const [copied,       setCopied]       = useState(false);
@@ -326,6 +374,7 @@ export default function OrderConfirmed() {
         <div className="oc-banner-icon">{isCOD ? '📦' : '🎉'}</div>
         <h1>{isCOD ? t('order_confirmed.order_placed_title') : t('order_confirmed.payment_success_title')}</h1>
         <p>{t('order_confirmed.banner_subtitle', { name: name || '' })}</p>
+        <DeliveryTimeline />
         {orderId && (
           <div className="oc-order-pill">
             <span className="oc-order-pill-label">{t('order_confirmed.order_id_label')}</span>
@@ -337,11 +386,18 @@ export default function OrderConfirmed() {
         )}
       </div>
 
-      {/* ── INFO STRIP ── */}
-      <div className="oc-info-strip">
-        <span>📦 <strong>{t('order_confirmed.delivery_value')}</strong></span>
-        <span>🚚 <strong>{dispatchValue}</strong></span>
-        <span>💬 <strong>{t('order_confirmed.support_value')}</strong></span>
+      {/* ── DELIVERY DATE BAND ── */}
+      <div style={{
+        background: '#fff', borderBottom: '3px solid #2d6b40',
+        padding: '12px 20px', display: 'flex', alignItems: 'center',
+        justifyContent: 'center', gap: 8, flexWrap: 'wrap',
+      }}>
+        <span style={{ fontSize: '.82rem', color: '#555' }}>📦 Free shipping · Est. delivery</span>
+        {deliveryEstDisplay ? (
+          <strong style={{ fontSize: '1rem', color: '#2d6b40' }}>{deliveryEstDisplay}</strong>
+        ) : (
+          <strong style={{ fontSize: '.9rem', color: '#2d6b40' }}>3–5 business days</strong>
+        )}
       </div>
 
       {/* ── GRID BODY ── */}
