@@ -20,7 +20,12 @@ export default async function handler(req, res) {
   query = query.eq('archived', archived === 'true');
 
   if (method && method !== 'all') query = query.eq('method', method);
-  if (status && status !== 'all') query = query.eq('status', status);
+  if (status && status !== 'all') {
+    query = query.eq('status', status);
+  } else {
+    // "all" filter: hide cancelled (archived already excluded above via eq('archived', false))
+    query = query.neq('status', 'cancelled');
+  }
   if (search) {
     query = query.or(
       `order_id.ilike.%${search}%,name.ilike.%${search}%,mobile.ilike.%${search}%,pincode.ilike.%${search}%`
