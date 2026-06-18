@@ -1981,3 +1981,34 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
 .chat-csat-buttons button:hover {
   background: #f0e0cc;
 }
+
+/* ── Notification opt-in toggle ───────────────────────────────── */
+.notify-toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; margin: 12px 0 6px; padding: 10px 12px;
+  background: #faf6f1; border: 1px solid #e8ddd0; border-radius: 8px;
+  cursor: pointer;
+}
+.notify-toggle-row:hover { background: #f5ede3; }
+.notify-toggle-label {
+  display: flex; align-items: center; gap: 8px;
+  font-size: .82rem; color: var(--vd-text); font-weight: 500; line-height: 1.3;
+  user-select: none;
+}
+.notify-toggle-label svg { flex-shrink: 0; }
+.notify-toggle-switch {
+  position: relative; width: 40px; height: 22px; flex-shrink: 0;
+}
+.notify-toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+.notify-toggle-track {
+  position: absolute; inset: 0; border-radius: 22px;
+  background: #d4c5b0; transition: background .2s;
+}
+.notify-toggle-switch input:checked + .notify-toggle-track { background: var(--vd-brown); }
+.notify-toggle-thumb {
+  position: absolute; top: 3px; left: 3px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.2);
+  transition: transform .2s; pointer-events: none;
+}
+.notify-toggle-switch input:checked ~ .notify-toggle-thumb { transform: translateX(18px); }
