@@ -1204,7 +1204,7 @@ export default function Home() {
                 {/* Dot indicators */}
                 <div style={{ position:'absolute', bottom:10, left:'50%', transform:'translateX(-50%)', display:'flex', gap:6 }}>
                   {GALLERY.map((_, i) => (
-                    <button key={i} onClick={() => setGalleryIdx(i)} style={{ width: i===galleryIdx ? 20 : 8, height:8, borderRadius:4, border:'none', background: i===galleryIdx ? '#5C3D1E' : 'rgba(255,255,255,.7)', cursor:'pointer', transition:'all .2s', padding:0 }} aria-label={`Image ${i+1}`} />
+                    <button key={i} onClick={() => setGalleryIdx(i)} style={{ width: i===galleryIdx ? 20 : 8, height:8, borderRadius:4, border:'none', background: i===galleryIdx ? '#5C3D1E' : 'rgba(255,255,255,.7)', cursor:'pointer', transition:'all .2s', padding:'8px 4px', margin:0, boxSizing:'content-box' }} aria-label={`Image ${i+1}`} />
                   ))}
                 </div>
               </div>
@@ -1303,8 +1303,8 @@ export default function Home() {
                 className="video-player"
                 controls
                 playsInline
-                preload="metadata"
-                poster="https://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/thumb-celebrity_aifzvx"
+                preload="none"
+                poster="https://res.cloudinary.com/ddmmfkvwb/image/upload/w_400,h_700,c_fill,q_auto,f_auto/thumb-celebrity_aifzvx"
               >
                 <source src={process.env.NEXT_PUBLIC_VIDEO_CELEBRITY || "/videos/celebrity.mp4"} type="video/mp4" />
               </video>
@@ -1341,8 +1341,8 @@ export default function Home() {
                   className="video-player"
                   controls
                   playsInline
-                  preload="metadata"
-                  poster="https://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/thumb-testimonial_btk4ko"
+                  preload="none"
+                  poster="https://res.cloudinary.com/ddmmfkvwb/image/upload/w_400,h_700,c_fill,q_auto,f_auto/thumb-testimonial_btk4ko"
                 >
                   <source src={process.env.NEXT_PUBLIC_VIDEO_TESTIMONIAL || "/videos/testimonial.mp4"} type="video/mp4" />
                 </video>
@@ -1359,8 +1359,8 @@ export default function Home() {
                   className="video-player"
                   controls
                   playsInline
-                  preload="metadata"
-                  poster="https://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/thumb-meta-ad_jzvhar"
+                  preload="none"
+                  poster="https://res.cloudinary.com/ddmmfkvwb/image/upload/w_400,h_700,c_fill,q_auto,f_auto/thumb-meta-ad_jzvhar"
                 >
                   <source src={process.env.NEXT_PUBLIC_VIDEO_METAAD || "/videos/meta-ad.mp4"} type="video/mp4" />
                 </video>
@@ -2105,7 +2105,7 @@ export default function Home() {
                         Get order updates via browser notification
                       </span>
                       <span className="notify-toggle-switch">
-                        <input type="checkbox" checked={notifyOrders} onChange={e => { e.stopPropagation(); setNotifyOrders(e.target.checked); }} />
+                        <input type="checkbox" id="notify-orders-checkbox" aria-label="Get order updates via browser notification" checked={notifyOrders} onChange={e => { e.stopPropagation(); setNotifyOrders(e.target.checked); }} />
                         <span className="notify-toggle-track" />
                         <span className="notify-toggle-thumb" />
                       </span>

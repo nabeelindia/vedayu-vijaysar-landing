@@ -241,7 +241,7 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
 }
 .solution-circle img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
 
-.solution-sub { font-size: .78rem; font-weight: 700; color: var(--vd-green); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
+.solution-sub { font-size: .78rem; font-weight: 700; color: #2d6b40; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
 .solution-text h2 { color: var(--vd-dark-brown); margin-bottom: 12px; }
 
 .solution-points { list-style: none; margin: 0 0 26px; }
@@ -631,7 +631,7 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
   font-weight: 700;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: var(--vd-gold);
+  color: var(--vd-brown);
   margin-bottom: 10px;
 }
 .celebrity-wrap {
@@ -672,7 +672,7 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
 .celebrity-byline {
   font-size: .85rem;
   font-weight: 600;
-  color: var(--vd-gold);
+  color: var(--vd-brown);
   margin-top: 10px;
 }
 .celebrity-badges {
