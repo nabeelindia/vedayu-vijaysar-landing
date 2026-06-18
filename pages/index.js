@@ -1189,6 +1189,7 @@ export default function Home() {
                   className="hero-product-img"
                   width={520}
                   height={520}
+                  sizes="(max-width: 768px) 100vw, 520px"
                   priority
                   onClick={() => setLightbox({ imgs: GALLERY.map(g => g.src), idx: galleryIdx })}
                   style={{ transition:'opacity .25s', display:'block', width:'100%', height:'100%', objectFit:'contain', cursor:'zoom-in' }}
@@ -1267,6 +1268,7 @@ export default function Home() {
                   alt="Vedayu Vijaysar Wooden Glass — Premium Natural Wood"
                   width={400}
                   height={400}
+                  sizes="(max-width: 768px) 80vw, 400px"
                   style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
                 />
                 <span style={{ position:'absolute', bottom:16, left:'50%', transform:'translateX(-50%)', background:'rgba(0,0,0,.45)', color:'#fff', fontSize:'.65rem', padding:'3px 8px', borderRadius:20, whiteSpace:'nowrap' }}>{t('spec.zoom')}</span>
@@ -1537,7 +1539,7 @@ export default function Home() {
             </div>
             {/* Key findings */}
             <div style={{ flex:'1 1 280px', maxWidth:480 }}>
-              <p style={{ fontSize:'.8rem', fontWeight:700, color:'#888', letterSpacing:1, textTransform:'uppercase', marginBottom:16 }}>Hydel Laboratories (P) Ltd. — Report No. HLPL20-260420-01</p>
+              <p style={{ fontSize:'.8rem', fontWeight:700, color:'#666', letterSpacing:1, textTransform:'uppercase', marginBottom:16 }}>Hydel Laboratories (P) Ltd. — Report No. HLPL20-260420-01</p>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
                 {[
                   { icon:'✅', n:1 },
@@ -1552,7 +1554,7 @@ export default function Home() {
                   return (
                   <div key={n} style={{ background:'#fdf6ec', border:'1px solid #e8d5b0', borderRadius:10, padding:'12px 14px' }}>
                     <div style={{ fontSize:'1.3rem', marginBottom:4 }}>{icon}</div>
-                    <div style={{ fontSize:'.7rem', color:'#888', fontWeight:600, textTransform:'uppercase', letterSpacing:.5 }}>{label}</div>
+                    <div style={{ fontSize:'.7rem', color:'#666', fontWeight:600, textTransform:'uppercase', letterSpacing:.5 }}>{label}</div>
                     <div style={{ fontSize:'.92rem', fontWeight:800, color:'#5C3D1E', marginTop:2 }}>{value}</div>
                   </div>
                 );})}

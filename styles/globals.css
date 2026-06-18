@@ -165,7 +165,7 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
 .badge-green { background: var(--vd-green); border-color: var(--vd-green); color: #fff; }
 
 .eyebrow {
-  font-size: .78rem; font-weight: 700; color: var(--vd-green);
+  font-size: .78rem; font-weight: 700; color: #2d6b40;
   text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px;
 }
 .hero h1    { color: var(--vd-dark-brown); margin-bottom: 14px; }
