@@ -40,7 +40,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Database not configured (SUPABASE_SERVICE_KEY missing)' });
   }
 
-  const { name, mobile, email, address, city, state, pincode, pack, price, qty, utm = {}, referrerId, scheduledShipDate } = req.body;
+  const { name, mobile, email, address, area, landmark, city, state, pincode, pack, price, qty, utm = {}, referrerId, scheduledShipDate } = req.body;
 
   // Basic server-side validation
   if (!name?.trim() || !mobile?.trim() || !address?.trim() || !pincode?.trim() || !city?.trim() || !state) {
@@ -101,6 +101,8 @@ export default async function handler(req, res) {
       mobile:      mobile.trim(),
       email:       email?.trim() || null,
       address,
+      area:        area?.trim()     || null,
+      landmark:    landmark?.trim() || null,
       city,
       state,
       pincode,

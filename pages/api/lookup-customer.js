@@ -4,7 +4,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
   const { mobile, email } = req.body;
-  if (!mobile || !email) return res.status(400).json({ found: false });
+  if (!mobile) return res.status(400).json({ found: false });
 
   try {
     const customer = await lookupCustomer({ mobile, email });

@@ -492,25 +492,26 @@ export default function Home() {
   const lookupRef = useRef(null);
   const tryLookup = useCallback(async (mobile, email) => {
     if (!/^[6-9][0-9]{9}$/.test(mobile)) return;
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
     clearTimeout(lookupRef.current);
     lookupRef.current = setTimeout(async () => {
       try {
         const res  = await fetch('/api/lookup-customer', {
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify({ mobile, email }),
+          body:    JSON.stringify({ mobile, email: email || undefined }),
         });
         const data = await res.json();
         if (data.found) {
           const c = data.customer;
           setForm(f => ({
             ...f,
-            name:    f.name    || c.name,
-            house:   f.house   || c.address,
-            pincode: f.pincode || c.pincode,
-            city:    f.city    || c.city,
-            state:   f.state   || c.state,
+            name:     f.name     || c.name,
+            house:    f.house    || c.address  || '',
+            area:     f.area     || c.area     || '',
+            landmark: f.landmark || c.landmark || '',
+            pincode:  f.pincode  || c.pincode,
+            city:     f.city     || c.city,
+            state:    f.state    || c.state,
           }));
           if (c.pincode) handlePincode(c.pincode);
           setWelcomeBack(c.name);
