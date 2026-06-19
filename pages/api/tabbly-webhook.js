@@ -16,12 +16,18 @@ export default async function handler(req, res) {
   }
 
   const raw = req.body || {};
+  console.log('[Tabbly] webhook payload:', JSON.stringify(raw));
 
   // Tabbly payload: order_id lives in custom_identifiers (JSON string), outcomes in call_json_output
   let parsedIdentifiers = {};
   try { parsedIdentifiers = JSON.parse(raw.custom_identifiers || '{}'); } catch {}
 
-  const order_id    = raw.order_id    || parsedIdentifiers.order_id;
+  // sip_call_id fallback: we set it to "vedayu_{orderId}" when triggering
+  const sipOrderId = typeof raw.sip_call_id === 'string' && raw.sip_call_id.startsWith('vedayu_')
+    ? raw.sip_call_id.replace(/^vedayu_/, '')
+    : null;
+
+  const order_id    = raw.order_id || parsedIdentifiers.order_id || sipOrderId;
   const call_status = raw.call_status;
   const jsonOutput  = raw.call_json_output || {};
 

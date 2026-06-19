@@ -411,7 +411,7 @@ export default function Home() {
   const fieldOk = {
     name:    () => form.name.trim().length > 1,
     mobile:  () => /^[6-9][0-9]{9}$/.test(form.mobile.trim()),
-    email:   () => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()),
+    email:   () => !form.email.trim() || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()),
     house:   () => form.house.trim().length > 2,
     area:    () => form.area.trim().length > 2,
     pincode: () => /^[1-9][0-9]{5}$/.test(form.pincode),
@@ -544,8 +544,7 @@ export default function Home() {
   const validate = () => {
     if (!form.name.trim())                                        return 'Please enter your full name.';
     if (!/^[6-9][0-9]{9}$/.test(form.mobile.trim()))             return 'Please enter a valid 10-digit mobile number.';
-    if (!form.email.trim()) return 'Please enter your email address.';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) return 'Please enter a valid email address.';
+    if (form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) return 'Please enter a valid email address.';
     if (!form.house.trim())  return 'Please enter your house / flat / building.';
     if (!form.area.trim())   return 'Please enter your area / locality.';
     if (!/^[1-9][0-9]{5}$/.test(form.pincode))                   return 'Please enter a valid 6-digit pincode.';
