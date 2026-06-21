@@ -1351,7 +1351,7 @@ export default function Home() {
                   controls
                   playsInline
                   preload="none"
-                  poster="https://res.cloudinary.com/ddmmfkvwb/image/upload/w_400,h_700,c_fill,q_auto,f_auto/thumb-testimonial_btk4ko"
+                  poster="https://res.cloudinary.com/ddmmfkvwb/video/upload/w_400,h_700,c_fill,q_auto,f_auto,so_0/vedayu-user-testimonial_qwhr2c.jpg"
                 >
                   <source src="https://res.cloudinary.com/ddmmfkvwb/video/upload/f_auto,q_auto/v1782027864/vedayu-user-testimonial_qwhr2c.mp4" type="video/mp4" />
                 </video>
@@ -1369,7 +1369,7 @@ export default function Home() {
                   controls
                   playsInline
                   preload="none"
-                  poster="https://res.cloudinary.com/ddmmfkvwb/image/upload/w_400,h_700,c_fill,q_auto,f_auto/thumb-meta-ad_jzvhar"
+                  poster="https://res.cloudinary.com/ddmmfkvwb/video/upload/w_400,h_700,c_fill,q_auto,f_auto,so_0/vedayu-doctor-suggested_bptbqg.jpg"
                 >
                   <source src="https://res.cloudinary.com/ddmmfkvwb/video/upload/f_auto,q_auto/v1782028584/vedayu-doctor-suggested_bptbqg.mp4" type="video/mp4" />
                 </video>
