@@ -1351,6 +1351,42 @@ export default function Home() {
                   controls
                   playsInline
                   preload="none"
+                  poster="https://res.cloudinary.com/ddmmfkvwb/image/upload/w_400,h_700,c_fill,q_auto,f_auto/thumb-testimonial_btk4ko"
+                >
+                  <source src={process.env.NEXT_PUBLIC_VIDEO_TESTIMONIAL || "/videos/testimonial.mp4"} type="video/mp4" />
+                </video>
+              </div>
+              <div className="video-duo-caption">
+                <div className="video-stars">★★★★★</div>
+                <p className="video-pull-quote">&ldquo;Maine pehle kai products try kiye — kuch kaam aaya, kuch nahi. Vijaysar glass ne meri subah ki routine change kar di.&rdquo;</p>
+                <div className="video-author-line">{t('video.t1.author')}</div>
+              </div>
+            </div>
+            <div className="video-duo-item">
+              <div className="video-player-wrap">
+                <video
+                  className="video-player"
+                  controls
+                  playsInline
+                  preload="none"
+                  poster="https://res.cloudinary.com/ddmmfkvwb/image/upload/w_400,h_700,c_fill,q_auto,f_auto/thumb-meta-ad_jzvhar"
+                >
+                  <source src={process.env.NEXT_PUBLIC_VIDEO_METAAD || "/videos/meta-ad.mp4"} type="video/mp4" />
+                </video>
+              </div>
+              <div className="video-duo-caption">
+                <div className="video-stars">★★★★★</div>
+                <p className="video-pull-quote">&ldquo;Vijaysar wood — 2,000 years of Ayurvedic tradition, one simple morning habit. Pure, natural, and genuinely effective.&rdquo;</p>
+                <div className="video-author-line">{t('video.t2.author')}</div>
+              </div>
+            </div>
+            <div className="video-duo-item">
+              <div className="video-player-wrap">
+                <video
+                  className="video-player"
+                  controls
+                  playsInline
+                  preload="none"
                   poster="https://res.cloudinary.com/ddmmfkvwb/video/upload/w_400,h_700,c_fill,q_auto,f_auto,so_0/vedayu-user-testimonial_qwhr2c.jpg"
                 >
                   <source src="https://res.cloudinary.com/ddmmfkvwb/video/upload/f_auto,q_auto/v1782027864/vedayu-user-testimonial_qwhr2c.mp4" type="video/mp4" />
@@ -1358,8 +1394,8 @@ export default function Home() {
               </div>
               <div className="video-duo-caption">
                 <div className="video-stars">★★★★★</div>
-                <p className="video-pull-quote">&ldquo;Maine pehle kai products try kiye — kuch kaam aaya, kuch nahi. Vijaysar glass ne meri subah ki routine change kar di.&rdquo;</p>
-                <div className="video-author-line">{t('video.t1.author')}</div>
+                <p className="video-pull-quote">&ldquo;Shuru mein mujhe yakeen nahi tha, lekin 3 hafte mein fark dikhne laga. Ab iske bina subah adhoori lagti hai.&rdquo;</p>
+                <div className="video-author-line">{t('video.t3.author')}</div>
               </div>
             </div>
             <div className="video-duo-item">
@@ -1376,8 +1412,8 @@ export default function Home() {
               </div>
               <div className="video-duo-caption">
                 <div className="video-stars">★★★★★</div>
-                <p className="video-pull-quote">&ldquo;Vijaysar wood — 2,000 years of Ayurvedic tradition, one simple morning habit. Pure, natural, and genuinely effective.&rdquo;</p>
-                <div className="video-author-line">{t('video.t2.author')}</div>
+                <p className="video-pull-quote">&ldquo;Doctor ne suggest kiya tha Vijaysar try karne ke liye. 2 mahine ho gaye — results dekh ke khud hairan hoon.&rdquo;</p>
+                <div className="video-author-line">{t('video.t4.author')}</div>
               </div>
             </div>
           </div>
