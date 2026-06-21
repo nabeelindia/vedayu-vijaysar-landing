@@ -2255,7 +2255,7 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
     gap: 12px;
     margin-left: -20px;
     margin-right: -20px;
-    padding-left: 24px;
+    padding-left: 40px;
     padding-right: 24px;
     padding-bottom: 10px;
   }
@@ -2284,7 +2284,7 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
     gap: 14px;
     margin-left: -20px;
     margin-right: -20px;
-    padding-left: 24px;
+    padding-left: 40px;
     padding-right: 24px;
     padding-bottom: 10px;
   }

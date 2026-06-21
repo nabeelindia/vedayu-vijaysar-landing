@@ -1347,10 +1347,10 @@ export default function Home() {
           {(() => {
             const videos = [
               {
-                src: process.env.NEXT_PUBLIC_VIDEO_TESTIMONIAL || '/videos/testimonial.mp4',
-                poster: 'https://res.cloudinary.com/ddmmfkvwb/image/upload/w_400,h_700,c_fill,q_auto,f_auto/thumb-testimonial_btk4ko',
-                author: t('video.t1.author'),
-                quote: 'Maine pehle kai products try kiye — Vijaysar glass ne meri subah ki routine change kar di.',
+                src: 'https://res.cloudinary.com/ddmmfkvwb/video/upload/f_auto,q_auto/v1782028584/vedayu-doctor-suggested_bptbqg.mp4',
+                poster: 'https://res.cloudinary.com/ddmmfkvwb/video/upload/w_400,h_700,c_fill,q_auto,f_auto,so_0/vedayu-doctor-suggested_bptbqg.jpg',
+                author: t('video.t4.author'),
+                quote: 'Doctor ne suggest kiya. 2 mahine ho gaye — results dekh ke khud hairan hoon.',
               },
               {
                 src: process.env.NEXT_PUBLIC_VIDEO_METAAD || '/videos/meta-ad.mp4',
@@ -1365,10 +1365,10 @@ export default function Home() {
                 quote: '3 hafte mein fark dikhne laga. Ab iske bina subah adhoori lagti hai.',
               },
               {
-                src: 'https://res.cloudinary.com/ddmmfkvwb/video/upload/f_auto,q_auto/v1782028584/vedayu-doctor-suggested_bptbqg.mp4',
-                poster: 'https://res.cloudinary.com/ddmmfkvwb/video/upload/w_400,h_700,c_fill,q_auto,f_auto,so_0/vedayu-doctor-suggested_bptbqg.jpg',
-                author: t('video.t4.author'),
-                quote: 'Doctor ne suggest kiya. 2 mahine ho gaye — results dekh ke khud hairan hoon.',
+                src: process.env.NEXT_PUBLIC_VIDEO_TESTIMONIAL || '/videos/testimonial.mp4',
+                poster: 'https://res.cloudinary.com/ddmmfkvwb/image/upload/w_400,h_700,c_fill,q_auto,f_auto/thumb-testimonial_btk4ko',
+                author: t('video.t1.author'),
+                quote: 'Maine pehle kai products try kiye — Vijaysar glass ne meri subah ki routine change kar di.',
               },
             ];
             return (
