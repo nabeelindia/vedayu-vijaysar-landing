@@ -517,5 +517,7 @@
   "order_confirmed.notify_denied_msg": "⚠️ Notifications blocked. To enable, update your browser's notification permissions for this site.",
   "order_confirmed.est_delivery_label": "Est. Delivery",
   "order_confirmed.notify_blocked_msg": "Notifications are blocked in your browser. To enable, go to your browser settings and allow notifications for this site.",
-  "order_confirmed.track_order_cta": "📦 Track My Order →"
+  "order_confirmed.track_order_cta": "📦 Track My Order →",
+  "specs.show_more": "Show all specifications ↓",
+  "specs.show_less": "Show fewer specifications ↑"
 }

@@ -46,6 +46,13 @@ function App({ Component, pageProps }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Register service worker globally so push notifications work on all pages
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+  }, []);
+
   // Track language usage — fires once per locale per session (sessionStorage dedup)
   useEffect(() => {
     try {

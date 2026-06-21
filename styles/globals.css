@@ -252,9 +252,8 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
    ==================================================== */
 .benefits-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px,100%),1fr)); gap: 18px; }
 .benefit-card {
-  background: #fff; border-radius: 12px; padding: 26px 18px;
-  text-align: center; box-shadow: 0 2px 16px rgba(92,61,30,.07);
-  border: 1px solid #f0e8d8;
+  background: #fff; border-radius: 14px; padding: 28px 20px;
+  text-align: center; border: 1.5px solid #e8d8c0;
   cursor: default;
 }
 .benefit-icon { font-size: 2.2rem; margin-bottom: 12px; }
@@ -292,7 +291,10 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
    MAKING PROCESS
    ==================================================== */
 .process-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px,1fr)); gap: 16px; text-align: center; }
-.process-item { padding: 18px 12px; }
+.process-item {
+  padding: 24px 20px; border-radius: 14px;
+  background: rgba(255,255,255,0.13);
+}
 .process-num {
   width: 46px; height: 46px; background: var(--vd-gold); color: #fff;
   border-radius: 50%; display: flex; align-items: center; justify-content: center;
@@ -312,6 +314,14 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
 .spec-row:last-child { border-bottom: none; }
 .spec-label { background: var(--vd-off-white); font-weight: 600; font-size: .88rem; color: var(--vd-dark-brown); padding: 12px 18px; }
 .spec-value { background: #fff; font-size: .88rem; color: var(--vd-text-light); padding: 12px 18px; }
+.specs-show-more {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  margin: 14px auto 0; background: none; border: 1px solid var(--vd-border);
+  border-radius: 8px; padding: 10px 20px; font-size: .84rem; font-weight: 600;
+  color: var(--vd-brown); cursor: pointer; width: 100%; max-width: 600px;
+  transition: background .18s;
+}
+.specs-show-more:hover { background: var(--vd-off-white); }
 
 /* ====================================================
    PRICING
@@ -615,11 +625,14 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
 /* ====================================================
    TRUST
    ==================================================== */
-.trust-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px,1fr)); gap: 18px; text-align: center; }
-.trust-item  { padding: 18px 14px; }
+.trust-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px,1fr)); gap: 18px; text-align: center; }
+.trust-item  {
+  padding: 24px 20px; border-radius: 14px;
+  background: rgba(255,255,255,0.15);
+}
 .trust-icon  { font-size: 2.1rem; margin-bottom: 10px; }
-.trust-item h3 { font-size: .86rem; font-weight: 700; color: #fff; margin-bottom: 5px; }
-.trust-item p  { font-size: .76rem; color: rgba(255,255,255,.76); line-height: 1.5; }
+.trust-item h3 { font-size: .86rem; font-weight: 700; color: #fff; margin-bottom: 5px; word-break: break-word; }
+.trust-item p  { font-size: .76rem; color: rgba(255,255,255,.82); line-height: 1.5; word-break: break-word; overflow-wrap: break-word; }
 
 /* ====================================================
    REVIEWS
@@ -773,9 +786,24 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
 }
 @media (max-width: 720px) {
   .video-duo-wrap {
-    grid-template-columns: 1fr;
-    gap: 32px;
-    max-width: 340px;
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 16px;
+    max-width: unset;
+    margin-left: -20px;
+    margin-right: -20px;
+    padding-left: 24px;
+    padding-right: 24px;
+    padding-bottom: 10px;
+  }
+  .video-duo-wrap::-webkit-scrollbar { display: none; }
+  .video-duo-item {
+    flex: 0 0 76vw;
+    scroll-snap-align: start;
   }
   .video-pull-quote {
     font-size: .88rem;
@@ -1013,6 +1041,13 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
 .toast-error { border-left: 4px solid #e53e3e; }
 .toast-success { border-left: 4px solid var(--vd-green); }
 @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@media (max-width: 767px) {
+  .toast {
+    top: auto; bottom: 82px; left: 16px; right: 16px; max-width: none;
+    animation: slideUp .3s ease-out;
+  }
+  @keyframes slideUp { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+}
 
 /* ====================================================
    RESPONSIVE
@@ -2049,4 +2084,58 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
 .oc-cod-call-note {
   margin: 6px 0 0; font-size: .72rem; color: var(--vd-text-light);
   font-style: italic; line-height: 1.5;
+}
+
+/* ====================================================
+   MOBILE HORIZONTAL SCROLL CAROUSELS
+   problem-grid, benefits-grid, process-grid, trust-grid
+   ==================================================== */
+@media (max-width: 767px) {
+  /* Shared track styles */
+  .problem-grid,
+  .benefits-grid,
+  .process-grid,
+  .trust-grid {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 12px;
+    margin-left: -20px;
+    margin-right: -20px;
+    padding-left: 24px;
+    padding-right: 24px;
+    padding-bottom: 10px;
+  }
+  .problem-grid::-webkit-scrollbar,
+  .benefits-grid::-webkit-scrollbar,
+  .process-grid::-webkit-scrollbar,
+  .trust-grid::-webkit-scrollbar { display: none; }
+
+  /* Card widths — peek ~12% of the next card to signal swipeability */
+  .problem-card { flex: 0 0 80vw; scroll-snap-align: start; }
+  .benefit-card { flex: 0 0 72vw; scroll-snap-align: start; }
+  .process-item { flex: 0 0 72vw; scroll-snap-align: start; }
+  .trust-item   { flex: 0 0 72vw; scroll-snap-align: start; }
+
+  /* Restore grid overrides that conflict with flex */
+  .benefits-grid { grid-template-columns: unset; }
+
+  /* Reviews horizontal scroll */
+  .reviews-grid {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 14px;
+    margin-left: -20px;
+    margin-right: -20px;
+    padding-left: 24px;
+    padding-right: 24px;
+    padding-bottom: 10px;
+  }
+  .reviews-grid::-webkit-scrollbar { display: none; }
+  .review-card { flex: 0 0 82vw; scroll-snap-align: start; }
 }

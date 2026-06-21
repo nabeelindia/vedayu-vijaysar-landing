@@ -517,5 +517,7 @@
   "order_confirmed.notify_denied_msg": "⚠️ नोटिफिकेशन ब्लॉक है। ब्राउज़र सेटिंग में इस साइट की अनुमति दें।",
   "order_confirmed.est_delivery_label": "अनुमानित डिलीवरी",
   "order_confirmed.notify_blocked_msg": "आपके ब्राउज़र में नोटिफिकेशन ब्लॉक हैं। सक्षम करने के लिए, ब्राउज़र सेटिंग में इस साइट के लिए नोटिफिकेशन की अनुमति दें।",
-  "order_confirmed.track_order_cta": "📦 ऑर्डर ट्रैक करें →"
+  "order_confirmed.track_order_cta": "📦 ऑर्डर ट्रैक करें →",
+  "specs.show_more": "सभी विवरण देखें ↓",
+  "specs.show_less": "कम विवरण दिखाएं ↑"
 }

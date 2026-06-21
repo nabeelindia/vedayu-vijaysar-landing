@@ -96,7 +96,7 @@ export default async function handler(req, res) {
       abandoned_at: new Date().toISOString(),
       wa_sent_at:   new Date().toISOString(),
       recovered:    false,
-    }, { onConflict: 'mobile' }).catch(() => {});
+    }, { onConflict: 'mobile' }).then(() => {}, () => {});
   }
 
   return res.status(200).end();

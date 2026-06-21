@@ -23,7 +23,12 @@ const PACKS = {
   2: { qty: 2, price: 899,  original: 1398, label: 'Vijaysar Glass × 2', name: 'Pack of 2',       tag: 'Couple Pack',        saving: 'You save ₹499 — ₹449.50 per glass' },
   5: { qty: 5, price: 1999, original: 3495, label: 'Vijaysar Glass × 5', name: 'Pack of 5',       tag: 'Family Pack',        saving: 'You save ₹1,496 — ₹399.80 per glass!' },
 };
-const fmt = (n) => '₹' + Number(n).toLocaleString('en-IN');
+const fmt = (n) => {
+  const num = Number(n);
+  if (num >= 100000) return '₹' + Math.floor(num / 100000) + ',' + String(Math.floor((num % 100000) / 1000)).padStart(2,'0') + ',' + String(num % 1000).padStart(3,'0');
+  if (num >= 1000)   return '₹' + Math.floor(num / 1000) + ',' + String(num % 1000).padStart(3,'0');
+  return '₹' + num;
+};
 
 /* ─── Delivery estimate helper ──────────────────────────────── */
 function getDeliveryEst(pincode, locale) {
@@ -190,6 +195,7 @@ export default function Home() {
   const [mobSummaryOpen, setMobSummaryOpen] = useState(false);
   const [loading,    setLoading]    = useState(false);
   const [openFaq,    setOpenFaq]    = useState(null);
+  const [showAllSpecs, setShowAllSpecs] = useState(false);
   const [toast,      setToast]      = useState(null);
   const [welcomeBack,    setWelcomeBack]    = useState(null);
   const [pincodeLoading, setPincodeLoading] = useState(false);
@@ -1706,13 +1712,22 @@ export default function Home() {
           })()}
 
           <div className="specs-table">
-            {[1,2,3,4,5,6,7,8,9,10,11,12,13,14].map(n => (
-              <div className="spec-row" key={n}>
+            {[1,2,3,4,5,7,8,9,10,11,12,13,14].map((n, i) => (
+              <div className="spec-row" key={n} style={!showAllSpecs && i >= 6 ? { display:'none' } : undefined} aria-hidden={!showAllSpecs && i >= 6 ? true : undefined}>
                 <div className="spec-label">{t(`specs.row${n}.label`)}</div>
                 <div className="spec-value">{t(`specs.row${n}.value`)}</div>
               </div>
             ))}
           </div>
+          <button
+            className="specs-show-more"
+            onClick={() => setShowAllSpecs(s => !s)}
+          >
+            {showAllSpecs ? t('specs.show_less') : t('specs.show_more')}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transition:'transform .25s', transform: showAllSpecs ? 'rotate(180deg)' : 'none' }}>
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
         </div>
       </section>
 
@@ -2304,7 +2319,7 @@ export default function Home() {
                 }
               </div>
               <button
-                onClick={formReady ? placeOrder : () => scrollToCheckout()}
+                onClick={formReady ? placeOrder : () => { scrollToCheckout(); setTimeout(() => showToast('Almost there! Just add your name, mobile & address to confirm your order.', 'info'), 400); }}
                 disabled={loading}
                 style={{ background: formReady ? '#4A7C59' : 'var(--vd-gold)', color: '#fff', fontWeight: 700, padding: '11px 22px', borderRadius: 6, fontSize: '.88rem', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'background .3s' }}
               >
