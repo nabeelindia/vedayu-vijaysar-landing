@@ -35,6 +35,17 @@ export default function OrderDetail() {
   const [waMsg,     setWaMsg]     = useState('');
   const [editingSchedule,  setEditingSchedule]  = useState(false);
   const [scheduleInput,    setScheduleInput]    = useState('');
+  const [editingCustomer,  setEditingCustomer]  = useState(false);
+  const [custName,         setCustName]         = useState('');
+  const [custMobile,       setCustMobile]       = useState('');
+  const [custEmail,        setCustEmail]        = useState('');
+  const [editingAddress,   setEditingAddress]   = useState(false);
+  const [addrLine,         setAddrLine]         = useState('');
+  const [addrCity,         setAddrCity]         = useState('');
+  const [addrState,        setAddrState]        = useState('');
+  const [addrPin,          setAddrPin]          = useState('');
+  const [editingCourier,   setEditingCourier]   = useState(false);
+  const [courierInput,     setCourierInput]     = useState('');
 
   useEffect(() => {
     if (!id) return;
@@ -153,26 +164,108 @@ export default function OrderDetail() {
           </div>
           <table style={{ width:'100%', borderCollapse:'collapse' }}>
             <tbody>
-              <Row label="Customer"   value={order.name} />
-              <Row label="Mobile"     value={<a href={`tel:+${order.mobile}`} style={{ color:'#5C3D1E' }}>{order.mobile}</a>} />
-              <Row label="Email"      value={order.email || '—'} />
-              <Row label="Address"    value={<span>{`${order.address}, ${order.city}, ${order.state} — ${order.pincode}`}{order.address_changed && (
-                <span style={{ display:'inline-flex', alignItems:'center', gap:6, marginLeft:8 }}>
-                  <span style={{
-                    fontSize: '.72rem', fontWeight: 700,
-                    color: '#E65100', background: '#FFF3E0',
-                    padding: '2px 8px', borderRadius: 20,
-                  }}>
-                    📍 Address updated
-                  </span>
-                  <button onClick={() => { if (confirm('Mark address flag as reviewed?')) patch({ address_changed: false }); }}
-                    disabled={saving}
-                    style={{ fontSize:'.65rem', padding:'1px 7px', borderRadius:20, border:'1px solid #E65100',
-                      background:'transparent', color:'#E65100', cursor:'pointer', fontWeight:700 }}>
-                    Clear
-                  </button>
-                </span>
-              )}</span>} />
+              {/* Customer Name */}
+              <tr style={{ borderBottom:'1px solid #f0ede8' }}>
+                <td style={{ padding:'9px 0', fontWeight:600, color:'#555', width:'40%', fontSize:'.85rem' }}>Customer</td>
+                <td style={{ padding:'9px 0', fontSize:'.85rem', color:'#1a1a1a' }}>
+                  {editingCustomer ? (
+                    <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                      <input value={custName} onChange={e => setCustName(e.target.value)} placeholder="Name"
+                        style={{ padding:'5px 8px', borderRadius:6, border:'1.5px solid #4A7C59', fontSize:'.82rem' }} />
+                      <input value={custMobile} onChange={e => setCustMobile(e.target.value)} placeholder="Mobile"
+                        style={{ padding:'5px 8px', borderRadius:6, border:'1.5px solid #4A7C59', fontSize:'.82rem' }} />
+                      <input value={custEmail} onChange={e => setCustEmail(e.target.value)} placeholder="Email (optional)"
+                        style={{ padding:'5px 8px', borderRadius:6, border:'1.5px solid #4A7C59', fontSize:'.82rem' }} />
+                      <div style={{ display:'flex', gap:6 }}>
+                        <button onClick={async () => {
+                          await patch({ name: custName.trim(), mobile: custMobile.trim(), email: custEmail.trim() || null });
+                          setEditingCustomer(false);
+                        }} disabled={saving}
+                          style={{ padding:'4px 10px', background:'#4A7C59', color:'#fff', border:'none', borderRadius:6, fontSize:'.78rem', fontWeight:700, cursor:'pointer' }}>
+                          {saving ? '…' : 'Save'}
+                        </button>
+                        <button onClick={() => setEditingCustomer(false)}
+                          style={{ padding:'4px 8px', background:'none', border:'none', color:'#888', fontSize:'.78rem', cursor:'pointer' }}>
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <span style={{ display:'flex', gap:8, alignItems:'center' }}>
+                      <span>{order.name}</span>
+                      <button onClick={() => { setCustName(order.name || ''); setCustMobile(order.mobile || ''); setCustEmail(order.email || ''); setEditingCustomer(true); }}
+                        style={{ background:'none', border:'none', cursor:'pointer', fontSize:'.8rem', color:'#4A7C59', padding:0 }} title="Edit customer">✏️</button>
+                    </span>
+                  )}
+                </td>
+              </tr>
+              {/* Mobile — shown only when not in customer edit mode */}
+              {!editingCustomer && (
+                <tr style={{ borderBottom:'1px solid #f0ede8' }}>
+                  <td style={{ padding:'9px 0', fontWeight:600, color:'#555', width:'40%', fontSize:'.85rem' }}>Mobile</td>
+                  <td style={{ padding:'9px 0', fontSize:'.85rem', color:'#1a1a1a' }}>
+                    <a href={`tel:+${order.mobile}`} style={{ color:'#5C3D1E' }}>{order.mobile}</a>
+                  </td>
+                </tr>
+              )}
+              {/* Email — shown only when not in customer edit mode */}
+              {!editingCustomer && (
+                <tr style={{ borderBottom:'1px solid #f0ede8' }}>
+                  <td style={{ padding:'9px 0', fontWeight:600, color:'#555', width:'40%', fontSize:'.85rem' }}>Email</td>
+                  <td style={{ padding:'9px 0', fontSize:'.85rem', color:'#1a1a1a' }}>{order.email || '—'}</td>
+                </tr>
+              )}
+              {/* Address */}
+              <tr style={{ borderBottom:'1px solid #f0ede8' }}>
+                <td style={{ padding:'9px 0', fontWeight:600, color:'#555', width:'40%', fontSize:'.85rem' }}>Address</td>
+                <td style={{ padding:'9px 0', fontSize:'.85rem', color:'#1a1a1a' }}>
+                  {editingAddress ? (
+                    <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                      <input value={addrLine} onChange={e => setAddrLine(e.target.value)} placeholder="Street address"
+                        style={{ padding:'5px 8px', borderRadius:6, border:'1.5px solid #4A7C59', fontSize:'.82rem' }} />
+                      <div style={{ display:'flex', gap:6 }}>
+                        <input value={addrCity} onChange={e => setAddrCity(e.target.value)} placeholder="City"
+                          style={{ flex:1, padding:'5px 8px', borderRadius:6, border:'1.5px solid #4A7C59', fontSize:'.82rem' }} />
+                        <input value={addrState} onChange={e => setAddrState(e.target.value)} placeholder="State"
+                          style={{ flex:1, padding:'5px 8px', borderRadius:6, border:'1.5px solid #4A7C59', fontSize:'.82rem' }} />
+                        <input value={addrPin} onChange={e => setAddrPin(e.target.value)} placeholder="Pincode"
+                          style={{ width:80, padding:'5px 8px', borderRadius:6, border:'1.5px solid #4A7C59', fontSize:'.82rem' }} />
+                      </div>
+                      <div style={{ display:'flex', gap:6 }}>
+                        <button onClick={async () => {
+                          await patch({ address: addrLine.trim(), city: addrCity.trim(), state: addrState.trim(), pincode: addrPin.trim() });
+                          setEditingAddress(false);
+                        }} disabled={saving}
+                          style={{ padding:'4px 10px', background:'#4A7C59', color:'#fff', border:'none', borderRadius:6, fontSize:'.78rem', fontWeight:700, cursor:'pointer' }}>
+                          {saving ? '…' : 'Save'}
+                        </button>
+                        <button onClick={() => setEditingAddress(false)}
+                          style={{ padding:'4px 8px', background:'none', border:'none', color:'#888', fontSize:'.78rem', cursor:'pointer' }}>
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <span style={{ display:'flex', alignItems:'flex-start', gap:8, flexWrap:'wrap' }}>
+                      <span>{`${order.address}, ${order.city}, ${order.state} — ${order.pincode}`}</span>
+                      {order.address_changed && (
+                        <span style={{ display:'inline-flex', alignItems:'center', gap:6 }}>
+                          <span style={{ fontSize:'.72rem', fontWeight:700, color:'#E65100', background:'#FFF3E0', padding:'2px 8px', borderRadius:20 }}>
+                            📍 Address updated
+                          </span>
+                          <button onClick={() => { if (confirm('Mark address flag as reviewed?')) patch({ address_changed: false }); }}
+                            disabled={saving}
+                            style={{ fontSize:'.65rem', padding:'1px 7px', borderRadius:20, border:'1px solid #E65100', background:'transparent', color:'#E65100', cursor:'pointer', fontWeight:700 }}>
+                            Clear
+                          </button>
+                        </span>
+                      )}
+                      <button onClick={() => { setAddrLine(order.address || ''); setAddrCity(order.city || ''); setAddrState(order.state || ''); setAddrPin(order.pincode || ''); setEditingAddress(true); }}
+                        style={{ background:'none', border:'none', cursor:'pointer', fontSize:'.8rem', color:'#4A7C59', padding:0 }} title="Edit address">✏️</button>
+                    </span>
+                  )}
+                </td>
+              </tr>
               <Row label="Pack"       value={`${order.pack} × ${order.qty}`} />
               <Row label="Amount"     value={fmt(order.price)} />
               <Row label="Payment"    value={order.method === 'cod' ? 'Cash on Delivery' : 'Prepaid (UPI/Card)'} />
@@ -257,7 +350,41 @@ export default function OrderDetail() {
                   )}
                 </td>
               </tr>
-              {!editingTracking && order.courier && <Row label="Courier" value={order.courier} />}
+              <tr style={{ borderBottom:'1px solid #f0ede8' }}>
+                <td style={{ padding:'9px 0', fontWeight:600, color:'#555', width:'40%', fontSize:'.85rem' }}>Courier</td>
+                <td style={{ padding:'9px 0', fontSize:'.85rem', color:'#1a1a1a' }}>
+                  {editingCourier ? (
+                    <span style={{ display:'flex', gap:6, alignItems:'center' }}>
+                      <select value={courierInput} onChange={e => setCourierInput(e.target.value)}
+                        style={{ padding:'5px 8px', borderRadius:6, border:'1.5px solid #4A7C59', fontSize:'.82rem', background:'#fff' }}>
+                        <option>Delhivery</option>
+                        <option>DTDC</option>
+                        <option>Bluedart</option>
+                        <option>Ecom Express</option>
+                        <option>XpressBees</option>
+                        <option>Shadowfax</option>
+                        <option>NimbusPost</option>
+                        <option>India Post</option>
+                        <option>Other</option>
+                      </select>
+                      <button onClick={async () => { await patch({ courier: courierInput }); setEditingCourier(false); }} disabled={saving}
+                        style={{ padding:'4px 10px', background:'#4A7C59', color:'#fff', border:'none', borderRadius:6, fontSize:'.78rem', fontWeight:700, cursor:'pointer' }}>
+                        {saving ? '…' : 'Save'}
+                      </button>
+                      <button onClick={() => setEditingCourier(false)}
+                        style={{ padding:'4px 8px', background:'none', border:'none', color:'#888', fontSize:'.78rem', cursor:'pointer' }}>
+                        Cancel
+                      </button>
+                    </span>
+                  ) : (
+                    <span style={{ display:'flex', alignItems:'center', gap:8 }}>
+                      <span>{order.courier || '—'}</span>
+                      <button onClick={() => { setCourierInput(order.courier || 'Delhivery'); setEditingCourier(true); }}
+                        style={{ background:'none', border:'none', cursor:'pointer', fontSize:'.8rem', color:'#4A7C59', padding:0 }} title="Edit courier">✏️</button>
+                    </span>
+                  )}
+                </td>
+              </tr>
               {order.sent_at     && <Row label="Order sent"   value={fmtD(order.sent_at)} />}
               {order.delivered_at && <Row label="Delivered"   value={fmtD(order.delivered_at)} />}
             </tbody>
