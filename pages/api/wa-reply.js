@@ -1,6 +1,8 @@
 import { supabase } from '../../lib/supabase';
+import { checkAdminAuth } from './admin/_auth';
 
 export default async function handler(req, res) {
+  if (!checkAdminAuth(req)) return res.status(401).json({ error: 'Unauthorized' });
   if (req.method !== 'POST') return res.status(405).end();
 
   const { phone, message } = req.body || {};

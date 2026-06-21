@@ -1,6 +1,8 @@
 import { supabase } from '../../lib/supabase';
+import { checkAdminAuth } from './admin/_auth';
 
 export default async function handler(req, res) {
+  if (!checkAdminAuth(req)) return res.status(401).json({ error: 'Unauthorized' });
   if (!supabase) return res.status(503).json({ error: 'Supabase not configured' });
 
   if (req.method === 'PATCH') {
