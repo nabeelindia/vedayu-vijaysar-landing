@@ -722,21 +722,21 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
 .vtm-row {
   display: flex;
   flex-direction: row;
-  gap: 14px;
+  gap: 16px;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
+  scroll-padding-left: 18px;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   padding-bottom: 6px;
-  margin-left: -4px;
-  margin-right: -4px;
-  padding-left: 4px;
-  padding-right: 4px;
+  padding-left: 18px;
+  padding-right: 24px;
 }
 .vtm-row::-webkit-scrollbar { display: none; }
 
 .vtm-card {
-  flex: 0 0 160px;
+  flex: 0 0 62vw;
+  max-width: 240px;
   scroll-snap-align: start;
   background: none;
   border: none;
@@ -2250,12 +2250,13 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
     display: flex;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
+    scroll-padding-left: 38px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     gap: 12px;
     margin-left: -20px;
     margin-right: -20px;
-    padding-left: 40px;
+    padding-left: 38px;
     padding-right: 24px;
     padding-bottom: 10px;
   }
@@ -2279,12 +2280,13 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
     display: flex;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
+    scroll-padding-left: 38px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     gap: 14px;
     margin-left: -20px;
     margin-right: -20px;
-    padding-left: 40px;
+    padding-left: 38px;
     padding-right: 24px;
     padding-bottom: 10px;
   }
