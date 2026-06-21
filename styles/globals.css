@@ -629,6 +629,7 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
 .trust-item  {
   padding: 24px 20px; border-radius: 14px;
   background: rgba(255,255,255,0.15);
+  min-width: 0; overflow: hidden;
 }
 .trust-icon  { font-size: 2.1rem; margin-bottom: 10px; }
 .trust-item h3 { font-size: .86rem; font-weight: 700; color: #fff; margin-bottom: 5px; word-break: break-word; }
