@@ -1713,7 +1713,7 @@ export default function Home() {
 
           <div className="specs-table">
             {[1,2,3,4,5,7,8,9,10,11,12,13,14].map((n, i) => (
-              <div className="spec-row" key={n} style={!showAllSpecs && i >= 6 ? { display:'none' } : undefined} aria-hidden={!showAllSpecs && i >= 6 ? true : undefined}>
+              <div className="spec-row" key={n} style={!showAllSpecs && i >= 5 ? { display:'none' } : undefined} aria-hidden={!showAllSpecs && i >= 5 ? true : undefined}>
                 <div className="spec-label">{t(`specs.row${n}.label`)}</div>
                 <div className="spec-value">{t(`specs.row${n}.value`)}</div>
               </div>
