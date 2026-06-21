@@ -69,7 +69,7 @@ function GlassBagBar({ bag, onPay, paying, paid }) {
   );
 }
 
-function GlassUpsellSection({ ladder, orderId, name, mobile, email }) {
+function GlassUpsellSection({ ladder, orderId, name, mobile, email, method, originalPrice, originalPack }) {
   const [step, setStep]               = useState(0);
   const [bag, setBag]                 = useState([]);
   const [paying, setPaying]           = useState(false);
@@ -314,7 +314,10 @@ function GlassUpsellSection({ ladder, orderId, name, mobile, email }) {
             onClick={() => { setBag(b => [...b, { glass: current.glass, price: current.price }]); setStep(s => s + 1); }}
             style={{ width: '100%', marginTop: 14, padding: '14px 20px', background: '#5C3D1E', color: '#fff', border: 'none', borderRadius: 10, fontSize: '.95rem', fontWeight: 800, cursor: 'pointer' }}
           >
-            Yes, add {current.label} glass for ₹{current.price} →
+            {method === 'cod'
+              ? `Yes, pay ₹${current.price} now — ₹${originalPrice} for ${originalPack} as COD`
+              : `Yes, add ${current.label} glass for ₹${current.price} →`
+            }
           </button>
           <button
             onClick={() => setStep(ladder.length)}
@@ -818,6 +821,9 @@ export default function OrderConfirmed() {
               name={name}
               mobile={custMobile}
               email={custEmail}
+              method={method}
+              originalPrice={price}
+              originalPack={pack}
             />
             <MiswakCard id="miswak-upsell-mobile" miswakState={miswakState} miswakErr={miswakErr} handleMiswakPayment={handleMiswakPayment} setMiswakState={setMiswakState} t={t} />
             <ReferralCard id="referral-share-mobile" orderId={orderId} refMsg={refMsg} t={t} />
