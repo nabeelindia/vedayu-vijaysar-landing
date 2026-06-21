@@ -17,11 +17,311 @@ const loadRazorpay = () =>
     document.body.appendChild(s);
   });
 
+const GLASS_LADDER = [
+  { glass: 2, label: '2nd', price: 399, save: 100 },
+  { glass: 3, label: '3rd', price: 349, save: 150 },
+  { glass: 4, label: '4th', price: 299, save: 200 },
+  { glass: 5, label: '5th', price: 249, save: 250 },
+];
+
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
   const base64  = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
   const raw     = window.atob(base64);
   return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+}
+
+function GlassBagBar({ bag, onPay, paying, paid }) {
+  if (bag.length === 0 || paid) return null;
+  const total = bag.reduce((s, g) => s + g.price, 0);
+  const count = bag.length;
+  return (
+    <div style={{
+      position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
+      background: '#5C3D1E', color: '#fff',
+      padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      boxShadow: '0 -4px 20px rgba(0,0,0,.25)',
+    }}>
+      <div>
+        <p style={{ margin: 0, fontWeight: 800, fontSize: '.95rem' }}>
+          🫙 {count} extra glass{count > 1 ? 'es' : ''} in bag
+        </p>
+        <p style={{ margin: 0, fontSize: '.8rem', opacity: .85 }}>Total: ₹{total}</p>
+      </div>
+      <button
+        onClick={onPay}
+        disabled={paying}
+        style={{
+          background: paying ? '#aaa' : '#fff', color: paying ? '#fff' : '#5C3D1E',
+          border: 'none', borderRadius: 10, padding: '10px 20px',
+          fontWeight: 800, fontSize: '.9rem', cursor: paying ? 'not-allowed' : 'pointer',
+          minWidth: 100,
+        }}
+      >
+        {paying ? '⏳ Wait…' : 'Pay Now →'}
+      </button>
+    </div>
+  );
+}
+
+function GlassUpsellSection({ startStep, orderId, name, mobile, email }) {
+  const [step, setStep]               = useState(startStep);
+  const [bag, setBag]                 = useState([]);
+  const [paying, setPaying]           = useState(false);
+  const [paid, setPaid]               = useState(false);
+  const [err, setErr]                 = useState('');
+  const [miswakState, setMiswakState] = useState('idle'); // idle | paying | done | declined
+
+  if (startStep === null) return null;
+
+  async function handlePay() {
+    if (bag.length === 0) return;
+    setPaying(true);
+    setErr('');
+    try {
+      const loaded = await loadRazorpay();
+      if (!loaded) { setErr('Could not load payment. Please try again.'); setPaying(false); return; }
+
+      const res  = await fetch('/api/glass-upsell', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId, glasses: bag, name, mobile, email }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.razorpayOrderId) {
+        setErr('Could not open payment. Please try again.');
+        setPaying(false);
+        return;
+      }
+
+      new window.Razorpay({
+        key:         data.key,
+        order_id:    data.razorpayOrderId,
+        amount:      data.total * 100,
+        currency:    'INR',
+        name:        'Vedayu',
+        description: `Add ${bag.length} extra Vijaysar glass${bag.length > 1 ? 'es' : ''}`,
+        prefill:     { name: name || '', contact: mobile ? `91${mobile}` : '', email: email || '' },
+        theme:       { color: '#5C3D1E' },
+        handler: async (payment) => {
+          const vRes = await fetch('/api/verify-glass-upsell', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              razorpay_order_id:   payment.razorpay_order_id,
+              razorpay_payment_id: payment.razorpay_payment_id,
+              razorpay_signature:  payment.razorpay_signature,
+              orderId, glasses: bag, name, mobile, email,
+            }),
+          });
+          if (vRes.ok) {
+            setPaid(true);
+          } else {
+            setErr('Payment received but confirmation failed. We will contact you shortly.');
+          }
+          setPaying(false);
+        },
+        modal: { ondismiss: () => setPaying(false) },
+      }).open();
+    } catch (e) {
+      console.error('GlassUpsellSection: payment failed', e);
+      setErr('Something went wrong. Please try again.');
+      setPaying(false);
+    }
+  }
+
+  if (paid) {
+    const total = bag.reduce((s, g) => s + g.price, 0);
+    return (
+      <div style={{ background: '#F0F9F3', border: '2px solid #4A7C59', borderRadius: 16, padding: '20px 24px', marginBottom: 16, textAlign: 'center' }}>
+        <div style={{ fontSize: '2.2rem', marginBottom: 8 }}>🫙</div>
+        <p style={{ margin: '0 0 4px', fontWeight: 800, fontSize: '1rem', color: '#2d6b40' }}>
+          {bag.length} extra glass{bag.length > 1 ? 'es' : ''} added to your order!
+        </p>
+        <p style={{ margin: 0, fontSize: '.82rem', color: '#4A7C59', lineHeight: 1.6 }}>
+          Paid ₹{total}. Packed in the same box — no extra delivery.
+        </p>
+      </div>
+    );
+  }
+
+  // Miswak interstitial — shown when ladder exhausted (all accepted OR "No thanks" clicked)
+  if (step >= GLASS_LADDER.length && miswakState !== 'declined') {
+    async function handleMiswakInline() {
+      setMiswakState('paying');
+      try {
+        const loaded = await loadRazorpay();
+        if (!loaded) { setMiswakState('idle'); return; }
+
+        const res  = await fetch('/api/miswak-upsell', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId, name, mobile, email }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.razorpayOrderId) { setMiswakState('idle'); return; }
+
+        new window.Razorpay({
+          key:         data.key,
+          order_id:    data.razorpayOrderId,
+          amount:      5000,
+          currency:    'INR',
+          name:        'Vedayu',
+          description: 'FREE Miswak + ₹50 Shipping',
+          prefill:     { name: name || '', contact: mobile ? `91${mobile}` : '', email: email || '' },
+          theme:       { color: '#2d6b40' },
+          handler: async (payment) => {
+            const vRes = await fetch('/api/verify-miswak', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_order_id:   payment.razorpay_order_id,
+                razorpay_payment_id: payment.razorpay_payment_id,
+                razorpay_signature:  payment.razorpay_signature,
+                orderId, name, mobile, email,
+              }),
+            });
+            setMiswakState(vRes.ok ? 'done' : 'idle');
+          },
+          modal: { ondismiss: () => setMiswakState('idle') },
+        }).open();
+      } catch (e) {
+        console.error('miswak inline: failed', e);
+        setMiswakState('idle');
+      }
+    }
+
+    if (miswakState === 'done') {
+      return (
+        <div style={{ background: '#F0F9F3', border: '2px solid #4A7C59', borderRadius: 16, padding: '20px 24px', marginBottom: 16, textAlign: 'center' }}>
+          <div style={{ fontSize: '2rem', marginBottom: 8 }}>🌿</div>
+          <p style={{ margin: '0 0 4px', fontWeight: 800, fontSize: '1rem', color: '#2d6b40' }}>FREE Miswak added!</p>
+          <p style={{ margin: '0 0 16px', fontSize: '.82rem', color: '#4A7C59', lineHeight: 1.6 }}>Packed in the same box as your order.</p>
+          {bag.length > 0 && (
+            <button onClick={handlePay} disabled={paying} style={{ background: paying ? '#aaa' : '#5C3D1E', color: '#fff', border: 'none', borderRadius: 10, padding: '13px 24px', fontWeight: 800, fontSize: '.95rem', cursor: paying ? 'not-allowed' : 'pointer' }}>
+              {paying ? '⏳ Opening Payment…' : `Pay ₹${bag.reduce((s, g) => s + g.price, 0)} for your glasses →`}
+            </button>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <>
+        <div style={{ border: '2px solid #4A7C59', borderRadius: 16, marginBottom: 16, overflow: 'hidden' }}>
+          <div style={{ background: '#2d6b40', padding: '8px 20px', textAlign: 'center' }}>
+            <p style={{ margin: 0, color: '#fff', fontWeight: 800, fontSize: '.85rem' }}>One last thing — a free gift</p>
+          </div>
+          <div style={{ padding: '18px 20px' }}>
+            <p style={{ margin: '0 0 4px', fontWeight: 800, fontSize: '1.05rem', color: '#1a5c2a' }}>
+              FREE Premium Miswak — just pay ₹50 shipping
+            </p>
+            <p style={{ margin: '0 0 14px', fontSize: '.82rem', color: '#4A7C59', lineHeight: 1.6 }}>
+              Ancient natural toothbrush. Packed in the same box — no separate delivery.
+            </p>
+            {['100% natural Salvadora persica wood', 'Antibacterial — no toothpaste needed', 'Ships in your current box, no extra delivery'].map(b => (
+              <div key={b} style={{ display: 'flex', gap: 8, marginBottom: 6, fontSize: '.82rem', color: '#4A7C59' }}>
+                <span>✓</span><span>{b}</span>
+              </div>
+            ))}
+            {bag.length > 0 && (
+              <div style={{ background: '#F0F9F3', border: '1px solid #4A7C59', borderRadius: 8, padding: '8px 12px', margin: '12px 0', fontSize: '.8rem', color: '#2d6b40' }}>
+                🛒 {bag.length} glass{bag.length > 1 ? 'es' : ''} already in bag — ₹{bag.reduce((s, g) => s + g.price, 0)}
+              </div>
+            )}
+            <button
+              onClick={handleMiswakInline}
+              disabled={miswakState === 'paying'}
+              style={{ width: '100%', marginTop: 14, padding: '14px 20px', background: miswakState === 'paying' ? '#aaa' : '#2d6b40', color: '#fff', border: 'none', borderRadius: 10, fontSize: '.95rem', fontWeight: 800, cursor: miswakState === 'paying' ? 'not-allowed' : 'pointer' }}
+            >
+              {miswakState === 'paying' ? '⏳ Opening Payment…' : 'Yes, add FREE Miswak — Pay ₹50 shipping →'}
+            </button>
+            <button
+              onClick={() => setMiswakState('declined')}
+              disabled={miswakState === 'paying'}
+              style={{ width: '100%', marginTop: 8, background: 'transparent', border: 'none', color: '#aaa', fontSize: '.78rem', cursor: 'pointer', textDecoration: 'underline', padding: 4 }}
+            >
+              No thanks, I don&apos;t want the miswak
+            </button>
+          </div>
+        </div>
+        <GlassBagBar bag={bag} onPay={handlePay} paying={paying} paid={paid} />
+      </>
+    );
+  }
+
+  // Ladder exhausted + miswak declined — show inline pay button
+  if (step >= GLASS_LADDER.length) {
+    if (bag.length === 0) return null;
+    return (
+      <div style={{ background: '#FFF8E1', border: '2px solid #C9A84C', borderRadius: 16, padding: '18px 20px', marginBottom: 16, textAlign: 'center' }}>
+        <p style={{ margin: '0 0 4px', fontWeight: 800, fontSize: '1rem', color: '#5C3D1E' }}>
+          🫙 {bag.length} extra glass{bag.length > 1 ? 'es' : ''} in your bag
+        </p>
+        <p style={{ margin: '0 0 14px', fontSize: '.82rem', color: '#6D4C00' }}>
+          Total: ₹{bag.reduce((s, g) => s + g.price, 0)} — Ships with your order, no extra delivery.
+        </p>
+        {err && <p style={{ fontSize: '.78rem', color: '#e53e3e', margin: '0 0 10px' }}>⚠️ {err}</p>}
+        <button onClick={handlePay} disabled={paying} style={{ background: paying ? '#aaa' : '#5C3D1E', color: '#fff', border: 'none', borderRadius: 10, padding: '13px 24px', fontWeight: 800, fontSize: '.95rem', cursor: paying ? 'not-allowed' : 'pointer' }}>
+          {paying ? '⏳ Opening Payment…' : `Pay ₹${bag.reduce((s, g) => s + g.price, 0)} Now →`}
+        </button>
+      </div>
+    );
+  }
+
+  const current = GLASS_LADDER[step];
+  const glassIcons = Array.from({ length: current.glass }, (_, i) => i);
+
+  return (
+    <>
+      <div style={{ border: '2px solid #5C3D1E', borderRadius: 16, marginBottom: 16, overflow: 'hidden' }}>
+        <div style={{ background: '#5C3D1E', padding: '8px 20px', textAlign: 'center' }}>
+          <p style={{ margin: 0, color: '#fff', fontWeight: 800, fontSize: '.85rem' }}>Special offer — only for you</p>
+        </div>
+        <div style={{ padding: '18px 20px' }}>
+          <p style={{ margin: '0 0 4px', fontWeight: 800, fontSize: '1.05rem', color: '#2C1810' }}>
+            Add a {current.label} glass for ₹{current.price}
+          </p>
+          <p style={{ margin: '0 0 14px', fontSize: '.82rem', color: '#6D4C00', lineHeight: 1.6 }}>
+            Ships in the same box. No new order, no extra delivery charge.
+          </p>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+            {glassIcons.map(i => <span key={i} style={{ fontSize: 22 }}>🫙</span>)}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
+            <span style={{ fontSize: 28, fontWeight: 800, color: '#2C1810' }}>₹{current.price}</span>
+            <span style={{ fontSize: 14, color: '#aaa', textDecoration: 'line-through' }}>₹499</span>
+          </div>
+          <p style={{ margin: '0 0 14px', fontSize: '.8rem', color: '#2d6b40', fontWeight: 600 }}>
+            You save ₹{current.save}
+          </p>
+          {['Same Vedayu Vijaysar glass', 'Ships with your current order — no extra delivery', 'Perfect for family members or as a gift'].map(b => (
+            <div key={b} style={{ display: 'flex', gap: 8, marginBottom: 6, fontSize: '.82rem', color: '#4A7C59' }}>
+              <span>✓</span><span>{b}</span>
+            </div>
+          ))}
+          {bag.length > 0 && (
+            <div style={{ background: '#F0F9F3', border: '1px solid #4A7C59', borderRadius: 8, padding: '8px 12px', margin: '12px 0', fontSize: '.8rem', color: '#2d6b40' }}>
+              🛒 {bag.length} glass{bag.length > 1 ? 'es' : ''} added so far — ₹{bag.reduce((s, g) => s + g.price, 0)} total
+            </div>
+          )}
+          <button
+            onClick={() => { setBag(b => [...b, { glass: current.glass, price: current.price }]); setStep(s => s + 1); }}
+            style={{ width: '100%', marginTop: 14, padding: '14px 20px', background: '#5C3D1E', color: '#fff', border: 'none', borderRadius: 10, fontSize: '.95rem', fontWeight: 800, cursor: 'pointer' }}
+          >
+            Yes, add {current.label} glass for ₹{current.price} →
+          </button>
+          <button
+            onClick={() => setStep(GLASS_LADDER.length)}
+            style={{ width: '100%', marginTop: 8, background: 'transparent', border: 'none', color: '#aaa', fontSize: '.78rem', cursor: 'pointer', textDecoration: 'underline', padding: 4 }}
+          >
+            No thanks, I don&apos;t want to add more glasses
+          </button>
+        </div>
+      </div>
+      <GlassBagBar bag={bag} onPay={handlePay} paying={paying} paid={paid} />
+    </>
+  );
 }
 
 function MiswakCard({ id, miswakState, miswakErr, handleMiswakPayment, setMiswakState, t }) {
@@ -154,6 +454,9 @@ export default function OrderConfirmed() {
   const router  = useRouter();
   const { t } = useTranslation('common');
   const { method, pack, price, name, orderId, scheduledShipDate, deliveryEst: deliveryEstRaw } = router.query;
+
+  const packQty        = parseInt((pack || '').replace(/\D/g, ''), 10) || 1;
+  const glassStartStep = packQty === 1 ? 0 : packQty === 2 ? 1 : null;
 
   // Strip leading "by " prefix if present (e.g. "by Tue, 24 Jun" → "Tue, 24 Jun")
   const deliveryEstDisplay = deliveryEstRaw
@@ -501,6 +804,13 @@ export default function OrderConfirmed() {
 
           {/* Mobile-only: full offer cards */}
           <div className="oc-mobile-only">
+            <GlassUpsellSection
+              startStep={glassStartStep}
+              orderId={orderId}
+              name={name}
+              mobile={custMobile}
+              email={custEmail}
+            />
             <MiswakCard id="miswak-upsell-mobile" miswakState={miswakState} miswakErr={miswakErr} handleMiswakPayment={handleMiswakPayment} setMiswakState={setMiswakState} t={t} />
             <ReferralCard id="referral-share-mobile" orderId={orderId} refMsg={refMsg} t={t} />
           </div>
@@ -527,6 +837,13 @@ export default function OrderConfirmed() {
 
         {/* ═══ RIGHT COLUMN (desktop only, sticky) ═══ */}
         <div className="oc-right">
+          <GlassUpsellSection
+            startStep={glassStartStep}
+            orderId={orderId}
+            name={name}
+            mobile={custMobile}
+            email={custEmail}
+          />
           <MiswakCard id="miswak-upsell-desktop" miswakState={miswakState} miswakErr={miswakErr} handleMiswakPayment={handleMiswakPayment} setMiswakState={setMiswakState} t={t} />
           <ReferralCard id="referral-share-desktop" orderId={orderId} refMsg={refMsg} t={t} />
         </div>
