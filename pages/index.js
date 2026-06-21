@@ -205,6 +205,7 @@ export default function Home() {
   const [navVisible, setNavVisible] = useState(true);
   const lastScrollY = useRef(0);
   const [exitIntent, setExitIntent] = useState(false);
+  const [videoModal, setVideoModal] = useState(null);
   const [deliveryEst, setDeliveryEst] = useState('');
   const [shipsBy,     setShipsBy]     = useState(null);
   const [scheduleOpen,    setScheduleOpen]    = useState(false);
@@ -1343,80 +1344,68 @@ export default function Home() {
           <h2 className="section-title">{t('section.video_reviews')}</h2>
           <p className="section-sub">{t('section.video_reviews_sub')}</p>
           <div className="divider" />
-          <div className="video-duo-wrap">
-            <div className="video-duo-item">
-              <div className="video-player-wrap">
-                <video
-                  className="video-player"
-                  controls
-                  playsInline
-                  preload="none"
-                  poster="https://res.cloudinary.com/ddmmfkvwb/image/upload/w_400,h_700,c_fill,q_auto,f_auto/thumb-testimonial_btk4ko"
-                >
-                  <source src={process.env.NEXT_PUBLIC_VIDEO_TESTIMONIAL || "/videos/testimonial.mp4"} type="video/mp4" />
-                </video>
-              </div>
-              <div className="video-duo-caption">
-                <div className="video-stars">★★★★★</div>
-                <p className="video-pull-quote">&ldquo;Maine pehle kai products try kiye — kuch kaam aaya, kuch nahi. Vijaysar glass ne meri subah ki routine change kar di.&rdquo;</p>
-                <div className="video-author-line">{t('video.t1.author')}</div>
-              </div>
-            </div>
-            <div className="video-duo-item">
-              <div className="video-player-wrap">
-                <video
-                  className="video-player"
-                  controls
-                  playsInline
-                  preload="none"
-                  poster="https://res.cloudinary.com/ddmmfkvwb/image/upload/w_400,h_700,c_fill,q_auto,f_auto/thumb-meta-ad_jzvhar"
-                >
-                  <source src={process.env.NEXT_PUBLIC_VIDEO_METAAD || "/videos/meta-ad.mp4"} type="video/mp4" />
-                </video>
-              </div>
-              <div className="video-duo-caption">
-                <div className="video-stars">★★★★★</div>
-                <p className="video-pull-quote">&ldquo;Vijaysar wood — 2,000 years of Ayurvedic tradition, one simple morning habit. Pure, natural, and genuinely effective.&rdquo;</p>
-                <div className="video-author-line">{t('video.t2.author')}</div>
-              </div>
-            </div>
-            <div className="video-duo-item">
-              <div className="video-player-wrap">
-                <video
-                  className="video-player"
-                  controls
-                  playsInline
-                  preload="none"
-                  poster="https://res.cloudinary.com/ddmmfkvwb/video/upload/w_400,h_700,c_fill,q_auto,f_auto,so_0/vedayu-user-testimonial_qwhr2c.jpg"
-                >
-                  <source src="https://res.cloudinary.com/ddmmfkvwb/video/upload/f_auto,q_auto/v1782027864/vedayu-user-testimonial_qwhr2c.mp4" type="video/mp4" />
-                </video>
-              </div>
-              <div className="video-duo-caption">
-                <div className="video-stars">★★★★★</div>
-                <p className="video-pull-quote">&ldquo;Shuru mein mujhe yakeen nahi tha, lekin 3 hafte mein fark dikhne laga. Ab iske bina subah adhoori lagti hai.&rdquo;</p>
-                <div className="video-author-line">{t('video.t3.author')}</div>
-              </div>
-            </div>
-            <div className="video-duo-item">
-              <div className="video-player-wrap">
-                <video
-                  className="video-player"
-                  controls
-                  playsInline
-                  preload="none"
-                  poster="https://res.cloudinary.com/ddmmfkvwb/video/upload/w_400,h_700,c_fill,q_auto,f_auto,so_0/vedayu-doctor-suggested_bptbqg.jpg"
-                >
-                  <source src="https://res.cloudinary.com/ddmmfkvwb/video/upload/f_auto,q_auto/v1782028584/vedayu-doctor-suggested_bptbqg.mp4" type="video/mp4" />
-                </video>
-              </div>
-              <div className="video-duo-caption">
-                <div className="video-stars">★★★★★</div>
-                <p className="video-pull-quote">&ldquo;Doctor ne suggest kiya tha Vijaysar try karne ke liye. 2 mahine ho gaye — results dekh ke khud hairan hoon.&rdquo;</p>
-                <div className="video-author-line">{t('video.t4.author')}</div>
-              </div>
-            </div>
-          </div>
+          {(() => {
+            const videos = [
+              {
+                src: process.env.NEXT_PUBLIC_VIDEO_TESTIMONIAL || '/videos/testimonial.mp4',
+                poster: 'https://res.cloudinary.com/ddmmfkvwb/image/upload/w_400,h_700,c_fill,q_auto,f_auto/thumb-testimonial_btk4ko',
+                author: t('video.t1.author'),
+                quote: 'Maine pehle kai products try kiye — Vijaysar glass ne meri subah ki routine change kar di.',
+              },
+              {
+                src: process.env.NEXT_PUBLIC_VIDEO_METAAD || '/videos/meta-ad.mp4',
+                poster: 'https://res.cloudinary.com/ddmmfkvwb/image/upload/w_400,h_700,c_fill,q_auto,f_auto/thumb-meta-ad_jzvhar',
+                author: t('video.t2.author'),
+                quote: '2,000 years of Ayurvedic tradition — one simple morning habit.',
+              },
+              {
+                src: 'https://res.cloudinary.com/ddmmfkvwb/video/upload/f_auto,q_auto/v1782027864/vedayu-user-testimonial_qwhr2c.mp4',
+                poster: 'https://res.cloudinary.com/ddmmfkvwb/video/upload/w_400,h_700,c_fill,q_auto,f_auto,so_0/vedayu-user-testimonial_qwhr2c.jpg',
+                author: t('video.t3.author'),
+                quote: '3 hafte mein fark dikhne laga. Ab iske bina subah adhoori lagti hai.',
+              },
+              {
+                src: 'https://res.cloudinary.com/ddmmfkvwb/video/upload/f_auto,q_auto/v1782028584/vedayu-doctor-suggested_bptbqg.mp4',
+                poster: 'https://res.cloudinary.com/ddmmfkvwb/video/upload/w_400,h_700,c_fill,q_auto,f_auto,so_0/vedayu-doctor-suggested_bptbqg.jpg',
+                author: t('video.t4.author'),
+                quote: 'Doctor ne suggest kiya. 2 mahine ho gaye — results dekh ke khud hairan hoon.',
+              },
+            ];
+            return (
+              <>
+                <div className="vtm-row">
+                  {videos.map((v, i) => (
+                    <button key={i} className="vtm-card" onClick={() => setVideoModal(v.src)} aria-label={`Play video: ${v.author}`}>
+                      <div className="vtm-thumb-wrap">
+                        <img src={v.poster} alt={v.author} className="vtm-thumb" loading="lazy" />
+                        <div className="vtm-play-btn">
+                          <svg width="28" height="28" viewBox="0 0 24 24" fill="#fff"><polygon points="5,3 19,12 5,21"/></svg>
+                        </div>
+                        <div className="vtm-stars">★★★★★</div>
+                      </div>
+                      <p className="vtm-quote">&ldquo;{v.quote}&rdquo;</p>
+                      <div className="vtm-author">{v.author}</div>
+                    </button>
+                  ))}
+                </div>
+                {videoModal && (
+                  <div className="vtm-modal-backdrop" onClick={() => setVideoModal(null)}>
+                    <div className="vtm-modal" onClick={e => e.stopPropagation()}>
+                      <button className="vtm-close" onClick={() => setVideoModal(null)} aria-label="Close">✕</button>
+                      <video
+                        key={videoModal}
+                        className="vtm-modal-video"
+                        controls
+                        autoPlay
+                        playsInline
+                        src={videoModal}
+                      />
+                    </div>
+                  </div>
+                )}
+              </>
+            );
+          })()}
           <div className="video-section-cta">
             <div className="video-badges">
               <span className="video-badge">{t('video.badge.customers')}</span>
