@@ -846,7 +846,7 @@ export default function OrderConfirmed() {
         {/* ═══ RIGHT COLUMN (desktop only, sticky) ═══ */}
         <div className="oc-right">
           <GlassUpsellSection
-            startStep={glassStartStep}
+            ladder={glassLadder}
             orderId={orderId}
             name={name}
             mobile={custMobile}
