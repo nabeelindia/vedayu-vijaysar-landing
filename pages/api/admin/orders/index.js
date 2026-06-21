@@ -27,8 +27,9 @@ export default async function handler(req, res) {
     query = query.neq('status', 'cancelled');
   }
   if (search) {
+    const safeSearch = search.replace(/[(),.]/g, '');
     query = query.or(
-      `order_id.ilike.%${search}%,name.ilike.%${search}%,mobile.ilike.%${search}%,pincode.ilike.%${search}%`
+      `order_id.ilike.%${safeSearch}%,name.ilike.%${safeSearch}%,mobile.ilike.%${safeSearch}%,pincode.ilike.%${safeSearch}%`
     );
   }
 
