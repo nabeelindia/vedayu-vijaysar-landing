@@ -25,8 +25,12 @@ export default function handler(req, res) {
     match = timingSafeEqual(Buffer.from(password || ''), Buffer.from(expected));
   } catch { match = false; }
 
-  if (!match) return res.status(401).json({ error: 'Wrong password' });
+  if (!match) {
+    console.warn('[auth] admin login FAILED', { ip: req.headers['x-forwarded-for'] || 'unknown', ua: req.headers['user-agent'] });
+    return res.status(401).json({ error: 'Wrong password' });
+  }
 
+  console.log('[auth] admin login OK', { ip: req.headers['x-forwarded-for'] || 'unknown' });
   const token = makeAdminToken();
   res.setHeader('Set-Cookie', `admin_session=${token}; Path=/; Max-Age=${7 * 24 * 60 * 60}; HttpOnly; SameSite=Strict`);
   return res.json({ ok: true });

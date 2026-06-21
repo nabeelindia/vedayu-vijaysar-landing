@@ -31,8 +31,12 @@ export default function handler(req, res) {
     match = false;
   }
 
-  if (!match) return res.status(401).json({ error: 'Wrong password' });
+  if (!match) {
+    console.warn('[auth] insights login FAILED', { ip: req.headers['x-forwarded-for'] || 'unknown', ua: req.headers['user-agent'] });
+    return res.status(401).json({ error: 'Wrong password' });
+  }
 
+  console.log('[auth] insights login OK', { ip: req.headers['x-forwarded-for'] || 'unknown' });
   const token = makeToken();
   const maxAge = 7 * 24 * 60 * 60;
   res.setHeader('Set-Cookie', `insights_session=${token}; Path=/; Max-Age=${maxAge}; HttpOnly; SameSite=Strict`);
