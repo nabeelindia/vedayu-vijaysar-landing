@@ -5,7 +5,7 @@
  */
 import Razorpay from 'razorpay';
 
-const VALID_PRICES = { 2: 399, 3: 349, 4: 299, 5: 249 };
+const VALID_PRICES = { 2: 399, 3: 349, 4: 299, 5: 249, 6: 299, 7: 249 };
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();

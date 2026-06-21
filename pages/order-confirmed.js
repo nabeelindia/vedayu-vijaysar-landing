@@ -24,6 +24,11 @@ const GLASS_LADDER = [
   { glass: 5, label: '5th', price: 249, save: 250 },
 ];
 
+const PACK5_LADDER = [
+  { glass: 6, label: '6th', price: 299, save: 200 },
+  { glass: 7, label: '7th', price: 249, save: 250 },
+];
+
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
   const base64  = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -64,15 +69,15 @@ function GlassBagBar({ bag, onPay, paying, paid }) {
   );
 }
 
-function GlassUpsellSection({ startStep, orderId, name, mobile, email }) {
-  const [step, setStep]               = useState(startStep);
+function GlassUpsellSection({ ladder, orderId, name, mobile, email }) {
+  const [step, setStep]               = useState(0);
   const [bag, setBag]                 = useState([]);
   const [paying, setPaying]           = useState(false);
   const [paid, setPaid]               = useState(false);
   const [err, setErr]                 = useState('');
   const [miswakState, setMiswakState] = useState('idle'); // idle | paying | done | declined
 
-  if (startStep === null) return null;
+  if (!ladder || ladder.length === 0) return null;
 
   async function handlePay() {
     if (bag.length === 0) return;
@@ -146,7 +151,7 @@ function GlassUpsellSection({ startStep, orderId, name, mobile, email }) {
   }
 
   // Miswak interstitial — shown when ladder exhausted (all accepted OR "No thanks" clicked)
-  if (step >= GLASS_LADDER.length && miswakState !== 'declined') {
+  if (step >= ladder.length && miswakState !== 'declined') {
     async function handleMiswakInline() {
       setMiswakState('paying');
       try {
@@ -251,7 +256,7 @@ function GlassUpsellSection({ startStep, orderId, name, mobile, email }) {
   }
 
   // Ladder exhausted + miswak declined — show inline pay button
-  if (step >= GLASS_LADDER.length) {
+  if (step >= ladder.length) {
     if (bag.length === 0) return null;
     return (
       <div style={{ background: '#FFF8E1', border: '2px solid #C9A84C', borderRadius: 16, padding: '18px 20px', marginBottom: 16, textAlign: 'center' }}>
@@ -269,7 +274,7 @@ function GlassUpsellSection({ startStep, orderId, name, mobile, email }) {
     );
   }
 
-  const current = GLASS_LADDER[step];
+  const current = ladder[step];
   const glassIcons = Array.from({ length: current.glass }, (_, i) => i);
 
   return (
@@ -312,7 +317,7 @@ function GlassUpsellSection({ startStep, orderId, name, mobile, email }) {
             Yes, add {current.label} glass for ₹{current.price} →
           </button>
           <button
-            onClick={() => setStep(GLASS_LADDER.length)}
+            onClick={() => setStep(ladder.length)}
             style={{ width: '100%', marginTop: 8, background: 'transparent', border: 'none', color: '#aaa', fontSize: '.78rem', cursor: 'pointer', textDecoration: 'underline', padding: 4 }}
           >
             No thanks, I don&apos;t want to add more glasses
@@ -455,8 +460,11 @@ export default function OrderConfirmed() {
   const { t } = useTranslation('common');
   const { method, pack, price, name, orderId, scheduledShipDate, deliveryEst: deliveryEstRaw } = router.query;
 
-  const packQty        = parseInt((pack || '').replace(/\D/g, ''), 10) || 1;
-  const glassStartStep = packQty === 1 ? 0 : packQty === 2 ? 1 : null;
+  const packQty     = parseInt((pack || '').replace(/\D/g, ''), 10) || 1;
+  const glassLadder = packQty === 5 ? PACK5_LADDER
+    : packQty === 2 ? GLASS_LADDER.slice(1)
+    : packQty === 1 ? GLASS_LADDER
+    : null;
 
   // Strip leading "by " prefix if present (e.g. "by Tue, 24 Jun" → "Tue, 24 Jun")
   const deliveryEstDisplay = deliveryEstRaw
@@ -805,7 +813,7 @@ export default function OrderConfirmed() {
           {/* Mobile-only: full offer cards */}
           <div className="oc-mobile-only">
             <GlassUpsellSection
-              startStep={glassStartStep}
+              ladder={glassLadder}
               orderId={orderId}
               name={name}
               mobile={custMobile}
