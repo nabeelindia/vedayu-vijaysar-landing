@@ -804,6 +804,7 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
   .video-duo-item {
     flex: 0 0 76vw;
     scroll-snap-align: start;
+    padding-bottom: 4px;
   }
   .video-pull-quote {
     font-size: .88rem;
@@ -1059,7 +1060,9 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
   .hero-grid { grid-template-columns: 1fr; gap: 32px; }
   .hero-img-wrap { order: -1; }
   .hero-img-placeholder { aspect-ratio: 4/3; max-width: 100%; }
-  .solution-grid { grid-template-columns: 1fr; gap: 36px; }
+  .solution-grid { grid-template-columns: 1fr; gap: 36px; text-align: center; }
+  .solution-points { text-align: left; }
+  .solution-grid .btn { display: block; width: 100%; }
   .steps::before { display: none; }
   .field-row { grid-template-columns: 1fr; gap: 10px; }
   .pack-selector { grid-template-columns: repeat(3,1fr); }
@@ -1701,6 +1704,13 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
   to   { opacity: 1; transform: translateY(0)    scale(1); }
 }
 
+/* On mobile, always lift chat bubble above the sticky CTA bar (~62px tall) */
+@media (max-width: 767px) {
+  .chat-bubble {
+    bottom: 80px;
+    right: 14px;
+  }
+}
 @media (max-width: 420px) {
   .chat-window {
     right: 0;
@@ -1709,9 +1719,11 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
     height: 100dvh;
     border-radius: 0;
   }
-  .chat-bubble {
-    right: 14px;
-    bottom: 14px;
+}
+/* On order-confirmed page the green sticky bar covers the chat bubble — lift it */
+@media (max-width: 767px) {
+  body:has(.oc-sticky-bar) .chat-bubble {
+    bottom: 80px;
   }
 }
 
@@ -2114,10 +2126,11 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
   .trust-grid::-webkit-scrollbar { display: none; }
 
   /* Card widths — peek ~12% of the next card to signal swipeability */
-  .problem-card { flex: 0 0 80vw; scroll-snap-align: start; }
-  .benefit-card { flex: 0 0 72vw; scroll-snap-align: start; }
-  .process-item { flex: 0 0 72vw; scroll-snap-align: start; }
-  .trust-item   { flex: 0 0 72vw; scroll-snap-align: start; }
+  .problem-card { flex: 0 0 80vw; scroll-snap-align: start; padding: 28px 22px; }
+  .benefit-card { flex: 0 0 72vw; scroll-snap-align: start; padding: 30px 22px; }
+  .process-item { flex: 0 0 72vw; scroll-snap-align: start; padding: 28px 22px; }
+  .trust-item   { flex: 0 0 72vw; scroll-snap-align: start; padding: 28px 22px; }
+  .review-card  { flex: 0 0 82vw; padding: 24px 20px; }
 
   /* Restore grid overrides that conflict with flex */
   .benefits-grid { grid-template-columns: unset; }
