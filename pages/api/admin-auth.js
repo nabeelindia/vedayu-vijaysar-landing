@@ -1,7 +1,8 @@
 import { createHmac, timingSafeEqual } from 'crypto';
 
 function makeAdminToken() {
-  const secret    = process.env.ADMIN_PASSWORD || 'admin-dev';
+  const secret = process.env.ADMIN_PASSWORD;
+  if (!secret) throw new Error('ADMIN_PASSWORD env var not set');
   const payload   = JSON.stringify({ exp: Date.now() + 7 * 24 * 60 * 60 * 1000 });
   const payload64 = Buffer.from(payload).toString('base64');
   const sig       = createHmac('sha256', secret).update(payload64).digest('hex');

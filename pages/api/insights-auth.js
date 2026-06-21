@@ -2,7 +2,8 @@ import { createHmac, timingSafeEqual } from 'crypto';
 
 // Signs a token using the same HMAC-SHA256 + hex approach as the middleware
 function makeToken() {
-  const secret = process.env.SESSION_SECRET || 'dev-secret';
+  const secret = process.env.SESSION_SECRET;
+  if (!secret) throw new Error('SESSION_SECRET env var not set');
   const payload = JSON.stringify({ exp: Date.now() + 7 * 24 * 60 * 60 * 1000 });
   const payload64 = Buffer.from(payload).toString('base64');
   const sig = createHmac('sha256', secret).update(payload64).digest('hex');

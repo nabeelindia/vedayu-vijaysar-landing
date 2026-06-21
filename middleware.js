@@ -24,7 +24,7 @@ export async function middleware(req) {
   // Admin protection
   if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
     const token  = req.cookies.get('admin_session')?.value;
-    const secret = process.env.ADMIN_PASSWORD || 'admin-dev';
+    const secret = process.env.ADMIN_PASSWORD || '';
     if (!(await verifyToken(token, secret))) {
       const url = new URL('/admin/login', req.url);
       url.searchParams.set('from', pathname);
@@ -35,7 +35,7 @@ export async function middleware(req) {
   // Insights protection (unchanged logic)
   if (pathname.startsWith('/insights') && pathname !== '/insights/login') {
     const token  = req.cookies.get('insights_session')?.value;
-    const secret = process.env.SESSION_SECRET || 'dev-secret';
+    const secret = process.env.SESSION_SECRET || '';
     if (!(await verifyToken(token, secret))) {
       const url = new URL('/insights/login', req.url);
       url.searchParams.set('from', pathname);
