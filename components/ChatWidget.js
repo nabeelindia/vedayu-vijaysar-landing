@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
+import { supabaseClient } from '../lib/supabaseClient';
 
 function escapeHtml(str) {
   if (!str) return '';
@@ -129,6 +130,8 @@ export default function ChatWidget() {
   const [csatSubmitted, setCsatSubmitted] = useState(false);
   const [humanHandoffRequested, setHumanHandoffRequested] = useState(false);
   const [humanHandoffSubmitted, setHumanHandoffSubmitted] = useState(false);
+  const [adminActive, setAdminActive] = useState(false);
+  const [adminName, setAdminName]     = useState(null);
 
   function resetChat() {
     const newId = crypto.randomUUID();
@@ -148,6 +151,8 @@ export default function ChatWidget() {
     setCsatSubmitted(false);
     setHumanHandoffRequested(false);
     setHumanHandoffSubmitted(false);
+    setAdminActive(false);
+    setAdminName(null);
   }
 
   async function handleHumanHandoffSuccess(name, phone) {
@@ -178,6 +183,41 @@ export default function ChatWidget() {
     }
   }, [messages, loading, contactCaptureRequested, captureForOrderRequested]);
 
+  // Supabase Realtime — receive admin messages and takeover state in real time
+  useEffect(() => {
+    if (!open || !sessionId || !supabaseClient) return;
+
+    const channel = supabaseClient
+      .channel(`chat_widget_${sessionId}`)
+      .on('postgres_changes', {
+        event:  'UPDATE',
+        schema: 'public',
+        table:  'chat_sessions',
+        filter: `session_id=eq.${sessionId}`,
+      }, payload => {
+        const updated = payload.new;
+        if (!updated) return;
+
+        if (updated.admin_active !== undefined) {
+          setAdminActive(!!updated.admin_active);
+          setAdminName(updated.admin_name || null);
+        }
+
+        if (Array.isArray(updated.messages)) {
+          setMessages(prev => {
+            const seen  = new Set(prev.map(m => `${m.role}|${m.timestamp}|${m.content}`));
+            const fresh = updated.messages.filter(
+              m => !seen.has(`${m.role}|${m.timestamp}|${m.content}`)
+            );
+            return fresh.length ? [...prev, ...fresh] : prev;
+          });
+        }
+      })
+      .subscribe();
+
+    return () => supabaseClient.removeChannel(channel);
+  }, [open, sessionId]);
+
   async function sendMessage(text) {
     if (loading || !text.trim()) return;
     const newMessage = { role: 'user', content: text.trim() };
@@ -195,6 +235,11 @@ export default function ChatWidget() {
         body: JSON.stringify({ messages: updatedMessages, locale, sessionId }),
       });
       const data = await res.json();
+      if (data.adminActive) {
+        setAdminActive(true);
+        setLoading(false);
+        return;
+      }
       setMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
       if (data.contactCaptureRequested) {
         setContactCaptureRequested(true);
@@ -298,6 +343,19 @@ export default function ChatWidget() {
             </div>
           </div>
 
+          {/* Admin active banner */}
+          {adminActive && (
+            <div style={{
+              background: '#e3f2fd', borderBottom: '1px solid #90caf9',
+              padding: '8px 12px', fontSize: '.78rem', color: '#1565c0',
+              fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6,
+            }}>
+              <span style={{ width: 8, height: 8, background: '#1565c0', borderRadius: '50%',
+                display: 'inline-block', animation: 'livePulse 1.5s infinite' }} />
+              Connected to a support agent{adminName ? ` — ${adminName}` : ''}
+            </div>
+          )}
+
           {/* Messages */}
           <div className="chat-messages">
             {messages.length === 0 && !loading && (
@@ -314,6 +372,15 @@ export default function ChatWidget() {
             )}
             {messages.map((m, i) => (
               <div key={i} className={m.role === 'user' ? 'chat-row-user' : 'chat-row-bot'}>
+                {m.role === 'admin' && (
+                  <div className="chat-avatar-bot" aria-hidden="true">
+                    <svg viewBox="0 0 40 40" width="32" height="32" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="20" cy="20" r="20" fill="#e3f2fd"/>
+                      <circle cx="20" cy="16" r="6" fill="#1565c0"/>
+                      <ellipse cx="20" cy="34" rx="11" ry="8" fill="#1565c0"/>
+                    </svg>
+                  </div>
+                )}
                 {m.role === 'assistant' && (
                   <div className="chat-avatar-bot" aria-hidden="true">
                     <svg viewBox="0 0 40 40" width="32" height="32" xmlns="http://www.w3.org/2000/svg">
@@ -352,13 +419,19 @@ export default function ChatWidget() {
                   </div>
                 )}
                 <div className="chat-bubble-wrap">
+                  {m.role === 'admin' && (
+                    <div style={{ fontSize: '.65rem', color: '#1565c0', fontWeight: 600, marginBottom: 2 }}>
+                      Support Agent
+                    </div>
+                  )}
                   <div
                     className={m.role === 'user' ? 'chat-msg-user' : 'chat-msg-bot'}
+                    style={m.role === 'admin' ? { background: '#1565c0', color: '#fff' } : undefined}
                     {...(m.role === 'assistant'
                       ? { dangerouslySetInnerHTML: { __html: renderMarkdown(m.content) } }
                       : {})}
                   >
-                    {m.role === 'user' ? m.content : null}
+                    {m.role === 'user' ? m.content : (m.role === 'admin' ? m.content : null)}
                   </div>
                   {m.role === 'assistant' && packSelectionIndex === i && (
                     <div className="chat-pack-buttons">

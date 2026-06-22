@@ -464,6 +464,27 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'messages must be a non-empty array' });
   }
 
+  // ── 1b. Admin takeover gate — skip AI if an admin has joined ──────────────
+  {
+    const { data: sess } = await supabase
+      .from('chat_sessions')
+      .select('admin_active')
+      .eq('session_id', sessionId)
+      .maybeSingle();
+
+    if (sess?.admin_active) {
+      return res.status(200).json({
+        reply: 'A support agent has joined the conversation and will respond shortly.',
+        contactCaptureRequested: false,
+        scrollToOrderRequested:  false,
+        packSelectionRequested:  false,
+        captureForOrderRequested: false,
+        humanHandoffRequested:   false,
+        adminActive:             true,
+      });
+    }
+  }
+
   // ── 2. Rate limiting ───────────────────────────────────────────────────────
   const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim()
     || req.socket?.remoteAddress

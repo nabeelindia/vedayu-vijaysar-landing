@@ -2309,3 +2309,8 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
   .reviews-grid::-webkit-scrollbar { display: none; }
   .review-card { flex: 0 0 82vw; scroll-snap-align: start; }
 }
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
