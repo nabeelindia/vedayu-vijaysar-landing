@@ -1876,6 +1876,10 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
   body:has(.oc-sticky-bar) .chat-bubble {
     bottom: 80px;
   }
+  /* Glass bag bar (order-confirmed upsell) sits at bottom:0 — lift bubble above it */
+  body:has(.glass-bag-bar) .chat-bubble {
+    bottom: 90px;
+  }
 }
 
 .chat-header {
