@@ -193,10 +193,9 @@ export default function ChatWidget() {
         event:  'UPDATE',
         schema: 'public',
         table:  'chat_sessions',
-        filter: `session_id=eq.${sessionId}`,
       }, payload => {
         const updated = payload.new;
-        if (!updated) return;
+        if (!updated || updated.session_id !== sessionId) return;
 
         if (updated.admin_active !== undefined) {
           setAdminActive(!!updated.admin_active);

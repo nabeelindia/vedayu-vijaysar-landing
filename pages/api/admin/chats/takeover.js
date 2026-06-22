@@ -6,18 +6,19 @@ export default async function handler(req, res) {
   if (!checkAdminAuth(req)) return res.status(401).json({ error: 'Unauthorized' });
 
   const { sessionId, action, adminName } = req.body || {};
-  if (!sessionId || !['takeover', 'release'].includes(action)) {
-    return res.status(400).json({ error: 'sessionId and action (takeover|release) are required' });
+  if (!sessionId || !['takeover', 'release', 'archive', 'unarchive'].includes(action)) {
+    return res.status(400).json({ error: 'sessionId and valid action are required' });
   }
 
-  const isTakeover = action === 'takeover';
+  let update = { updated_at: new Date().toISOString() };
+  if (action === 'takeover')   update = { ...update, admin_active: true,  admin_name: adminName || 'Admin' };
+  if (action === 'release')    update = { ...update, admin_active: false, admin_name: null };
+  if (action === 'archive')    update = { ...update, archived: true };
+  if (action === 'unarchive')  update = { ...update, archived: false };
+
   const { error } = await supabase
     .from('chat_sessions')
-    .update({
-      admin_active: isTakeover,
-      admin_name:   isTakeover ? (adminName || 'Admin') : null,
-      updated_at:   new Date().toISOString(),
-    })
+    .update(update)
     .eq('session_id', sessionId);
 
   if (error) {
