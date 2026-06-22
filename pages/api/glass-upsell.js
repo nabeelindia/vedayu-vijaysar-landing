@@ -4,6 +4,7 @@
  * Called once when customer clicks "Pay" on the bag bar.
  */
 import Razorpay from 'razorpay';
+import { supabase } from '../../lib/supabase';
 
 const VALID_PRICES = { 2: 399, 3: 349, 4: 299, 5: 249, 6: 299, 7: 249 };
 
@@ -15,6 +16,16 @@ export default async function handler(req, res) {
 
   if (!orderId || !Array.isArray(glasses) || glasses.length === 0) {
     return res.status(400).json({ error: 'orderId and glasses[] are required' });
+  }
+
+  // Verify the parent order exists in DB before creating a payment
+  const { data: parentOrder, error: lookupErr } = await supabase
+    .from('orders')
+    .select('id')
+    .eq('order_id', orderId)
+    .single();
+  if (lookupErr || !parentOrder) {
+    return res.status(404).json({ error: 'Order not found' });
   }
 
   for (const g of glasses) {

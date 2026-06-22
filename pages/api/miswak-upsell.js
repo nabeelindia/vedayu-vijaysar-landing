@@ -4,12 +4,23 @@
  * Called from /order-confirmed after the customer opts in.
  */
 import Razorpay from 'razorpay';
+import { supabase } from '../../lib/supabase';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
   const { orderId, name, mobile, email } = req.body;
   if (!orderId) return res.status(400).json({ error: 'orderId is required' });
+
+  // Verify the parent order exists in DB before creating a payment
+  const { data: parentOrder, error: lookupErr } = await supabase
+    .from('orders')
+    .select('id')
+    .eq('order_id', orderId)
+    .single();
+  if (lookupErr || !parentOrder) {
+    return res.status(404).json({ error: 'Order not found' });
+  }
 
   try {
     const razorpay = new Razorpay({
