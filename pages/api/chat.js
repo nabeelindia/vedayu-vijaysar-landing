@@ -370,15 +370,26 @@ const TRACK_ORDER_TOOL = {
 async function lookupOrdersFromSupabase(field, value) {
   const { data: rows } = await supabase
     .from('orders')
-    .select('order_id, awb, name, status')
+    .select('order_id, awb, name, status, created_at, pack, payment_method')
     .eq(field, value)
-    .not('awb', 'is', null)
     .order('created_at', { ascending: false })
     .limit(3);
   return rows || [];
 }
 
-async function trackAndFormat(orderId, awb, name) {
+async function trackAndFormat(orderId, awb, name, row) {
+  // No AWB yet — order is confirmed but not dispatched
+  if (!awb) {
+    const parts = [
+      `customer_name: ${name || 'Customer'}`,
+      `Order **${orderId}**`,
+      `Status: **Order Confirmed — Awaiting Dispatch**`,
+    ];
+    if (row?.pack) parts.push(`Pack: ${row.pack}`);
+    if (row?.payment_method) parts.push(`Payment: ${row.payment_method}`);
+    return parts.join(' | ');
+  }
+
   const data = await trackShipment(awb);
   const status  = data?.status || 'Processing';
   const edd     = data?.edd    || null;
@@ -408,7 +419,7 @@ async function runTrackOrder(query, queryType) {
       const rows = await lookupOrdersFromSupabase('order_id', orderId);
       if (!rows.length) return `No order found for ID: ${orderId}. Please check the order ID and try again.`;
       const row = rows[0];
-      return await trackAndFormat(row.order_id, row.awb, row.name);
+      return await trackAndFormat(row.order_id, row.awb, row.name, row);
     }
 
     if (queryType === 'phone') {
@@ -416,14 +427,14 @@ async function runTrackOrder(query, queryType) {
       if (!/^[6-9][0-9]{9}$/.test(cleaned)) return 'Invalid mobile number. Please provide a 10-digit Indian mobile number.';
       const rows = await lookupOrdersFromSupabase('mobile', cleaned);
       if (!rows.length) return 'No orders found for this phone number.';
-      const results = await Promise.all(rows.map(r => trackAndFormat(r.order_id, r.awb, r.name)));
+      const results = await Promise.all(rows.map(r => trackAndFormat(r.order_id, r.awb, r.name, r)));
       return results.join('\n\n');
     }
 
     if (queryType === 'email') {
       const rows = await lookupOrdersFromSupabase('email', query.toLowerCase().trim());
       if (!rows.length) return 'No orders found for this email address.';
-      const results = await Promise.all(rows.map(r => trackAndFormat(r.order_id, r.awb, r.name)));
+      const results = await Promise.all(rows.map(r => trackAndFormat(r.order_id, r.awb, r.name, r)));
       return results.join('\n\n');
     }
 
