@@ -341,7 +341,13 @@ export default function AdminChats() {
     if (isMobile) setMobileView('detail');
   };
 
+  function patchSession(sessionId, patch) {
+    setSessions(prev => prev.map(s => s.session_id === sessionId ? { ...s, ...patch } : s));
+    setSelected(prev => prev?.session_id === sessionId ? { ...prev, ...patch } : prev);
+  }
+
   async function handleTakeover(sessionId) {
+    patchSession(sessionId, { admin_active: true, admin_name: 'Admin' });
     await fetch('/api/admin/chats/takeover', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -350,6 +356,7 @@ export default function AdminChats() {
   }
 
   async function handleRelease(sessionId) {
+    patchSession(sessionId, { admin_active: false, admin_name: null });
     await fetch('/api/admin/chats/takeover', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -361,13 +368,17 @@ export default function AdminChats() {
     if (!content.trim()) return;
     setSending(true);
     setAdminInput('');
+    const newMsg = { role: 'admin', content: content.trim(), timestamp: new Date().toISOString() };
+    // Optimistic: append message immediately so admin sees it without waiting for Realtime
+    patchSession(sessionId, {
+      messages: [...(selected?.messages || []), newMsg],
+    });
     await fetch('/api/admin/chats/message', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sessionId, content: content.trim() }),
     });
     setSending(false);
-    // Realtime updates the selected session's messages automatically
   }
 
   const detailProps = {
