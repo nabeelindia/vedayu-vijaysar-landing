@@ -33,6 +33,7 @@ body {
   background: var(--vd-cream);
   overflow-x: clip;
   -webkit-font-smoothing: antialiased;
+  -webkit-overflow-scrolling: touch;
 }
 
 a { text-decoration: none; color: inherit; }

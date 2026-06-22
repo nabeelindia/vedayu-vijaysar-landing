@@ -29,7 +29,7 @@
   "checkout.name_placeholder": "உங்கள் முழு பெயரை எழுதுங்கள்",
   "checkout.mobile_label": "மொபைல் எண் *",
   "checkout.mobile_placeholder": "10 இலக்க மொபைல் எண்",
-  "checkout.email_label": "மின்னஞ்சல் (விரும்பினால்)",
+  "checkout.email_label": "மின்னஞ்சல் *",
   "checkout.email_placeholder": "உங்கள் மின்னஞ்சல்",
   "checkout.address_label": "டெலிவரி முகவரி *",
   "checkout.address_placeholder": "வீட்டு எண், தெரு, பகுதி",

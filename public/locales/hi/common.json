@@ -29,7 +29,7 @@
   "checkout.name_placeholder": "अपना पूरा नाम लिखें",
   "checkout.mobile_label": "मोबाइल नंबर *",
   "checkout.mobile_placeholder": "10 अंकों का मोबाइल नंबर",
-  "checkout.email_label": "ईमेल (वैकल्पिक)",
+  "checkout.email_label": "ईमेल *",
   "checkout.email_placeholder": "आपका ईमेल",
   "checkout.address_label": "डिलीवरी पता *",
   "checkout.address_placeholder": "मकान नंबर, गली, इलाका",

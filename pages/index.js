@@ -418,7 +418,7 @@ export default function Home() {
   const fieldOk = {
     name:    () => form.name.trim().length > 1,
     mobile:  () => /^[6-9][0-9]{9}$/.test(form.mobile.trim()),
-    email:   () => !form.email.trim() || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()),
+    email:   () => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()),
     house:   () => form.house.trim().length > 2,
     area:    () => form.area.trim().length > 2,
     pincode: () => /^[1-9][0-9]{5}$/.test(form.pincode),
@@ -552,7 +552,7 @@ export default function Home() {
   const validate = () => {
     if (!form.name.trim())                                        return 'Please enter your full name.';
     if (!/^[6-9][0-9]{9}$/.test(form.mobile.trim()))             return 'Please enter a valid 10-digit mobile number.';
-    if (form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) return 'Please enter a valid email address.';
+    if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) return 'Please enter a valid email address.';
     if (!form.house.trim())  return 'Please enter your house / flat / building.';
     if (!form.area.trim())   return 'Please enter your area / locality.';
     if (!/^[1-9][0-9]{5}$/.test(form.pincode))                   return 'Please enter a valid 6-digit pincode.';
@@ -693,12 +693,17 @@ export default function Home() {
     }
   };
 
+  const isMobile = () => typeof window !== 'undefined' && window.innerWidth < 768;
+  const scrollToDelivery = () => {
+    document.getElementById('mobile')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
   const scrollToCheckout = (packId, forcePayment) => {
     const selectedPack = packId || pack;
     if (packId) setPack(packId);
     if (forcePayment) setPayment(forcePayment);
     fbq('InitiateCheckout', { content_name: PACKS[selectedPack].label, content_ids: [`vijaysar-${selectedPack}`], content_type: 'product', currency: 'INR', value: PACKS[selectedPack].price, num_items: PACKS[selectedPack].qty });
-    document.getElementById('checkout')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    (document.querySelector('.checkout-wrap-new') || document.getElementById('checkout'))?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   useEffect(() => {
@@ -1161,7 +1166,7 @@ export default function Home() {
               </div>
 
               <div className="hero-cta">
-                <button className="btn btn-brown btn-lg" onClick={() => scrollToCheckout()}>{t('hero.cta_order')}</button>
+                <button className="btn btn-brown btn-lg" onClick={() => isMobile() ? scrollToDelivery() : scrollToCheckout()}>{t('hero.cta_order')}</button>
                 <a href="#how-it-works" className="btn btn-outline">{t('hero.cta_how')}</a>
               </div>
               <div className="hero-micro">
@@ -1850,7 +1855,7 @@ export default function Home() {
             const PackSelector = () => (
               <div className="pack-selector">
                 {[1, 2, 5].map(p => (
-                  <div key={p} className={`pack-option${pack === p ? ' active' : ''}`} onClick={() => setPack(p)} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setPack(p)}>
+                  <div key={p} className={`pack-option${pack === p ? ' active' : ''}`} onClick={() => { setPack(p); if (isMobile()) setTimeout(() => scrollToDelivery(), 100); }} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter') { setPack(p); if (isMobile()) setTimeout(() => scrollToDelivery(), 100); } }}>
                     {p === 2 && <span className="pack-popular-tag">{t('pack.most_popular_badge')}</span>}
                     {p === 5 && <span className="pack-popular-tag" style={{background:'var(--vd-gold)'}}>🏆 {t('pack.best_value')}</span>}
                     {p === 1 && <span style={{ display:'block', height:18, marginBottom:2 }} />}
@@ -2046,7 +2051,7 @@ export default function Home() {
                     <div className="field-group">
                       <label className="field-label" htmlFor="email">{t('checkout.email_label')}{vIcon('email')}</label>
                       <input id="email" type="email" placeholder={t('checkout.email_placeholder')} autoComplete="email" value={form.email} onChange={e => { const v = e.target.value; setForm(f => ({ ...f, email: v })); tryLookup(form.mobile, v); }} onBlur={() => touch('email')} style={vStyle('email')} />
-                      <div style={{ fontSize:'.72rem', color:'var(--vd-text-light)', marginTop:3 }}>For order confirmation and updates</div>
+                      <div style={{ fontSize:'.72rem', color:'var(--vd-text-light)', marginTop:3 }}>For your invoice &amp; tracking link</div>
                     </div>
 
                     <div className="field-row">
@@ -2364,7 +2369,7 @@ export default function Home() {
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           aria-label="Back to top"
           style={{
-            position: 'fixed', bottom: 28, left: '50%', transform: 'translateX(-50%)',
+            position: 'fixed', bottom: showSticky ? 76 : 28, left: '50%', transform: 'translateX(-50%)',
             zIndex: 190, background: '#5C3D1E', color: '#fff',
             border: 'none', borderRadius: 24, padding: '9px 20px',
             display: 'flex', alignItems: 'center', gap: 7,

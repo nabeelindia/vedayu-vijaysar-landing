@@ -29,7 +29,7 @@
   "checkout.name_placeholder": "మీ పూర్తి పేరు రాయండి",
   "checkout.mobile_label": "మొబైల్ నంబర్ *",
   "checkout.mobile_placeholder": "10 అంకెల మొబైల్ నంబర్",
-  "checkout.email_label": "ఇమెయిల్ (ఐచ్ఛికం)",
+  "checkout.email_label": "ఇమెయిల్ *",
   "checkout.email_placeholder": "మీ ఇమెయిల్",
   "checkout.address_label": "డెలివరీ చిరునామా *",
   "checkout.address_placeholder": "ఇంటి నంబర్, వీధి, ప్రాంతం",

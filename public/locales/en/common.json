@@ -29,7 +29,7 @@
   "checkout.name_placeholder": "Your full name",
   "checkout.mobile_label": "Mobile Number *",
   "checkout.mobile_placeholder": "10-digit mobile number",
-  "checkout.email_label": "Email (optional)",
+  "checkout.email_label": "Email *",
   "checkout.email_placeholder": "your@email.com",
   "checkout.address_label": "Delivery Address *",
   "checkout.address_placeholder": "House No., Street, Area",
