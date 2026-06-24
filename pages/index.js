@@ -1145,7 +1145,7 @@ export default function Home() {
                   <span className="retailer-divider-label">Also available on</span>
                 </div>
                 <div className="retailer-logos">
-                  <a href="https://www.amazon.in/dp/B0H6BKLB51/" target="_blank" rel="noopener noreferrer" className="retailer-pill retailer-pill-amazon" aria-label="Buy on Amazon.in">
+                  <a href="https://www.amazon.in/dp/B0H6BKLB51/" target="_blank" rel="noopener noreferrer nofollow" className="retailer-pill retailer-pill-amazon" aria-label="Buy on Amazon.in">
                     <img src="/images/logo-amazon.svg" alt="Amazon.in" height="18" style={{ display:'block' }} />
                   </a>
                   <div className="retailer-pill" aria-label="Available at D-Mart stores">
@@ -2177,7 +2177,7 @@ export default function Home() {
                     <div className="retailer-checkout-strip">
                       <span className="retailer-checkout-label">Also available on</span>
                       <div className="retailer-logos">
-                        <a href="https://www.amazon.in/dp/B0H6BKLB51/" target="_blank" rel="noopener noreferrer" className="retailer-pill retailer-pill-amazon" aria-label="Buy on Amazon.in">
+                        <a href="https://www.amazon.in/dp/B0H6BKLB51/" target="_blank" rel="noopener noreferrer nofollow" className="retailer-pill retailer-pill-amazon" aria-label="Buy on Amazon.in">
                           <img src="/images/logo-amazon.svg" alt="Amazon.in" height="16" style={{ display:'block' }} />
                         </a>
                         <div className="retailer-pill" aria-label="Available at D-Mart stores">
@@ -2225,7 +2225,7 @@ export default function Home() {
                     <div className="retailer-sidebar-block">
                       <div className="retailer-sidebar-label">Also available on</div>
                       <div className="retailer-logos">
-                        <a href="https://www.amazon.in/dp/B0H6BKLB51/" target="_blank" rel="noopener noreferrer" className="retailer-pill retailer-pill-amazon" aria-label="Buy on Amazon.in">
+                        <a href="https://www.amazon.in/dp/B0H6BKLB51/" target="_blank" rel="noopener noreferrer nofollow" className="retailer-pill retailer-pill-amazon" aria-label="Buy on Amazon.in">
                           <img src="/images/logo-amazon.svg" alt="Amazon.in" height="16" style={{ display:'block' }} />
                         </a>
                         <div className="retailer-pill" aria-label="Available at D-Mart stores">
