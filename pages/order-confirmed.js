@@ -582,59 +582,12 @@ export default function OrderConfirmed() {
   const [miswakErr,    setMiswakErr]    = useState('');
   const [custMobile,   setCustMobile]   = useState('');
   const [custEmail,    setCustEmail]    = useState('');
-  const [notifyState,      setNotifyState]      = useState('idle');   // 'idle' | 'requesting' | 'granted' | 'denied' | 'browser-denied'
-  const [showNotifyToggle, setShowNotifyToggle] = useState(false);
-
   /* Fade in */
   useEffect(() => {
     const timer = setTimeout(() => setVisible(true), 80);
     return () => clearTimeout(timer);
   }, []);
 
-  /* Push notification opt-in */
-  useEffect(() => {
-    const shouldNotify = sessionStorage.getItem('vedayu_notify_orders');
-    if (shouldNotify === '1') {
-      requestPushPermission().then(setNotifyState);
-    } else {
-      // Check if browser has already denied — no point showing the button
-      const browserPerm = typeof Notification !== 'undefined' ? Notification.permission : 'default';
-      if (browserPerm === 'denied') {
-        setNotifyState('browser-denied');
-      }
-      setShowNotifyToggle(true);
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  async function requestPushPermission() {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return 'denied';
-    const VAPID_PUBLIC = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-    if (!VAPID_PUBLIC) {
-      console.warn('[Push] NEXT_PUBLIC_VAPID_PUBLIC_KEY not set');
-      return 'denied';
-    }
-    try {
-      setNotifyState('requesting');
-      const reg        = await navigator.serviceWorker.register('/sw.js');
-      const permission = await Notification.requestPermission();
-      if (permission !== 'granted') return 'denied';
-      const existing = await reg.pushManager.getSubscription();
-      const sub = existing || await reg.pushManager.subscribe({
-        userVisibleOnly:      true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC),
-      });
-      await fetch('/api/subscribe-push', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(sub.toJSON()),
-      });
-      sessionStorage.removeItem('vedayu_notify_orders');
-      return 'granted';
-    } catch (e) {
-      console.error('[Push] Permission request failed:', e);
-      return 'denied';
-    }
-  }
 
   /* Read customer context (mobile/email) from sessionStorage */
   useEffect(() => {
@@ -874,40 +827,6 @@ export default function OrderConfirmed() {
             </p>
           )}
 
-          {/* Notification opt-in card — only for users who did NOT opt in at checkout */}
-          {showNotifyToggle && notifyState !== 'granted' && (
-            <div className="oc-notify-card">
-              <div className="oc-notify-card-text">
-                <p className="oc-notify-card-title">🔔 {t('order_confirmed.notify_card_title')}</p>
-                {notifyState === 'browser-denied' ? (
-                  <p className="oc-notify-card-desc" style={{ color: '#c0392b' }}>
-                    {t('order_confirmed.notify_blocked_msg')}
-                  </p>
-                ) : (
-                  <>
-                    <p className="oc-notify-card-desc">{t('order_confirmed.notify_card_desc')}</p>
-                    {notifyState === 'denied' && (
-                      <p className="oc-notify-card-msg" style={{ color: '#c0392b' }}>{t('order_confirmed.notify_denied_msg')}</p>
-                    )}
-                  </>
-                )}
-              </div>
-              {notifyState !== 'denied' && notifyState !== 'browser-denied' && (
-                <button
-                  onClick={() => requestPushPermission().then(setNotifyState)}
-                  disabled={notifyState === 'requesting'}
-                  style={{
-                    flexShrink: 0, padding: '9px 16px', background: 'var(--vd-brown)',
-                    color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700,
-                    fontSize: '.8rem', cursor: notifyState === 'requesting' ? 'not-allowed' : 'pointer',
-                    opacity: notifyState === 'requesting' ? .7 : 1,
-                  }}
-                >
-                  {notifyState === 'requesting' ? '...' : t('order_confirmed.notify_enable_btn')}
-                </button>
-              )}
-            </div>
-          )}
 
           {/* Mobile-only: teaser rows — miswak teaser hidden when glassLadder exists (miswak is inside unified upsell card) */}
           {!glassLadder && miswakState !== 'done' && miswakState !== 'declined' && (

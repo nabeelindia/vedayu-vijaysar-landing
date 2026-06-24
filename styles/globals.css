@@ -2315,3 +2315,35 @@ p  { font-size: clamp(.9rem, 2vw, 1.05rem); line-height: 1.72; }
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.3; }
 }
+
+/* ── Retailer availability badges (Amazon + D-Mart) ── */
+.retailer-row { margin: 10px 0; }
+.retailer-divider { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.retailer-divider::before,
+.retailer-divider::after { content: ''; flex: 1; height: 1px; background: #e0d5c5; }
+.retailer-divider-label { font-size: .68rem; color: var(--vd-text-light); text-transform: uppercase; letter-spacing: .07em; white-space: nowrap; }
+.retailer-logos { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+@media (max-width: 768px) {
+  .retailer-row .retailer-divider { justify-content: center; }
+  .retailer-row .retailer-logos { justify-content: center; }
+}
+.retailer-pill { display: inline-flex; align-items: center; gap: 7px; background: #fff; border: 1.5px solid #e8d9c0; border-radius: 22px; padding: 6px 14px; width: fit-content; }
+.retailer-pill img { height: 18px; width: auto; max-width: 80px; object-fit: contain; }
+.retailer-pill-amazon { border-color: #FF9A00; text-decoration: none; transition: box-shadow .15s; cursor: pointer; }
+.retailer-pill-amazon:hover { box-shadow: 0 2px 10px rgba(255,154,0,.3); }
+.retailer-dmart-text { font-size: .72rem; color: var(--vd-text-light); }
+
+/* Checkout form inline strip — centered */
+.retailer-checkout-strip { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 0 4px; border-top: 1px solid #f0e8da; margin-top: 4px; width: 100%; text-align: center; }
+.retailer-checkout-label { font-size: .68rem; color: var(--vd-text-light); text-transform: uppercase; letter-spacing: .07em; display: block; width: 100%; text-align: center; }
+.retailer-checkout-strip .retailer-logos { justify-content: center; align-items: center; gap: 8px; width: 100%; }
+.retailer-checkout-strip .retailer-pill { padding: 4px 10px; border-radius: 18px; }
+.retailer-checkout-strip .retailer-pill img { height: 16px; max-width: 70px; }
+
+/* Sidebar block — hidden (kept in DOM for future use) */
+.retailer-sidebar-block { display: none; }
+
+@media (max-width: 480px) {
+  .retailer-logos { gap: 8px; }
+  .retailer-pill { padding: 5px 11px; }
+}

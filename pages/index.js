@@ -190,7 +190,6 @@ export default function Home() {
   /* form state */
   const [pack,       setPack]       = useState(1);
   const [payment,    setPayment]    = useState('prepaid');
-  const [notifyOrders, setNotifyOrders] = useState(true);
   const [form,       setForm]       = useState({ name:'', mobile:'', email:'', house:'', area:'', landmark:'', pincode:'', city:'', state:'' });
   const [mobSummaryOpen, setMobSummaryOpen] = useState(false);
   const [loading,    setLoading]    = useState(false);
@@ -565,7 +564,6 @@ export default function Home() {
   const placeOrder = async () => {
     const err = validate();
     if (err) { showToast(err); return; }
-    sessionStorage.setItem('vedayu_notify_orders', notifyOrders ? '1' : '0');
     setLoading(true);
 
     const selectedPack  = PACKS[pack];
@@ -1123,6 +1121,7 @@ export default function Home() {
                 <span className="badge badge-green">🚚 {t('badge.free_delivery')}</span>
                 <span className="badge">💳 {t('badge.cod')}</span>
               </div>
+
               <p className="eyebrow">{t('hero.eyebrow')}</p>
               <h1 onClick={() => scrollToCheckout()} style={{ cursor:'pointer' }} title="Tap to order">
                 {utm.source === 'facebook' || utm.source === 'instagram' || utm.medium === 'paid'
@@ -1138,6 +1137,22 @@ export default function Home() {
                 <span className="price-main">₹{PACKS[pack].price.toLocaleString('en-IN')}</span>
                 <span className="price-original">₹{PACKS[pack].original.toLocaleString('en-IN')}</span>
                 <span className="price-save">{t('pack.save_prefix')} ₹{(PACKS[pack].original - PACKS[pack].price).toLocaleString('en-IN')}</span>
+              </div>
+
+              {/* ── Retailer availability ── */}
+              <div className="retailer-row">
+                <div className="retailer-divider">
+                  <span className="retailer-divider-label">Also available on</span>
+                </div>
+                <div className="retailer-logos">
+                  <a href="https://www.amazon.in/dp/B0H6BKLB51/" target="_blank" rel="noopener noreferrer" className="retailer-pill retailer-pill-amazon" aria-label="Buy on Amazon.in">
+                    <img src="/images/logo-amazon.svg" alt="Amazon.in" height="18" style={{ display:'block' }} />
+                  </a>
+                  <div className="retailer-pill" aria-label="Available at D-Mart stores">
+                    <img src="/images/logo-dmart.svg" alt="D-Mart" height="18" style={{ display:'block' }} />
+                    <span className="retailer-dmart-text">stores near you</span>
+                  </div>
+                </div>
               </div>
 
               {/* Quick pack picker */}
@@ -1819,6 +1834,7 @@ export default function Home() {
             </div>
 
           </div>
+
         </div>
       </section>
 
@@ -2147,26 +2163,28 @@ export default function Home() {
 
                     <PaymentSection />
 
-                    <div className="notify-toggle-row" onClick={() => setNotifyOrders(v => !v)}>
-                      <span className="notify-toggle-label">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--vd-brown)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                        Get order updates via browser notification
-                      </span>
-                      <span className="notify-toggle-switch">
-                        <input type="checkbox" id="notify-orders-checkbox" aria-label="Get order updates via browser notification" checked={notifyOrders} onChange={e => { e.stopPropagation(); setNotifyOrders(e.target.checked); }} />
-                        <span className="notify-toggle-track" />
-                        <span className="notify-toggle-thumb" />
-                      </span>
-                    </div>
-
                     <button className="btn btn-brown btn-full" style={{ padding: '17px', fontSize: '1.05rem' }} onClick={placeOrder} disabled={loading}>
                       {ctaLabel}
                     </button>
-                    <div className="co-trust-badges" style={{ marginTop: 10, marginBottom: 12 }}>
+                    <div className="co-trust-badges" style={{ marginTop: 10, marginBottom: 8 }}>
                       <div className="co-trust-badge"><span className="tbd-icon">🛡</span><div><span className="tbd-name">Secure Payment</span><span className="tbd-sub">256-bit SSL</span></div></div>
                       <div className="co-trust-badge"><span className="tbd-icon">🚚</span><div><span className="tbd-name">Free Delivery</span><span className="tbd-sub">Pan-India</span></div></div>
                       <div className="co-trust-badge"><span className="tbd-icon">🔄</span><div><span className="tbd-name">7-Day Replacement</span><span className="tbd-sub">Hassle-free</span></div></div>
                       <div className="co-trust-badge"><span className="tbd-icon">✅</span><div><span className="tbd-name">Quality Checked</span><span className="tbd-sub">Lab verified</span></div></div>
+                    </div>
+
+                    {/* ── Retailer availability — Touch 2 (checkout trust) ── */}
+                    <div className="retailer-checkout-strip">
+                      <span className="retailer-checkout-label">Also available on</span>
+                      <div className="retailer-logos">
+                        <a href="https://www.amazon.in/dp/B0H6BKLB51/" target="_blank" rel="noopener noreferrer" className="retailer-pill retailer-pill-amazon" aria-label="Buy on Amazon.in">
+                          <img src="/images/logo-amazon.svg" alt="Amazon.in" height="16" style={{ display:'block' }} />
+                        </a>
+                        <div className="retailer-pill" aria-label="Available at D-Mart stores">
+                          <img src="/images/logo-dmart.svg" alt="D-Mart" height="16" style={{ display:'block' }} />
+                          <span className="retailer-dmart-text">stores near you</span>
+                        </div>
+                      </div>
                     </div>
                     <ContactBelow />
                   </div>
@@ -2201,6 +2219,20 @@ export default function Home() {
                       {payment === 'cod' && (
                         <div className="checkout-switch-badge">✨ Switch to online payment to save {fmt(discountAmt(pack))}</div>
                       )}
+                    </div>
+
+                    {/* ── Retailer availability — sidebar (desktop Touch 2) ── */}
+                    <div className="retailer-sidebar-block">
+                      <div className="retailer-sidebar-label">Also available on</div>
+                      <div className="retailer-logos">
+                        <a href="https://www.amazon.in/dp/B0H6BKLB51/" target="_blank" rel="noopener noreferrer" className="retailer-pill retailer-pill-amazon" aria-label="Buy on Amazon.in">
+                          <img src="/images/logo-amazon.svg" alt="Amazon.in" height="16" style={{ display:'block' }} />
+                        </a>
+                        <div className="retailer-pill" aria-label="Available at D-Mart stores">
+                          <img src="/images/logo-dmart.svg" alt="D-Mart" height="16" style={{ display:'block' }} />
+                          <span className="retailer-dmart-text">stores near you</span>
+                        </div>
+                      </div>
                     </div>
 
                     <div className="checkout-need-help">

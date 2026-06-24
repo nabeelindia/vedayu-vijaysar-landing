@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 210 52" width="210" height="52">
+  <!-- D -->
+  <text x="0" y="44" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="48" fill="#1a6b1a">D</text>
+  <!-- Pyramid icon -->
+  <g transform="translate(40,5)">
+    <polygon points="16,5 31,38 1,38" fill="#1a6b1a"/>
+    <line x1="4"  y1="33" x2="28" y2="33" stroke="#fff" stroke-width="2.2"/>
+    <line x1="6.5" y1="28" x2="25.5" y2="28" stroke="#fff" stroke-width="2.2"/>
+    <line x1="9"  y1="23" x2="23"  y2="23" stroke="#fff" stroke-width="2.2"/>
+    <line x1="11.5" y1="18" x2="20.5" y2="18" stroke="#fff" stroke-width="2"/>
+    <line x1="14" y1="13" x2="18"  y2="13" stroke="#fff" stroke-width="1.8"/>
+    <!-- People/star figure on apex -->
+    <circle cx="16" cy="2.5" r="2.8" fill="#1a6b1a"/>
+    <line x1="12.5" y1="6.5" x2="19.5" y2="6.5" stroke="#1a6b1a" stroke-width="1.8"/>
+    <line x1="16" y1="4.5" x2="13" y2="8" stroke="#1a6b1a" stroke-width="1.4"/>
+    <line x1="16" y1="4.5" x2="19" y2="8" stroke="#1a6b1a" stroke-width="1.4"/>
+  </g>
+  <!-- Mart -->
+  <text x="76" y="44" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="40" fill="#1a6b1a">Mart</text>
+</svg>
