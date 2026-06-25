@@ -8,11 +8,12 @@ export default async function handler(req, res) {
   const { id } = req.query;
 
   if (req.method === 'GET') {
-    const [orderRes, verifRes, notesRes, refundsRes] = await Promise.all([
+    const [orderRes, verifRes, notesRes, refundsRes, replRes] = await Promise.all([
       supabase.from('orders').select('*').eq('order_id', id).single(),
       supabase.from('cod_verifications').select('*').eq('order_id', id).maybeSingle(),
       supabase.from('order_notes').select('*').eq('order_id', id).order('created_at', { ascending: false }),
       supabase.from('refunds').select('*').eq('order_id', id).order('created_at', { ascending: false }),
+      supabase.from('orders').select('order_id,pack,status,created_at').eq('replacement_for', id).order('created_at', { ascending: false }),
     ]);
     if (orderRes.error) return res.status(404).json({ error: 'Order not found' });
 
@@ -30,6 +31,7 @@ export default async function handler(req, res) {
       notes:        notesRes.data   || [],
       refunds:      refundsRes.data || [],
       shipment,
+      replacements: replRes.data    || [],
     });
   }
 

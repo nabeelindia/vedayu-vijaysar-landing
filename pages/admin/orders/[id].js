@@ -46,6 +46,7 @@ export default function OrderDetail() {
   const [addrPin,          setAddrPin]          = useState('');
   const [editingCourier,   setEditingCourier]   = useState(false);
   const [courierInput,     setCourierInput]     = useState('');
+  const [replacements,     setReplacements]     = useState([]);
 
   useEffect(() => {
     if (!id) return;
@@ -54,6 +55,7 @@ export default function OrderDetail() {
       setNotes(d.notes     || []);
       setRefunds(d.refunds || []);
       setShipment(d.shipment || null);
+      setReplacements(d.replacements || []);
     });
   }, [id]);
 
@@ -152,6 +154,22 @@ export default function OrderDetail() {
     <AdminLayout title={order.order_id}>
       <PageHeader title={order.order_id}
         action={<a href="/admin/orders" style={{ fontSize:'.8rem', color:'#5C3D1E', fontWeight:600 }}>← Orders</a>} />
+
+      {order.replacement_for && (
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+          padding: '4px 10px', background: '#fff3cd',
+          border: '1.5px solid #ffc107', borderRadius: 20,
+          fontSize: '.72rem', fontWeight: 700, color: '#856404', marginTop: 6,
+        }}>
+          🔁 Replacement for{' '}
+          <span
+            onClick={() => router.push(`/admin/orders/${order.replacement_for}`)}
+            style={{ fontFamily: 'monospace', cursor: 'pointer', textDecoration: 'underline' }}>
+            {order.replacement_for}
+          </span>
+        </div>
+      )}
 
       <div className="admin-card-row" style={{ gap:16 }}>
         <div style={{ flex:'1 1 280px', background:'#fff', borderRadius:12,
@@ -452,6 +470,15 @@ export default function OrderDetail() {
               </button>
             )}
             <button
+              onClick={() => router.push(`/admin/orders/new?replace=${order.order_id}`)}
+              style={{
+                padding: '8px 14px', background: '#fff3cd', color: '#856404',
+                border: '1.5px solid #ffc107', borderRadius: 8,
+                fontSize: '.8rem', fontWeight: 700, cursor: 'pointer',
+              }}>
+              🔁 Create Replacement
+            </button>
+            <button
               onClick={() => {
                 const next = !order.archived;
                 if (confirm(next ? 'Archive this order? It will be hidden from the main list.' : 'Unarchive this order?')) {
@@ -689,6 +716,35 @@ export default function OrderDetail() {
           </p>
         )}
       </div>
+      {replacements.length > 0 && (
+        <div style={{ background:'#fff', borderRadius:12, padding:'18px 20px',
+          boxShadow:'0 1px 3px rgba(0,0,0,.07)', marginTop:16 }}>
+          <h2 style={{ margin:'0 0 12px', fontSize:'.85rem', fontWeight:700,
+            textTransform:'uppercase', letterSpacing:'.7px', color:'#888' }}>
+            🔁 Replacement Orders ({replacements.length})
+          </h2>
+          {replacements.map(r => (
+            <div key={r.order_id}
+              onClick={() => router.push(`/admin/orders/${r.order_id}`)}
+              style={{ padding:'10px 12px', background:'#fdf8f0', borderRadius:8,
+                border:'1.5px solid #e0d8cc', marginBottom:6, cursor:'pointer',
+                display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+              <div>
+                <div style={{ fontFamily:'monospace', fontWeight:700, fontSize:'.85rem', color:'#5C3D1E' }}>
+                  {r.order_id}
+                </div>
+                <div style={{ fontSize:'.75rem', color:'#888', marginTop:2 }}>
+                  {r.pack} · {new Date(r.created_at).toLocaleDateString('en-IN', { timeZone:'Asia/Kolkata', dateStyle:'medium' })}
+                </div>
+              </div>
+              <span style={{ fontSize:'.72rem', fontWeight:700, padding:'3px 10px',
+                borderRadius:20, background:'#fff3cd', color:'#856404', border:'1px solid #ffc107' }}>
+                {r.status}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </AdminLayout>
   );
 }
