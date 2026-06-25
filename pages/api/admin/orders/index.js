@@ -37,6 +37,8 @@ function getOrdersQuery({ method, status, search, page, archived, date_from, dat
   return { query, pageSize };
 }
 
+const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
 // ─── POST helpers ─────────────────────────────────────────────────────────────
 
 function buildOwnerEmail({ orderId, name, mobile, email, address, city, state, pincode,
@@ -54,13 +56,13 @@ function buildOwnerEmail({ orderId, name, mobile, email, address, city, state, p
   <div style="background:#fff;border:1px solid #D4B896;border-top:none;padding:24px;border-radius:0 0 8px 8px;">
     <table style="width:100%;border-collapse:collapse;font-size:.9rem;">
       <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:10px 0;font-weight:600;color:#3D2610;width:40%;">Order ID</td><td style="padding:10px 0;font-family:monospace;font-weight:700;">${orderId}</td></tr>
-      ${isReplacement ? `<tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:10px 0;font-weight:600;color:#3D2610;">Replaces</td><td style="padding:10px 0;font-family:monospace;color:#856404;font-weight:700;">${replacementFor}</td></tr>` : ''}
-      <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:10px 0;font-weight:600;color:#3D2610;">Customer</td><td style="padding:10px 0;">${name}</td></tr>
-      <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:10px 0;font-weight:600;color:#3D2610;">Mobile</td><td style="padding:10px 0;"><a href="tel:+91${mobile}" style="color:#5C3D1E;">+91 ${mobile}</a></td></tr>
-      ${email ? `<tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:10px 0;font-weight:600;color:#3D2610;">Email</td><td style="padding:10px 0;">${email}</td></tr>` : ''}
-      <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:10px 0;font-weight:600;color:#3D2610;">Address</td><td style="padding:10px 0;">${fullAddr}</td></tr>
-      <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:10px 0;font-weight:600;color:#3D2610;">Pack</td><td style="padding:10px 0;">${pack}</td></tr>
-      <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:10px 0;font-weight:600;color:#3D2610;">Qty</td><td style="padding:10px 0;">${qty} glass(es)</td></tr>
+      ${isReplacement ? `<tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:10px 0;font-weight:600;color:#3D2610;">Replaces</td><td style="padding:10px 0;font-family:monospace;color:#856404;font-weight:700;">${esc(replacementFor)}</td></tr>` : ''}
+      <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:10px 0;font-weight:600;color:#3D2610;">Customer</td><td style="padding:10px 0;">${esc(name)}</td></tr>
+      <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:10px 0;font-weight:600;color:#3D2610;">Mobile</td><td style="padding:10px 0;"><a href="tel:+91${esc(mobile)}" style="color:#5C3D1E;">+91 ${esc(mobile)}</a></td></tr>
+      ${email ? `<tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:10px 0;font-weight:600;color:#3D2610;">Email</td><td style="padding:10px 0;">${esc(email)}</td></tr>` : ''}
+      <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:10px 0;font-weight:600;color:#3D2610;">Address</td><td style="padding:10px 0;">${esc(fullAddr)}</td></tr>
+      <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:10px 0;font-weight:600;color:#3D2610;">Pack</td><td style="padding:10px 0;">${esc(pack)}</td></tr>
+      <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:10px 0;font-weight:600;color:#3D2610;">Qty</td><td style="padding:10px 0;">${esc(qty)} glass(es)</td></tr>
       <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:10px 0;font-weight:600;color:#3D2610;">Amount</td><td style="padding:10px 0;font-size:1.1rem;font-weight:700;color:${isReplacement ? '#4A7C59' : '#5C3D1E'};">${priceStr}</td></tr>
       <tr><td style="padding:10px 0;font-weight:600;color:#3D2610;">Method</td><td style="padding:10px 0;">${methodLabel}</td></tr>
     </table>
@@ -81,20 +83,20 @@ function buildCustomerEmail({ orderId, name, pack, qty, price, address, city, st
     <h2 style="color:#fff;margin:0;">Order Confirmed — Vedayu</h2>
   </div>
   <div style="background:#fff;border:1px solid #D4B896;border-top:none;padding:24px;border-radius:0 0 8px 8px;">
-    <p style="margin:0 0 16px;">Dear ${name},</p>
+    <p style="margin:0 0 16px;">Dear ${esc(name)},</p>
     ${isReplacement
       ? `<p style="margin:0 0 16px;">Your replacement order has been created. We will dispatch it to you within 1–2 business days.</p>`
       : `<p style="margin:0 0 16px;">Your order has been confirmed. We will dispatch it within 1–2 business days.</p>`
     }
     <table style="width:100%;border-collapse:collapse;font-size:.9rem;">
-      <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:9px 0;font-weight:600;color:#3D2610;width:40%;">Order ID</td><td style="padding:9px 0;font-family:monospace;font-weight:700;">${orderId}</td></tr>
-      <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:9px 0;font-weight:600;color:#3D2610;">Pack</td><td style="padding:9px 0;">${pack}</td></tr>
-      <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:9px 0;font-weight:600;color:#3D2610;">Qty</td><td style="padding:9px 0;">${qty} glass(es)</td></tr>
+      <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:9px 0;font-weight:600;color:#3D2610;width:40%;">Order ID</td><td style="padding:9px 0;font-family:monospace;font-weight:700;">${esc(orderId)}</td></tr>
+      <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:9px 0;font-weight:600;color:#3D2610;">Pack</td><td style="padding:9px 0;">${esc(pack)}</td></tr>
+      <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:9px 0;font-weight:600;color:#3D2610;">Qty</td><td style="padding:9px 0;">${esc(qty)} glass(es)</td></tr>
       <tr style="border-bottom:1px solid #f0e8d8;"><td style="padding:9px 0;font-weight:600;color:#3D2610;">Amount</td><td style="padding:9px 0;font-weight:700;">${priceStr}</td></tr>
-      <tr><td style="padding:9px 0;font-weight:600;color:#3D2610;">Deliver to</td><td style="padding:9px 0;">${fullAddr}</td></tr>
+      <tr><td style="padding:9px 0;font-weight:600;color:#3D2610;">Deliver to</td><td style="padding:9px 0;">${esc(fullAddr)}</td></tr>
     </table>
     <p style="margin:20px 0 0;font-size:.82rem;color:#888;">
-      Track your order at <a href="https://vedayulife.com/track?order=${orderId}" style="color:#5C3D1E;">vedayulife.com/track</a>
+      Track your order at <a href="https://vedayulife.com/track?order=${esc(orderId)}" style="color:#5C3D1E;">vedayulife.com/track</a>
     </p>
   </div>
 </div>`;

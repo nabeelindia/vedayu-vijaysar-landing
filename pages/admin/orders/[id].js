@@ -469,15 +469,17 @@ export default function OrderDetail() {
                 Mark RTO
               </button>
             )}
-            <button
-              onClick={() => router.push(`/admin/orders/new?replace=${order.order_id}`)}
-              style={{
-                padding: '8px 14px', background: '#fff3cd', color: '#856404',
-                border: '1.5px solid #ffc107', borderRadius: 8,
-                fontSize: '.8rem', fontWeight: 700, cursor: 'pointer',
-              }}>
-              🔁 Create Replacement
-            </button>
+            {!['cancelled', 'returned'].includes(order.status) && (
+              <button
+                onClick={() => router.push(`/admin/orders/new?replace=${order.order_id}`)}
+                style={{
+                  padding: '8px 14px', background: '#fff3cd', color: '#856404',
+                  border: '1.5px solid #ffc107', borderRadius: 8,
+                  fontSize: '.8rem', fontWeight: 700, cursor: 'pointer',
+                }}>
+                🔁 Create Replacement
+              </button>
+            )}
             <button
               onClick={() => {
                 const next = !order.archived;
