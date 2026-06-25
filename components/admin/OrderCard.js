@@ -52,11 +52,21 @@ export default function OrderCard({ order, onClick }) {
           </span>
         )}
         <span style={{ fontSize: '.65rem', fontWeight: 700,
-          color: order.method === 'cod' ? '#6D4C00' : '#2E7D32',
-          background: order.method === 'cod' ? '#FFF8E1' : '#E8F5E9',
+          color: order.method === 'cod' ? '#6D4C00' : order.method === 'prepaid' ? '#2E7D32' : '#5C3D1E',
+          background: order.method === 'cod' ? '#FFF8E1' : order.method === 'prepaid' ? '#E8F5E9' : '#f0ede8',
           padding: '2px 7px', borderRadius: 20 }}>
-          {order.method === 'cod' ? 'COD' : 'Prepaid'}
+          {order.method === 'cod' ? 'COD' : order.method === 'prepaid' ? 'Prepaid' : 'Free'}
         </span>
+        {order.replacement_for && (
+          <span style={{
+            fontSize: '.65rem', fontWeight: 700,
+            color: '#856404', background: '#FFF8E1',
+            padding: '2px 7px', borderRadius: 20, whiteSpace: 'nowrap',
+            border: '1px solid #ffc107',
+          }}>
+            🔁 Replacement
+          </span>
+        )}
       </div>
     </div>
   );
