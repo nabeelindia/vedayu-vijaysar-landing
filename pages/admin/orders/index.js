@@ -134,7 +134,20 @@ export default function OrdersList() {
 
   return (
     <AdminLayout title="Orders">
-      <PageHeader title={`Orders (${total})`} />
+      <PageHeader
+        title={`Orders (${total})`}
+        action={
+          <button
+            onClick={() => router.push('/admin/orders/new')}
+            style={{
+              padding: '8px 16px', background: '#5C3D1E', color: '#fff',
+              border: 'none', borderRadius: 8, fontSize: '.8rem',
+              fontWeight: 700, cursor: 'pointer',
+            }}>
+            + Create Order
+          </button>
+        }
+      />
       <div style={{ display:'flex', gap:8, alignItems:'center', marginBottom: dateRange === 'custom' ? 6 : 12, flexWrap:'wrap' }}>
         <input type="search" placeholder="Search by name, mobile, order ID, pincode…"
           value={search} onChange={e => setSearch(e.target.value)} onKeyDown={handleSearch}
