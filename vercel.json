@@ -1,4 +1,20 @@
 {
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "www.vedayulife.com" }],
+      "destination": "https://vedayulife.com/:path*",
+      "permanent": true
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "index, follow" }
+      ]
+    }
+  ],
   "crons": [
     { "path": "/api/cron/generate-posts",   "schedule": "30 0 * * 1" },
     { "path": "/api/cron/send-followups",   "schedule": "30 2 * * *" },
