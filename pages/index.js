@@ -728,8 +728,11 @@ export default function Home() {
         {/* ── Title — primary keyword first, commercial intent, price anchor ── */}
         <title>Vijaysar Wooden Glass — Buy Online India | Vedayu | From ₹499</title>
 
-        {/* ── Meta description — keyword-rich, emotional hook, under 155 chars ── */}
-        <meta name="description" content="Vijaysar Wooden Glass (Pterocarpus marsupium) — fill overnight, drink infused water each morning. Traditional Ayurvedic blood sugar wellness ritual. From ₹499 · Free delivery · COD available." />
+        {/* ── Meta description — keyword-rich, emotional hook, under 160 chars ── */}
+        <meta name="description" content="Vijaysar Wooden Glass — fill overnight, drink infused water each morning. Ayurvedic blood sugar wellness ritual. From ₹499 · Free delivery · COD available." />
+        <meta name="robots" content="index, follow" />
+        <meta name="keywords" content="vijaysar wooden glass, pterocarpus marsupium, ayurvedic blood sugar glass, vijaysar glass buy online india, wooden glass for diabetes, vedayu" />
+        <meta name="publisher" content="Vedayu" />
 
         {/* ── Open Graph — WhatsApp / Facebook / Twitter share preview ── */}
         <meta property="og:type"        content="product" />
@@ -1146,10 +1149,10 @@ export default function Home() {
                 </div>
                 <div className="retailer-logos">
                   <a href="https://www.amazon.in/dp/B0H6BKLB51/" target="_blank" rel="noopener noreferrer nofollow" className="retailer-pill retailer-pill-amazon" aria-label="Buy on Amazon.in">
-                    <img src="/images/logo-amazon.svg" alt="Amazon.in" height="18" style={{ display:'block' }} />
+                    <img src="/images/logo-amazon.svg" alt="Amazon.in" title="Amazon.in" height="18" style={{ display:'block' }} />
                   </a>
                   <div className="retailer-pill" aria-label="Available at D-Mart stores">
-                    <img src="/images/logo-dmart.svg" alt="D-Mart" height="18" style={{ display:'block' }} />
+                    <img src="/images/logo-dmart.svg" alt="D-Mart" title="D-Mart" height="18" style={{ display:'block' }} />
                     <span className="retailer-dmart-text">stores near you</span>
                   </div>
                 </div>
@@ -1214,6 +1217,7 @@ export default function Home() {
                 <Image
                   src={GALLERY[galleryIdx].src}
                   alt={GALLERY[galleryIdx].alt}
+                  title={GALLERY[galleryIdx].alt}
                   className="hero-product-img"
                   width={520}
                   height={520}
@@ -1294,6 +1298,7 @@ export default function Home() {
                 <Image
                   src="https://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/lifestyle_ehmoyv"
                   alt="Vedayu Vijaysar Wooden Glass — Premium Natural Wood"
+                  title="Vedayu Vijaysar Wooden Glass — Premium Natural Wood"
                   width={400}
                   height={400}
                   sizes="(max-width: 768px) 80vw, 400px"
@@ -1397,7 +1402,7 @@ export default function Home() {
                   {videos.map((v, i) => (
                     <button key={i} className="vtm-card" onClick={() => setVideoModal(v.src)} aria-label={`Play video: ${v.author}`}>
                       <div className="vtm-thumb-wrap">
-                        <img src={v.poster} alt={v.author} className="vtm-thumb" loading="lazy" />
+                        <img src={v.poster} alt={v.author} title={v.author} className="vtm-thumb" loading="lazy" />
                         <div className="vtm-play-btn">
                           <svg width="28" height="28" viewBox="0 0 24 24" fill="#fff"><polygon points="5,3 19,12 5,21"/></svg>
                         </div>
@@ -1488,6 +1493,7 @@ export default function Home() {
                 <Image
                   src="https://res.cloudinary.com/ddmmfkvwb/image/upload/q_auto,f_auto/how-to-use_lycjln"
                   alt="How to use Vijaysar Wooden Glass — 4 steps infographic"
+                  title="How to use Vijaysar Wooden Glass — 4 steps infographic"
                   width={480}
                   height={480}
                   style={{ width: '100%', maxWidth: 480, height: 'auto', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,.12)', display: 'block', margin: '0 auto' }}
@@ -1580,6 +1586,7 @@ export default function Home() {
                 <Image
                   src="/lab-cert-1.jpg"
                   alt="Hydel Laboratories test report for Vijaysar Herbal Wood Tumbler"
+                  title="Hydel Laboratories test report for Vijaysar Herbal Wood Tumbler"
                   width={800}
                   height={600}
                   style={{ width: '100%', height: 'auto', display: 'block' }}
@@ -1637,7 +1644,7 @@ export default function Home() {
             ].map(({ src, alt }, i, arr) => (
               <button key={src} onClick={() => setLightbox({ imgs: arr.map(a => a.src), idx: i })} aria-label={`Zoom: ${alt}`}
                 style={{ background:'none', border:'none', padding:0, cursor:'zoom-in', width:'100%', maxWidth:380, position:'relative' }}>
-                <Image src={src} alt={alt} width={380} height={380}
+                <Image src={src} alt={alt} title={alt} width={380} height={380}
                   style={{ width:'100%', height:'auto', borderRadius:12, boxShadow:'0 4px 20px rgba(0,0,0,.10)', display:'block' }} />
                 <span style={{ position:'absolute', bottom:10, right:10, background:'rgba(0,0,0,.45)', color:'#fff', fontSize:'.65rem', padding:'3px 8px', borderRadius:20 }}>{t('spec.zoom')}</span>
               </button>
@@ -1728,6 +1735,7 @@ export default function Home() {
                   ref={el => { t.el = el; }}
                   src={imgs[idx]}
                   alt="Zoomed view"
+                  title="Zoomed view"
                   onClick={e => e.stopPropagation()}
                   onTouchStart={onTouchStart}
                   onTouchMove={onTouchMove}
@@ -2007,7 +2015,7 @@ export default function Home() {
                         <div className="mob-order-summary-body">
                           <div className="checkout-order-panel">
                             <div className="op-product">
-                              <img src="https://res.cloudinary.com/ddmmfkvwb/image/upload/w_80,h_80,c_fill,q_auto,f_auto/product_rsek8j" alt="Vijaysar Wooden Glass" className="op-img" />
+                              <img src="https://res.cloudinary.com/ddmmfkvwb/image/upload/w_80,h_80,c_fill,q_auto,f_auto/product_rsek8j" alt="Vijaysar Wooden Glass" title="Vijaysar Wooden Glass" className="op-img" />
                               <div style={{ flex:1, minWidth:0 }}>
                                 <div className="op-name">{t('checkout.item_glass')} × {currentPack.qty}</div>
                                 <div className="op-variant">{currentPack.label}</div>
@@ -2178,10 +2186,10 @@ export default function Home() {
                       <span className="retailer-checkout-label">Also available on</span>
                       <div className="retailer-logos">
                         <a href="https://www.amazon.in/dp/B0H6BKLB51/" target="_blank" rel="noopener noreferrer nofollow" className="retailer-pill retailer-pill-amazon" aria-label="Buy on Amazon.in">
-                          <img src="/images/logo-amazon.svg" alt="Amazon.in" height="16" style={{ display:'block' }} />
+                          <img src="/images/logo-amazon.svg" alt="Amazon.in" title="Amazon.in" height="16" style={{ display:'block' }} />
                         </a>
                         <div className="retailer-pill" aria-label="Available at D-Mart stores">
-                          <img src="/images/logo-dmart.svg" alt="D-Mart" height="16" style={{ display:'block' }} />
+                          <img src="/images/logo-dmart.svg" alt="D-Mart" title="D-Mart" height="16" style={{ display:'block' }} />
                           <span className="retailer-dmart-text">stores near you</span>
                         </div>
                       </div>
@@ -2198,7 +2206,7 @@ export default function Home() {
 
                     <div className="checkout-order-panel">
                       <div className="op-product">
-                        <img src="https://res.cloudinary.com/ddmmfkvwb/image/upload/w_80,h_80,c_fill,q_auto,f_auto/product_rsek8j" alt="Vijaysar Wooden Glass" className="op-img" />
+                        <img src="https://res.cloudinary.com/ddmmfkvwb/image/upload/w_80,h_80,c_fill,q_auto,f_auto/product_rsek8j" alt="Vijaysar Wooden Glass" title="Vijaysar Wooden Glass" className="op-img" />
                         <div style={{ flex:1, minWidth:0 }}>
                           <div className="op-name">{t('checkout.item_glass')} × {currentPack.qty}</div>
                           <div className="op-variant">{currentPack.label}</div>
@@ -2226,10 +2234,10 @@ export default function Home() {
                       <div className="retailer-sidebar-label">Also available on</div>
                       <div className="retailer-logos">
                         <a href="https://www.amazon.in/dp/B0H6BKLB51/" target="_blank" rel="noopener noreferrer nofollow" className="retailer-pill retailer-pill-amazon" aria-label="Buy on Amazon.in">
-                          <img src="/images/logo-amazon.svg" alt="Amazon.in" height="16" style={{ display:'block' }} />
+                          <img src="/images/logo-amazon.svg" alt="Amazon.in" title="Amazon.in" height="16" style={{ display:'block' }} />
                         </a>
                         <div className="retailer-pill" aria-label="Available at D-Mart stores">
-                          <img src="/images/logo-dmart.svg" alt="D-Mart" height="16" style={{ display:'block' }} />
+                          <img src="/images/logo-dmart.svg" alt="D-Mart" title="D-Mart" height="16" style={{ display:'block' }} />
                           <span className="retailer-dmart-text">stores near you</span>
                         </div>
                       </div>
@@ -2320,7 +2328,7 @@ export default function Home() {
                 <div className="review-stars">{stars}</div>
                 <p className="review-text">&ldquo;{text}&rdquo;</p>
                 <div className="review-author">
-                  <img src={avatar} alt={name} className="review-avatar-img" style={{ flexShrink:0, background:'var(--vd-off-white)' }} />
+                  <img src={avatar} alt={name} title={name} className="review-avatar-img" style={{ flexShrink:0, background:'var(--vd-off-white)' }} />
                   <div>
                     <div className="review-name">{name}</div>
                     <div className="review-meta">{loc} · {ago}</div>
