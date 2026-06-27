@@ -150,10 +150,7 @@ export default function PartnerLogin() {
           )}
 
           <p style={{ textAlign: 'center', fontSize: '14px', color: '#64748b', marginTop: '24px', marginBottom: 0 }}>
-            Don't have an account?{' '}
-            <a href="/partner/register" style={{ color: PRIMARY, fontWeight: '600', textDecoration: 'none' }}>
-              Register
-            </a>
+            New here? Just enter your mobile &amp; email above — if you don&apos;t have an account we&apos;ll create one for you.
           </p>
         </div>
       </div>
