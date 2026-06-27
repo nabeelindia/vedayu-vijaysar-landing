@@ -12,19 +12,29 @@ export async function getServerSideProps({ params, res }) {
     return { notFound: true };
   }
 
-  const { data } = await supabase
+  if (!handle || !/^[\w-]{1,64}$/.test(handle)) return { notFound: true };
+
+  const { data, error } = await supabase
     .from('growth_partners')
     .select('handle')
     .ilike('handle', handle)
     .single();
 
+  if (error) {
+    console.error('[handle] supabase lookup error:', error.message);
+    return { notFound: true };
+  }
+
   if (!data) return { notFound: true };
 
+  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
   res.setHeader(
     'Set-Cookie',
-    `gp_ref=${data.handle}; Max-Age=2592000; Path=/; HttpOnly; SameSite=Lax`,
+    `gp_ref=${data.handle}; Max-Age=2592000; Path=/; HttpOnly; SameSite=Lax${secure}`,
   );
 
+  // Use 302 (temporary) not 301 — browsers cache 301s and skip re-running this
+  // handler, which would prevent the cookie from being refreshed on repeat visits.
   return {
     redirect: {
       destination: `/?gp=${encodeURIComponent(data.handle)}`,
