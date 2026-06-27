@@ -1,7 +1,16 @@
+import { timingSafeEqual, createHmac } from 'crypto';
 import { supabase } from '../../../lib/supabase';
 import { makeGpToken, gpSessionCookie } from '../../../lib/gp-auth';
 
 const MOBILE_RE = /^[6-9]\d{9}$/;
+
+function makeVerifyToken(mobile) {
+  const secret = process.env.GP_SESSION_SECRET;
+  const exp = Date.now() + 15 * 60 * 1000; // 15 minutes
+  const payload = Buffer.from(JSON.stringify({ mobile, exp })).toString('base64');
+  const sig = createHmac('sha256', secret).update(payload).digest('hex');
+  return `${payload}.${sig}`;
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
@@ -22,12 +31,14 @@ export default async function handler(req, res) {
     .eq('mobile', mobile)
     .single();
 
-  const valid =
-    otpRow &&
-    otpRow.otp === otp &&
-    new Date(otpRow.expires_at) > new Date();
+  if (!otpRow || new Date(otpRow.expires_at) <= new Date()) {
+    return res.status(401).json({ error: 'Invalid or expired OTP' });
+  }
 
-  if (!valid) {
+  // Timing-safe OTP comparison
+  const otpBuf = Buffer.from(String(otpRow.otp));
+  const inputBuf = Buffer.from(String(otp).slice(0, 6));
+  if (otpBuf.length !== inputBuf.length || !timingSafeEqual(otpBuf, inputBuf)) {
     return res.status(401).json({ error: 'Invalid or expired OTP' });
   }
 
@@ -47,5 +58,5 @@ export default async function handler(req, res) {
     return res.json({ ok: true, registered: true });
   }
 
-  return res.json({ ok: true, registered: false });
+  return res.json({ ok: true, registered: false, verifyToken: makeVerifyToken(mobile) });
 }

@@ -62,8 +62,10 @@ export default async function handler(req, res) {
   });
 
   if (emailError) {
-    console.error('[send-otp] Email error:', emailError);
-    // Don't expose email errors to client — OTP is saved, they can retry
+    console.error('[send-otp] Email delivery failed:', emailError);
+    // Remove the OTP so user isn't rate-limited on retry
+    await supabase.from('gp_otp').delete().eq('mobile', mobile);
+    return res.status(500).json({ error: 'Failed to send OTP email. Please try again.' });
   }
 
   return res.json({ ok: true });

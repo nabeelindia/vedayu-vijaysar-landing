@@ -1,8 +1,9 @@
+import { timingSafeEqual, createHmac } from 'crypto';
 import { supabase } from '../../../lib/supabase';
 import { makeGpToken, gpSessionCookie } from '../../../lib/gp-auth';
 
 const MOBILE_RE = /^[6-9]\d{9}$/;
-const HANDLE_RE = /^[a-zA-Z0-9][a-zA-Z0-9-]{1,49}$/;
+const HANDLE_RE = /^[a-zA-Z0-9][a-zA-Z0-9-]{2,49}$/; // min 3, max 50 chars total
 const IFSC_RE = /^[A-Z]{4}0[A-Z0-9]{6}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -21,6 +22,19 @@ const REQUIRED_FIELDS = [
   'city', 'bank_name', 'bank_account', 'bank_ifsc',
 ];
 
+function validateVerifyToken(token, mobile) {
+  try {
+    const secret = process.env.GP_SESSION_SECRET;
+    const [payload64, sig] = token.split('.');
+    const expected = createHmac('sha256', secret).update(payload64).digest('hex');
+    const expectedBuf = Buffer.from(expected);
+    const sigBuf = Buffer.from(sig);
+    if (expectedBuf.length !== sigBuf.length || !timingSafeEqual(expectedBuf, sigBuf)) return false;
+    const { mobile: tokenMobile, exp } = JSON.parse(Buffer.from(payload64, 'base64').toString());
+    return tokenMobile === mobile && Date.now() < exp;
+  } catch { return false; }
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
@@ -36,7 +50,13 @@ export default async function handler(req, res) {
   const {
     mobile, name, handle, email, profession,
     city, bank_name, bank_account, bank_ifsc,
+    verifyToken,
   } = body;
+
+  // Require verified mobile token
+  if (!verifyToken || !validateVerifyToken(verifyToken, mobile)) {
+    return res.status(401).json({ error: 'Mobile verification required' });
+  }
 
   // Validate mobile
   if (!MOBILE_RE.test(mobile)) {
@@ -66,24 +86,15 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid IFSC code format' });
   }
 
-  // Check handle uniqueness
-  const { data: existingHandle } = await supabase
-    .from('growth_partners')
-    .select('id')
-    .eq('handle', handle.toLowerCase())
-    .single();
+  // Check handle and mobile uniqueness in parallel
+  const [{ data: existingHandle }, { data: existingMobile }] = await Promise.all([
+    supabase.from('growth_partners').select('id').ilike('handle', handle.toLowerCase()).single(),
+    supabase.from('growth_partners').select('id').eq('mobile', mobile).single(),
+  ]);
 
   if (existingHandle) {
     return res.status(409).json({ error: 'This handle is already taken. Please choose another.' });
   }
-
-  // Check mobile uniqueness
-  const { data: existingMobile } = await supabase
-    .from('growth_partners')
-    .select('id')
-    .eq('mobile', mobile)
-    .single();
-
   if (existingMobile) {
     return res.status(409).json({ error: 'This mobile number is already registered.' });
   }
