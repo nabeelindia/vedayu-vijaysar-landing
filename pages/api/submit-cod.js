@@ -7,6 +7,22 @@
  * Returns { success: true, orderId } on completion.
  */
 import { Resend } from 'resend';
+
+async function trackGpEarning(orderId, gpRef) {
+  if (!gpRef) return;
+  const { data: partner } = await supabase
+    .from('growth_partners')
+    .select('id')
+    .ilike('handle', gpRef)
+    .single();
+  if (!partner) return;
+  await supabase.from('gp_earnings').insert({
+    partner_id: partner.id,
+    order_id:   orderId,
+    amount:     100,
+    status:     'pending',
+  });
+}
 import { sendCapiPurchase } from '../../lib/meta-capi';
 import { enqueueFollowup } from '../../lib/followup-queue';
 import { waOrderConfirmed, waCodVerify } from '../../lib/whatsapp';
@@ -283,6 +299,8 @@ export default async function handler(req, res) {
     discount:     referrerId ? 50 : null,
     method:       'cod',
   }).then(() => {}, () => {});
+
+  trackGpEarning(orderId, req.cookies?.gp_ref).catch(() => {});
 
   // ── Tabbly outbound COD verification call ───────────────────────────────
   // Order already saved above. Call directly (not via internal HTTP which
