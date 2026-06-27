@@ -3,7 +3,9 @@
 // Requires SENTRY_AUTH_TOKEN, SENTRY_ORG, SENTRY_PROJECT env vars.
 
 export default async function handler(req, res) {
-  const token   = process.env.SENTRY_AUTH_TOKEN;
+  // SENTRY_READ_TOKEN needs event:read + org:read + project:read scopes
+  // Create it at: Sentry → Settings → Developer Settings → Internal Integrations
+  const token   = process.env.SENTRY_READ_TOKEN || process.env.SENTRY_AUTH_TOKEN;
   const org     = process.env.SENTRY_ORG;
   const project = process.env.SENTRY_PROJECT;
 
