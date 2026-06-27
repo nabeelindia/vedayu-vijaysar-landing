@@ -21,6 +21,7 @@ function suggestHandle(name) {
 
 export default function PartnerRegister() {
   const router = useRouter();
+  const [ready, setReady] = useState(false);
   const [step, setStep] = useState(2); // starts at step 2 (step 1 = login)
   const [mobile, setMobile] = useState('');
   const [email, setEmail] = useState('');
@@ -38,6 +39,7 @@ export default function PartnerRegister() {
     setMobile(storedMobile);
     setEmail(storedEmail);
     setVerifyToken(storedToken);
+    setReady(true);
   }, []);
   const [handle, setHandle] = useState('');
   const [handleEdited, setHandleEdited] = useState(false);
@@ -82,6 +84,8 @@ export default function PartnerRegister() {
       setLoading(false);
     }
   }
+
+  if (!ready) return null;
 
   return (
     <>

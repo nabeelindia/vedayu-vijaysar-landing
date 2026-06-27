@@ -521,5 +521,7 @@
   "order_confirmed.notify_blocked_msg": "Notifications are blocked in your browser. To enable, go to your browser settings and allow notifications for this site.",
   "order_confirmed.track_order_cta": "📦 Track My Order →",
   "specs.show_more": "Show all specifications ↓",
-  "specs.show_less": "Show fewer specifications ↑"
+  "specs.show_less": "Show fewer specifications ↑",
+  "footer.partners_heading": "Partners",
+  "footer.partners_link": "Become a Growth Partner"
 }

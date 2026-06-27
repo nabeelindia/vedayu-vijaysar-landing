@@ -521,5 +521,7 @@
   "order_confirmed.notify_blocked_msg": "आपके ब्राउज़र में नोटिफिकेशन ब्लॉक हैं। सक्षम करने के लिए, ब्राउज़र सेटिंग में इस साइट के लिए नोटिफिकेशन की अनुमति दें।",
   "order_confirmed.track_order_cta": "📦 ऑर्डर ट्रैक करें →",
   "specs.show_more": "सभी विवरण देखें ↓",
-  "specs.show_less": "कम विवरण दिखाएं ↑"
+  "specs.show_less": "कम विवरण दिखाएं ↑",
+  "footer.partners_heading": "पार्टनर",
+  "footer.partners_link": "ग्रोथ पार्टनर बनें"
 }

@@ -48,6 +48,10 @@ export default function SiteFooter() {
             <ul>
               <li><Link href="/blog">{t('footer.blog_link')}</Link></li>
             </ul>
+            <h3 className="footer-links-heading" style={{ marginTop: '1rem' }}>{t('footer.partners_heading')}</h3>
+            <ul>
+              <li><Link href="/partner/login">{t('footer.partners_link')}</Link></li>
+            </ul>
             <h3 className="footer-links-heading" style={{ marginTop: '1rem' }}>{t('footer.support_heading')}</h3>
             <ul>
               <li><Link href="/track" className="footer-track-btn">{t('footer.track_link')}</Link></li>

@@ -521,5 +521,7 @@
   "order_confirmed.notify_blocked_msg": "உங்கள் உலாவியில் அறிவிப்புகள் தடுக்கப்பட்டுள்ளன. இயக்க, உலாவி அமைப்புகளில் இந்த தளத்திற்கு அனுமதி வழங்கவும்.",
   "order_confirmed.track_order_cta": "📦 ஆர்டரை கண்காணி →",
   "specs.show_more": "அனைத்து விவரங்களையும் காண்க ↓",
-  "specs.show_less": "குறைவான விவரங்களைக் காண்க ↑"
+  "specs.show_less": "குறைவான விவரங்களைக் காண்க ↑",
+  "footer.partners_heading": "பங்காளர்கள்",
+  "footer.partners_link": "வளர்ச்சி பங்காளராக இணையுங்கள்"
 }

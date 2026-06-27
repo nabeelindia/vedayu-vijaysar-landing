@@ -521,5 +521,7 @@
   "order_confirmed.notify_blocked_msg": "మీ బ్రౌజర్‌లో నోటిఫికేషన్లు నిరోధించబడ్డాయి. ప్రారంభించడానికి, బ్రౌజర్ సెట్టింగ్‌లలో ఈ సైట్‌కు అనుమతి ఇవ్వండి.",
   "order_confirmed.track_order_cta": "📦 ఆర్డర్ ట్రాక్ చేయండి →",
   "specs.show_more": "అన్ని వివరాలు చూడండి ↓",
-  "specs.show_less": "తక్కువ వివరాలు చూడండి ↑"
+  "specs.show_less": "తక్కువ వివరాలు చూడండి ↑",
+  "footer.partners_heading": "భాగస్వాములు",
+  "footer.partners_link": "గ్రోత్ పార్టనర్ అవ్వండి"
 }
