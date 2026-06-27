@@ -14,6 +14,8 @@ export async function getServerSideProps({ params, res }) {
 
   if (!handle || !/^[\w-]{1,64}$/.test(handle)) return { notFound: true };
 
+  if (!supabase) return { notFound: true };
+
   const { data, error } = await supabase
     .from('growth_partners')
     .select('handle')
