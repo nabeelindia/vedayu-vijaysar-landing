@@ -27,7 +27,7 @@ export default async function handler(req, res) {
   // Look up valid OTP
   const { data: otpRow } = await supabase
     .from('gp_otp')
-    .select('otp, expires_at')
+    .select('otp, expires_at, attempts')
     .eq('mobile', mobile)
     .single();
 
@@ -35,10 +35,17 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Invalid or expired OTP' });
   }
 
+  // Lock out after 5 failed attempts
+  if (otpRow.attempts >= 5) {
+    await supabase.from('gp_otp').delete().eq('mobile', mobile);
+    return res.status(429).json({ error: 'Too many attempts. Please request a new OTP.' });
+  }
+
   // Timing-safe OTP comparison
   const otpBuf = Buffer.from(String(otpRow.otp));
   const inputBuf = Buffer.from(String(otp).slice(0, 6));
   if (otpBuf.length !== inputBuf.length || !timingSafeEqual(otpBuf, inputBuf)) {
+    await supabase.from('gp_otp').update({ attempts: otpRow.attempts + 1 }).eq('mobile', mobile);
     return res.status(401).json({ error: 'Invalid or expired OTP' });
   }
 
