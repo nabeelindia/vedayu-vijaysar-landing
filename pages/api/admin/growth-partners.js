@@ -28,7 +28,7 @@ export default async function handler(req, res) {
   const statsMap = {};
   for (const e of (earnings || [])) {
     if (!statsMap[e.partner_id]) statsMap[e.partner_id] = { orderCount: 0, totalEarned: 0 };
-    statsMap[e.partner_id].orderCount++;
+    if (e.status !== 'cancelled') statsMap[e.partner_id].orderCount++;
     if (e.status === 'earned') statsMap[e.partner_id].totalEarned += Number(e.amount || 0);
   }
 

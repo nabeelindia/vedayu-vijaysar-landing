@@ -1,7 +1,7 @@
 // pages/api/admin/gp-withdrawals/[id]/complete.js
 import { checkAdminAuth } from '../../../_auth';
-import { supabase } from '../../../../../../lib/supabase';
-import { waCustomMessage } from '../../../../../../lib/whatsapp';
+import { supabase } from '../../../../../lib/supabase';
+import { waCustomMessage } from '../../../../../lib/whatsapp';
 
 export default async function handler(req, res) {
   if (!checkAdminAuth(req)) return res.status(401).json({ error: 'Unauthorized' });
@@ -21,11 +21,16 @@ export default async function handler(req, res) {
     return res.status(404).json({ error: 'Withdrawal not found' });
   }
 
+  if (withdrawal.status !== 'pending') {
+    return res.status(409).json({ error: 'Already completed' });
+  }
+
   // Mark as completed
   const { error: updateErr } = await supabase
     .from('gp_withdrawals')
     .update({ status: 'completed', completed_at: new Date().toISOString() })
-    .eq('id', id);
+    .eq('id', id)
+    .eq('status', 'pending');
 
   if (updateErr) return res.status(500).json({ error: updateErr.message });
 
@@ -38,7 +43,7 @@ export default async function handler(req, res) {
 
     await waCustomMessage({
       mobile: partner.mobile,
-      text: `Hi ${partner.name}, your Vedayu Growth Partner earnings of ₹${amount} have been transferred to your ${bankName} account ending ••${last4}. Thank you for growing with us! — Team Vedayu`,
+      text: `Hi ${partner.name}, your Vedayu Growth Partner earnings of ₹${amount} have been transferred to your ${bankName} account ending ••••${last4}. Thank you for growing with us! — Team Vedayu`,
     }).catch(err => console.error('WhatsApp send failed:', err));
   }
 

@@ -34,7 +34,7 @@ export default function AdminWithdrawals() {
       const res = await fetch(`/api/admin/gp-withdrawals/${id}/complete`, { method: 'PUT' });
       if (!res.ok) throw new Error('Failed');
       setWithdrawals(prev => prev.filter(w => w.id !== id));
-      showToast('Marked as transferred — WhatsApp sent to partner.');
+      showToast('Marked as transferred. Partner will be notified via WhatsApp.');
     } catch {
       showToast('Error marking withdrawal. Please try again.');
     } finally {
