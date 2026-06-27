@@ -1,5 +1,5 @@
 // pages/api/admin/gp-withdrawals/[id]/complete.js
-import { checkAdminAuth } from '../../../_auth';
+import { checkAdminAuth } from '../../../../../_auth';
 import { supabase } from '../../../../../lib/supabase';
 import { waCustomMessage } from '../../../../../lib/whatsapp';
 
