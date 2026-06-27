@@ -1,5 +1,5 @@
 // pages/api/admin/gp-kyc/[id]/verify.js
-import { checkAdminAuth } from '../../../../../_auth';
+import { checkAdminAuth } from '../../_auth';
 import { supabase } from '../../../../../lib/supabase';
 
 export default async function handler(req, res) {
