@@ -198,6 +198,7 @@ export default function Home() {
   const [toast,      setToast]      = useState(null);
   const [welcomeBack,    setWelcomeBack]    = useState(null);
   const [pincodeLoading, setPincodeLoading] = useState(false);
+  const [pincodeNoService, setPincodeNoService] = useState(false);
   const [utm,            setUtm]            = useState({});
   const [showSticky, setShowSticky] = useState(false);
   const [scrolled,   setScrolled]   = useState(false);
@@ -434,6 +435,7 @@ export default function Home() {
   const handlePincode = useCallback(async (val) => {
     // always update the raw pincode value and clear stale city/state
     setForm(f => ({ ...f, pincode: val, city: '', state: '' }));
+    setPincodeNoService(false);
 
     // clear delivery estimate if pincode is incomplete
     if (val.length < 6) setDeliveryEst('');
@@ -465,6 +467,12 @@ export default function Home() {
             city:  pinData.city  || f.city,
             state: pinNormaliseState(pinData.state) || f.state,
           }));
+        } else {
+          // No city/state returned — pincode not found in DB
+          setPincodeNoService(true);
+          setDeliveryEst('');
+          setPincodeLoading(false);
+          return;
         }
         // Pincode not serviceable — clear estimate and show warning
         if (pinData && pinData.serviceable === false) {
@@ -2084,6 +2092,7 @@ export default function Home() {
                           {t('checkout.pincode_label')}{vIcon('pincode')}{pincodeLoading && <span style={{ fontWeight:400, color:'#4A7C59', fontSize:'.76rem', marginLeft:6 }}>🔍 {t('checkout.detecting')}</span>}
                         </label>
                         <input id="pincode" type="text" placeholder={t('checkout.pincode_placeholder')} maxLength={6} inputMode="numeric" value={form.pincode} onChange={e => handlePincode(e.target.value.replace(/\D/g,''))} onBlur={() => touch('pincode')} style={vStyle('pincode')} />
+                        {pincodeNoService && <div style={{ fontSize:'.78rem', color:'#c53030', marginTop:4, fontWeight:500 }}>⚠️ Delivery not available to this pincode</div>}
                       </div>
                       <div className="field-group">
                         {(form.city || form.state) ? (
@@ -2171,7 +2180,7 @@ export default function Home() {
 
                     <PaymentSection />
 
-                    <button className="btn btn-brown btn-full" style={{ padding: '17px', fontSize: '1.05rem' }} onClick={placeOrder} disabled={loading}>
+                    <button className="btn btn-brown btn-full" style={{ padding: '17px', fontSize: '1.05rem' }} onClick={placeOrder} disabled={loading || pincodeNoService}>
                       {ctaLabel}
                     </button>
                     <div className="co-trust-badges" style={{ marginTop: 10, marginBottom: 8 }}>
@@ -2390,7 +2399,7 @@ export default function Home() {
               </div>
               <button
                 onClick={formReady ? placeOrder : () => { scrollToCheckout(); setTimeout(() => showToast('Almost there! Just add your name, mobile & address to confirm your order.', 'info'), 400); }}
-                disabled={loading}
+                disabled={loading || pincodeNoService}
                 style={{ background: formReady ? '#4A7C59' : 'var(--vd-gold)', color: '#fff', fontWeight: 700, padding: '11px 22px', borderRadius: 6, fontSize: '.88rem', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'background .3s' }}
               >
                 {loading ? '⏳' : formReady
