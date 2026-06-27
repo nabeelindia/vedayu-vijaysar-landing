@@ -22,6 +22,7 @@ import { generateOrderId } from '../../lib/orders';
 import { supabase } from '../../lib/supabase';
 import { sendPush } from '../../lib/push';
 import { isBlockedDay } from '../../lib/holidays';
+import * as Sentry from '@sentry/nextjs';
 
 const formatUtm = (utm = {}) => {
   if (!Object.keys(utm).length) return 'Direct / Unknown';
@@ -53,6 +54,14 @@ export default async function handler(req, res) {
   if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
     return res.status(400).json({ error: 'Missing payment fields' });
   }
+
+  // Attach payment context early so any Sentry event in this request includes recovery data
+  Sentry.setContext('payment', {
+    payment_id: razorpay_payment_id,
+    order_id: razorpay_order_id,
+    amount_paise: amount,
+    mobile,
+  });
 
   // ── 1. Verify Razorpay HMAC-SHA256 signature ──────────────────────────────
   const body              = `${razorpay_order_id}|${razorpay_payment_id}`;

@@ -15,6 +15,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import { TOPIC_QUEUE } from '../../../lib/blog-topics';
+import * as Sentry from '@sentry/nextjs';
 
 export const config = { maxDuration: 300 };
 
@@ -152,6 +153,7 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
+  return Sentry.withMonitor('generate-posts', async () => {
   const log = [];
   const errors = [];
 
@@ -210,4 +212,5 @@ export default async function handler(req, res) {
   } catch (err) {
     return res.status(500).json({ error: err.message, log, errors });
   }
+  }, { schedule: { type: 'crontab', value: '30 0 * * 1' } });
 }

@@ -18,6 +18,7 @@ import { supabase } from '../../lib/supabase';
 import { sendPush } from '../../lib/push';
 import { isBlockedDay } from '../../lib/holidays';
 import { triggerTabblyCall } from '../../lib/tabbly';
+import * as Sentry from '@sentry/nextjs';
 
 const formatUtm = (utm = {}) => {
   if (!Object.keys(utm).length) return 'Direct / Unknown';
@@ -41,6 +42,15 @@ export default async function handler(req, res) {
   }
 
   const { name, mobile, email, address, area, landmark, city, state, pincode, pack, price, qty, utm = {}, referrerId, scheduledShipDate } = req.body;
+
+  // Attach COD context early so any Sentry event in this request includes recovery data
+  Sentry.setContext('order', {
+    mobile: mobile?.trim(),
+    pack,
+    price,
+    qty,
+    pincode: pincode?.trim(),
+  });
 
   // Basic server-side validation
   if (!name?.trim() || !mobile?.trim() || !address?.trim() || !pincode?.trim() || !city?.trim() || !state) {

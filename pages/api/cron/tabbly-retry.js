@@ -3,6 +3,7 @@
 // but only within the IST call window (10:00 AM – 10:00 PM).
 import { supabase }                          from '../../../lib/supabase';
 import { triggerTabblyCall, isWithinCallWindow } from '../../../lib/tabbly';
+import * as Sentry from '@sentry/nextjs';
 
 export default async function handler(req, res) {
   // Vercel cron jobs send the CRON_SECRET as an Authorization: Bearer header
@@ -10,68 +11,70 @@ export default async function handler(req, res) {
   if (cronSecret && req.headers.authorization !== `Bearer ${cronSecret}`) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
-  if (!supabase) return res.status(503).json({ error: 'DB not configured' });
+  return Sentry.withMonitor('tabbly-retry', async () => {
+    if (!supabase) return res.status(503).json({ error: 'DB not configured' });
 
-  if (!isWithinCallWindow()) {
-    return res.json({ skipped: true, reason: 'outside call window (IST 10am-10pm)' });
-  }
-
-  const { data: due, error } = await supabase
-    .from('tabbly_call_retries')
-    .select('id, order_id, attempt')
-    .eq('status', 'pending')
-    .lte('scheduled_at', new Date().toISOString())
-    .order('scheduled_at', { ascending: true })
-    .limit(20);
-
-  if (error) return res.status(500).json({ error: error.message });
-  if (!due?.length) return res.json({ fired: 0 });
-
-  let fired = 0;
-  for (const retry of due) {
-    const { data: order } = await supabase
-      .from('orders')
-      .select('name, mobile, price, address, city, state, pincode')
-      .eq('order_id', retry.order_id)
-      .single();
-
-    if (!order) {
-      await supabase.from('tabbly_call_retries').update({
-        status:     'skipped',
-        last_error: 'order not found',
-        updated_at:  new Date().toISOString(),
-      }).eq('id', retry.id);
-      continue;
+    if (!isWithinCallWindow()) {
+      return res.json({ skipped: true, reason: 'outside call window (IST 10am-10pm)' });
     }
 
-    const fullAddress = `${order.address}, ${order.city}, ${order.state} - ${order.pincode}`;
+    const { data: due, error } = await supabase
+      .from('tabbly_call_retries')
+      .select('id, order_id, attempt')
+      .eq('status', 'pending')
+      .lte('scheduled_at', new Date().toISOString())
+      .order('scheduled_at', { ascending: true })
+      .limit(20);
 
-    try {
-      await triggerTabblyCall({
-        orderId: retry.order_id,
-        name:    order.name,
-        mobile:  order.mobile,
-        price:   order.price,
-        address: fullAddress,
-        state:   order.state,
-      });
+    if (error) return res.status(500).json({ error: error.message });
+    if (!due?.length) return res.json({ fired: 0 });
 
-      await supabase.from('tabbly_call_retries').update({
-        status:     'fired',
-        fired_at:    new Date().toISOString(),
-        updated_at:  new Date().toISOString(),
-      }).eq('id', retry.id);
+    let fired = 0;
+    for (const retry of due) {
+      const { data: order } = await supabase
+        .from('orders')
+        .select('name, mobile, price, address, city, state, pincode')
+        .eq('order_id', retry.order_id)
+        .single();
 
-      fired++;
-    } catch (err) {
-      console.error(`[Tabbly] Retry ${retry.id} for ${retry.order_id} failed:`, err.message);
-      await supabase.from('tabbly_call_retries').update({
-        status:      'failed',
-        last_error:   err.message,
-        updated_at:   new Date().toISOString(),
-      }).eq('id', retry.id);
+      if (!order) {
+        await supabase.from('tabbly_call_retries').update({
+          status:     'skipped',
+          last_error: 'order not found',
+          updated_at:  new Date().toISOString(),
+        }).eq('id', retry.id);
+        continue;
+      }
+
+      const fullAddress = `${order.address}, ${order.city}, ${order.state} - ${order.pincode}`;
+
+      try {
+        await triggerTabblyCall({
+          orderId: retry.order_id,
+          name:    order.name,
+          mobile:  order.mobile,
+          price:   order.price,
+          address: fullAddress,
+          state:   order.state,
+        });
+
+        await supabase.from('tabbly_call_retries').update({
+          status:     'fired',
+          fired_at:    new Date().toISOString(),
+          updated_at:  new Date().toISOString(),
+        }).eq('id', retry.id);
+
+        fired++;
+      } catch (err) {
+        console.error(`[Tabbly] Retry ${retry.id} for ${retry.order_id} failed:`, err.message);
+        await supabase.from('tabbly_call_retries').update({
+          status:      'failed',
+          last_error:   err.message,
+          updated_at:   new Date().toISOString(),
+        }).eq('id', retry.id);
+      }
     }
-  }
 
-  return res.json({ fired, total: due.length });
+    return res.json({ fired, total: due.length });
+  }, { schedule: { type: 'crontab', value: '*/30 * * * *' } });
 }

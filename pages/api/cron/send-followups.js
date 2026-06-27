@@ -16,6 +16,7 @@ import { Resend } from 'resend';
 import { getActiveOrders, markSent, daysSince } from '../../../lib/followup-queue';
 import { day3Email, day7Email, day30Email, day90Email } from '../../../lib/followup-emails';
 import { waDispatchUpdate, waUsageTips, waUpsell, waRitualComplete } from '../../../lib/whatsapp';
+import * as Sentry from '@sentry/nextjs';
 
 export const config = { maxDuration: 60 };
 
@@ -47,53 +48,55 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-  const sent = [];
-  const errors = [];
+  return Sentry.withMonitor('send-followups', async () => {
+    const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+    const sent = [];
+    const errors = [];
 
-  let orders;
-  try {
-    orders = await getActiveOrders();
-  } catch (err) {
-    return res.status(500).json({ error: `KV fetch failed: ${err.message}` });
-  }
+    let orders;
+    try {
+      orders = await getActiveOrders();
+    } catch (err) {
+      return res.status(500).json({ error: `KV fetch failed: ${err.message}` });
+    }
 
-  for (const order of orders) {
-    const days = daysSince(order.orderTs);
+    for (const order of orders) {
+      const days = daysSince(order.orderTs);
 
-    for (const { day, key, email: emailTpl, wa: waTpl } of SCHEDULE) {
-      // Allow a 2-day window in case the cron missed a day
-      if (days >= day && days <= day + 2 && !order.sent[key]) {
-        // ── Email ────────────────────────────────────────────────
-        if (resend && order.email) {
-          try {
-            const { subject, html } = emailTpl(order);
-            await resend.emails.send({
-              from:    'Vedayu <orders@vedayulife.com>',
-              to:      order.email,
-              subject,
-              html,
-            });
-            sent.push(`${order.orderId} → email d${day}`);
-          } catch (err) {
-            errors.push(`${order.orderId} email d${day}: ${err.message}`);
+      for (const { day, key, email: emailTpl, wa: waTpl } of SCHEDULE) {
+        // Allow a 2-day window in case the cron missed a day
+        if (days >= day && days <= day + 2 && !order.sent[key]) {
+          // ── Email ────────────────────────────────────────────────
+          if (resend && order.email) {
+            try {
+              const { subject, html } = emailTpl(order);
+              await resend.emails.send({
+                from:    'Vedayu <orders@vedayulife.com>',
+                to:      order.email,
+                subject,
+                html,
+              });
+              sent.push(`${order.orderId} → email d${day}`);
+            } catch (err) {
+              errors.push(`${order.orderId} email d${day}: ${err.message}`);
+            }
           }
-        }
 
-        // ── WhatsApp ─────────────────────────────────────────────
-        if (order.mobile) {
-          try {
-            await waTpl(order);
-            sent.push(`${order.orderId} → wa d${day}`);
-          } catch (err) {
-            errors.push(`${order.orderId} wa d${day}: ${err.message}`);
+          // ── WhatsApp ─────────────────────────────────────────────
+          if (order.mobile) {
+            try {
+              await waTpl(order);
+              sent.push(`${order.orderId} → wa d${day}`);
+            } catch (err) {
+              errors.push(`${order.orderId} wa d${day}: ${err.message}`);
+            }
           }
-        }
 
-        await markSent(order.orderId, key);
+          await markSent(order.orderId, key);
+        }
       }
     }
-  }
 
-  return res.status(200).json({ checked: orders.length, sent, errors });
+    return res.status(200).json({ checked: orders.length, sent, errors });
+  }, { schedule: { type: 'crontab', value: '30 2 * * *' } });
 }
