@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { getGpSession } from '../../lib/gp-auth';
@@ -19,10 +19,26 @@ function suggestHandle(name) {
     .slice(0, 30) || '';
 }
 
-export default function PartnerRegister({ mobile, email, verifyToken }) {
+export default function PartnerRegister() {
   const router = useRouter();
   const [step, setStep] = useState(2); // starts at step 2 (step 1 = login)
+  const [mobile, setMobile] = useState('');
+  const [email, setEmail] = useState('');
+  const [verifyToken, setVerifyToken] = useState('');
   const [name, setName] = useState('');
+
+  useEffect(() => {
+    const storedMobile = sessionStorage.getItem('gp_verify_mobile') || '';
+    const storedEmail = sessionStorage.getItem('gp_verify_email') || '';
+    const storedToken = sessionStorage.getItem('gp_verify_token') || '';
+    if (!storedMobile || !storedToken) {
+      router.replace('/partner/login');
+      return;
+    }
+    setMobile(storedMobile);
+    setEmail(storedEmail);
+    setVerifyToken(storedToken);
+  }, []);
   const [handle, setHandle] = useState('');
   const [handleEdited, setHandleEdited] = useState(false);
   const [profession, setProfession] = useState('');
@@ -56,6 +72,9 @@ export default function PartnerRegister({ mobile, email, verifyToken }) {
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Registration failed'); return; }
+      sessionStorage.removeItem('gp_verify_token');
+      sessionStorage.removeItem('gp_verify_mobile');
+      sessionStorage.removeItem('gp_verify_email');
       router.replace('/partner');
     } catch {
       setError('Network error. Please try again.');
@@ -230,10 +249,8 @@ function btnStyle(disabled) {
   };
 }
 
-export async function getServerSideProps({ req, query }) {
+export async function getServerSideProps({ req }) {
   const partnerId = getGpSession(req);
   if (partnerId) return { redirect: { destination: '/partner', permanent: false } };
-
-  const { mobile = '', email = '', verifyToken = '' } = query;
-  return { props: { mobile, email, verifyToken } };
+  return { props: {} };
 }

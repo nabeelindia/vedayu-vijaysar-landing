@@ -51,7 +51,12 @@ export default function PartnerLogin() {
       if (data.registered) {
         router.replace('/partner');
       } else {
-        router.replace(`/partner/register?mobile=${encodeURIComponent(mobile)}&email=${encodeURIComponent(email)}&verifyToken=${encodeURIComponent(data.verifyToken)}`);
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('gp_verify_token', data.verifyToken);
+          sessionStorage.setItem('gp_verify_mobile', mobile);
+          sessionStorage.setItem('gp_verify_email', email);
+        }
+        router.replace('/partner/register');
       }
     } catch {
       setError('Network error. Please try again.');

@@ -56,3 +56,8 @@ create table if not exists gp_otp (
 -- Indexes
 create index if not exists gp_earnings_partner_status  on gp_earnings(partner_id, status);
 create index if not exists gp_withdrawals_status_idx   on gp_withdrawals(status);
+
+-- Prevent double-withdrawal race condition: only one pending withdrawal per partner
+create unique index if not exists gp_withdrawals_one_pending_per_partner
+  on gp_withdrawals (partner_id)
+  where (status = 'pending');

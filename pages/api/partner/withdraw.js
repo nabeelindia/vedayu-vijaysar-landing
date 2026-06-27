@@ -49,8 +49,11 @@ export default async function handler(req, res) {
     .insert({ partner_id: partnerId, amount: balance, status: 'pending' });
 
   if (insertError) {
-    console.error('[withdraw] DB insert error:', insertError);
-    return res.status(500).json({ error: 'Failed to submit withdrawal request' });
+    if (insertError.code === '23505') {
+      return res.status(409).json({ error: 'A withdrawal request is already pending' });
+    }
+    console.error('[withdraw] insert error:', insertError.message);
+    return res.status(500).json({ error: 'Failed to create withdrawal request' });
   }
 
   // Admin push notification (non-blocking)

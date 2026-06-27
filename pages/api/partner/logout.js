@@ -1,9 +1,7 @@
 import { gpClearCookie } from '../../../lib/gp-auth';
 
 export default function handler(req, res) {
+  if (req.method !== 'POST') return res.status(405).end();
   res.setHeader('Set-Cookie', gpClearCookie());
-  if (req.method === 'GET') {
-    return res.redirect(302, '/partner/login');
-  }
   return res.json({ ok: true });
 }

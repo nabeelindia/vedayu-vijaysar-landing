@@ -102,7 +102,10 @@ export default function PartnerDashboard({ partner, earnings, withdrawals, walle
                 ? <span style={{ background: '#d1fae5', color: GREEN, borderRadius: '8px', padding: '3px 10px', fontSize: '12px', fontWeight: '700' }}>✓ KYC Verified</span>
                 : <span style={{ background: '#fef3c7', color: AMBER, borderRadius: '8px', padding: '3px 10px', fontSize: '12px', fontWeight: '700' }}>⏳ KYC Pending</span>
               }
-              <a href="/api/partner/logout" style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', textDecoration: 'none' }}>Sign out</a>
+              <button
+                onClick={async () => { await fetch('/api/partner/logout', { method: 'POST' }); router.push('/partner/login'); }}
+                style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.7)', fontSize: '12px', cursor: 'pointer', padding: 0 }}
+              >Sign out</button>
             </div>
           </div>
         </div>
@@ -143,6 +146,14 @@ export default function PartnerDashboard({ partner, earnings, withdrawals, walle
         </div>
 
         <div style={{ padding: '16px' }}>
+          {/* Withdrawal success banner */}
+          {router.query.withdrawn === '1' && (
+            <div style={{ background: '#d1fae5', border: '1px solid #6ee7b7', borderRadius: 10,
+              padding: '12px 16px', margin: '0 0 12px', color: '#065f46', fontSize: 12, fontWeight: 600 }}>
+              Withdrawal request submitted! We'll transfer your earnings within 2–3 business days.
+            </div>
+          )}
+
           {/* Stats strip */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '16px' }}>
             {[
@@ -277,9 +288,9 @@ export async function getServerSideProps({ req }) {
   if (!partnerId) return { redirect: { destination: '/partner/login', permanent: false } };
 
   const [{ data: partner }, { data: earnings }, { data: withdrawals }] = await Promise.all([
-    supabase.from('growth_partners').select('*').eq('id', partnerId).single(),
-    supabase.from('gp_earnings').select('*').eq('partner_id', partnerId).order('created_at', { ascending: false }),
-    supabase.from('gp_withdrawals').select('*').eq('partner_id', partnerId).order('created_at', { ascending: false }),
+    supabase.from('growth_partners').select('id, name, handle, email, mobile, profession, city, kyc_verified, kyc_verified_at, created_at').eq('id', partnerId).single(),
+    supabase.from('gp_earnings').select('id, amount, status, created_at, order_id').eq('partner_id', partnerId).order('created_at', { ascending: false }),
+    supabase.from('gp_withdrawals').select('id, amount, status, requested_at, completed_at').eq('partner_id', partnerId).order('created_at', { ascending: false }),
   ]);
 
   if (!partner) return { redirect: { destination: '/partner/login', permanent: false } };
@@ -299,8 +310,8 @@ export async function getServerSideProps({ req }) {
   const stats = {
     ordersAll: (earnings || []).length,
     ordersMonth: thisMonth.length,
-    earnedAll: (earnings || []).reduce((acc, e) => acc + (e.amount || 0), 0),
-    earnedMonth: thisMonth.reduce((acc, e) => acc + (e.amount || 0), 0),
+    earnedAll: (earnings || []).filter(e => e.status === 'earned').reduce((acc, e) => acc + (e.amount || 0), 0),
+    earnedMonth: thisMonth.filter(e => e.status === 'earned').reduce((acc, e) => acc + (e.amount || 0), 0),
   };
 
   return {
