@@ -9,18 +9,24 @@ export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).end();
 
   const secret = process.env.CRON_SECRET;
-  if (secret && req.headers['x-cron-secret'] !== secret) {
+  if (!secret || req.headers['x-cron-secret'] !== secret) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  // Unlock earnings that are either:
+  // 1. in_transit AND delivered_at > 7 days (courier webhook set delivered_at)
+  // 2. pending AND created_at > 14 days (fallback for orders without courier tracking)
+  const cutoff7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const cutoff14d = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
 
   const { data: eligible, error: fetchErr } = await supabase
     .from('gp_earnings')
     .select('id')
-    .eq('status', 'in_transit')
-    .not('delivered_at', 'is', null)
-    .lt('delivered_at', cutoff);
+    .or(
+      `and(status.eq.in_transit,delivered_at.not.is.null,delivered_at.lt.${cutoff7d}),` +
+      `and(status.eq.pending,created_at.lt.${cutoff14d})`
+    )
+    .limit(500);
 
   if (fetchErr) {
     console.error('[gp-unlock-earnings] fetch error:', fetchErr.message);

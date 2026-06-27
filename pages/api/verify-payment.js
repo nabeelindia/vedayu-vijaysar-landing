@@ -13,23 +13,8 @@
 export const config = { maxDuration: 10 }; // Vercel Hobby max
 
 import crypto   from 'crypto';
-
-async function trackGpEarning(orderId, gpRef) {
-  if (!gpRef) return;
-  const { data: partner } = await supabase
-    .from('growth_partners')
-    .select('id')
-    .ilike('handle', gpRef)
-    .single();
-  if (!partner) return;
-  await supabase.from('gp_earnings').insert({
-    partner_id: partner.id,
-    order_id:   orderId,
-    amount:     100,
-    status:     'pending',
-  });
-}
 import { Resend } from 'resend';
+import { trackGpEarning } from '../../lib/gp-earnings';
 import { sendCapiPurchase } from '../../lib/meta-capi';
 import { enqueueFollowup } from '../../lib/followup-queue';
 import { waOrderConfirmed } from '../../lib/whatsapp';

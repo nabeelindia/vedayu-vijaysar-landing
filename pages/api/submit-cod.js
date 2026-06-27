@@ -7,23 +7,8 @@
  * Returns { success: true, orderId } on completion.
  */
 import { Resend } from 'resend';
-
-async function trackGpEarning(orderId, gpRef) {
-  if (!gpRef) return;
-  const { data: partner } = await supabase
-    .from('growth_partners')
-    .select('id')
-    .ilike('handle', gpRef)
-    .single();
-  if (!partner) return;
-  await supabase.from('gp_earnings').insert({
-    partner_id: partner.id,
-    order_id:   orderId,
-    amount:     100,
-    status:     'pending',
-  });
-}
 import { sendCapiPurchase } from '../../lib/meta-capi';
+import { trackGpEarning } from '../../lib/gp-earnings';
 import { enqueueFollowup } from '../../lib/followup-queue';
 import { waOrderConfirmed, waCodVerify } from '../../lib/whatsapp';
 import { saveCustomer } from '../../lib/customer-cache';
