@@ -131,7 +131,7 @@ export default function PartnerRegister() {
             {step === 2 && (
               <>
                 <div style={fieldGroup}>
-                  <label style={labelStyle}>Mobile</label>
+                  <label style={labelStyle}>WhatsApp Number</label>
                   <input value={mobile} readOnly style={{ ...inputStyle, background: '#f8fafc', color: '#94a3b8' }} />
                 </div>
                 <div style={fieldGroup}>

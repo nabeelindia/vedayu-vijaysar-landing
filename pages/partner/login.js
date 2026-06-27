@@ -84,7 +84,7 @@ export default function PartnerLogin() {
           </h1>
           <p style={{ fontSize: '14px', color: '#64748b', margin: '0 0 24px' }}>
             {step === 1
-              ? 'Enter your mobile number and email to receive an OTP.'
+              ? 'Enter your WhatsApp number and email to receive an OTP.'
               : `We sent a 6-digit OTP to ${email}`}
           </p>
 
@@ -96,7 +96,7 @@ export default function PartnerLogin() {
 
           {step === 1 ? (
             <form onSubmit={handleSendOtp}>
-              <label style={labelStyle}>Mobile Number</label>
+              <label style={labelStyle}>WhatsApp Number</label>
               <input
                 type="tel"
                 inputMode="numeric"
@@ -144,13 +144,13 @@ export default function PartnerLogin() {
                 onClick={() => { setStep(1); setOtp(''); setError(''); }}
                 style={{ display: 'block', width: '100%', marginTop: '8px', background: 'none', border: 'none', color: PRIMARY, fontSize: '14px', cursor: 'pointer', padding: '10px' }}
               >
-                ← Change mobile / email
+                ← Change WhatsApp / email
               </button>
             </form>
           )}
 
           <p style={{ textAlign: 'center', fontSize: '14px', color: '#64748b', marginTop: '24px', marginBottom: 0 }}>
-            New here? Just enter your mobile &amp; email above — if you don&apos;t have an account we&apos;ll create one for you.
+            New here? Just enter your WhatsApp number &amp; email above — if you don&apos;t have an account we&apos;ll create one for you.
           </p>
         </div>
       </div>
